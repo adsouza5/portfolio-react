@@ -1,0 +1,91 @@
+/* General Section Styling */
+.projects-section {
+    display: flex;
+    background-color: #373d47;
+    color: white;
+    padding: 50px;
+    position: relative;
+    min-height: 100vh;
+  
+    /* Added for transition effects */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: opacity 1s ease, transform 1s ease, visibility 1s;
+  }
+  
+  .projects-section.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+/* Timeline Styling */
+.timeline {
+    position: relative;
+    width: 200px;
+}
+
+.timeline-line {
+    position: absolute;
+    left: 150px;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background-color: gray;
+}
+
+.timeline-entry {
+    position: absolute;
+    left: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 140px;
+    width: 24px;
+    height: 24px;
+    background-color: #7e1515;
+    border-radius: 50%;
+    transform: translateY(-50%);
+}
+
+.timeline-label {
+    position: absolute;
+    left: 80px;
+    font-weight: bold;
+    transform: translateY(-50%);
+}
+
+/* Project Content Styling */
+.projects-content {
+    flex: 1;
+    padding-left: 40px;
+    display: flex;
+    flex-direction: column;
+}
+
+.project-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 120px;
+    position: relative;
+}
+
+.project-card h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.project-card p {
+    font-size: 18px;
+}
+
+.h1-text {
+    margin-bottom: 40px;
+    font-size: 50px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}

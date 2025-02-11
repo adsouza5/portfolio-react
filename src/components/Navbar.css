@@ -1,0 +1,35 @@
+/* Navbar.css */
+
+/* Container styles */
+.navbar {
+    position: fixed;           
+    top: 50%;                  
+    left: 0;                   
+    transform: translateY(-50%);  
+    z-index: 10;               
+    padding: 20px;             
+    display: flex;             
+    flex-direction: column;    
+    align-items: center;       
+    background-color: transparent; 
+  }
+  
+  /* Link styles */
+  .navbar a {
+    font-size: 2rem;           
+    color: white;              
+    text-decoration: none;     
+    margin: 10px 0;            
+    transition: color 0.3s ease; 
+  }
+  
+  /* Hover state for links */
+  .navbar a:hover {
+    color: #df1515;            
+  }
+  
+  /* Active link state (can be applied dynamically in React) */
+  .navbar a.active {
+    color: #df1515;            
+  }
+  

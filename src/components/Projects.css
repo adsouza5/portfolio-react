@@ -1,91 +1,166 @@
 /* General Section Styling */
 .projects-section {
     display: flex;
-    background-color: #373d47;
+    background-color: #192c2c;
     color: white;
     padding: 50px;
     position: relative;
     min-height: 100vh;
-  
-    /* Added for transition effects */
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px);
     transition: opacity 1s ease, transform 1s ease, visibility 1s;
   }
-  
   .projects-section.visible {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
   }
-/* Timeline Styling */
-.timeline {
+  
+  /* Timeline Styling */
+  .timeline {
     position: relative;
     width: 200px;
-}
-
-.timeline-line {
+  }
+  .timeline-line {
     position: absolute;
     left: 150px;
     top: 0;
     height: 100%;
     width: 3px;
-    background-color: gray;
-}
-
-.timeline-entry {
+    background-color: #084C61;
+    transition: height 1s ease;
+  }
+  .timeline-entry {
     position: absolute;
     left: 0;
     display: flex;
     align-items: center;
     width: 100%;
-}
-
-.timeline-marker {
+    transition: top 1s ease;
+  }
+  .timeline-marker {
     position: absolute;
     left: 140px;
     width: 24px;
     height: 24px;
-    background-color: #7e1515;
+    background-color: #177E89;
     border-radius: 50%;
     transform: translateY(-50%);
-}
-
-.timeline-label {
+  }
+  .timeline-label {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     position: absolute;
     left: 80px;
     font-weight: bold;
     transform: translateY(-50%);
-}
-
-/* Project Content Styling */
-.projects-content {
+  }
+  
+  /* Projects Content Styling */
+  .projects-content {
     flex: 1;
     padding-left: 40px;
     display: flex;
     flex-direction: column;
-}
-
-.project-card {
+    perspective: 1000px;  /* Moved perspective to the parent */
+  }
+  
+  /* Base styling for each project card (Reverted to original size, but now with smoother transitions) */
+  .project-card {
     background-color: rgba(255, 255, 255, 0.1);
-    padding: 20px;
+    padding: 60px;
     border-radius: 8px;
     margin-bottom: 120px;
     position: relative;
-}
+    cursor: pointer;
+    transition: all 2s ease;  /* Transition all properties for a smooth scale and transform */
+    will-change: height, transform, margin-top;
+  }
+  
+  /* Flip Container */
+  .flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 3s ease;
+  }
+  .flip-inner.flipped {
+    transform: rotateX(180deg);
+  }
+  
+  /* Front & Back Faces */
+  .flip-front,
+  .flip-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .flip-front {
+    z-index: 2;
+  }
+  .flip-back {
+    transform: rotateX(180deg);
+    z-index: 1;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
 
-.project-card h3 {
+  .flip-back img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }  
+  
+  /* Text Styling */
+  .flip-front h3 {
     font-size: 24px;
     margin-bottom: 10px;
-}
-
-.project-card p {
-    font-size: 18px;
-}
-
-.h1-text {
+  }
+  .flip-front p {
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  
+  /* Hover Overlay */
+  .project-card::after {
+    content: "Flip for more";
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    position: absolute;
+    top: 50%;
+    left: 90%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 20px;
+    padding: 10px 20px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .project-card:hover::after {
+    opacity: 1;
+  }
+  
+  /* H1 Text Styling */
+  .h1-text {
     margin-bottom: 40px;
     font-size: 50px;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-}
+  }
+  
+  /* Smooth Text Transition for Card Content */
+  .project-card p,
+  .project-card h3 {
+    transition: filter 1s ease;
+  }
+  .project-card:hover p,
+  .project-card:hover h3 {
+    filter: blur(4px);
+  }
+  

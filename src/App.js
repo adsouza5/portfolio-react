@@ -8,7 +8,7 @@ import './App.css';
 function App() {
   useEffect(() => {
     // Set the background to black once when the component mounts
-    document.body.style.background = "#111111";
+    document.body.style.background = "#181718";
 
     // Intersection Observer to add 'visible' class to sections
     const sections = document.querySelectorAll('.section, .projects-section');

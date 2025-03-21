@@ -25,11 +25,11 @@
   
   /* Hover state for links */
   .navbar a:hover {
-    color: #df1515;            
+    color: #DB3A34;            
   }
   
   /* Active link state (can be applied dynamically in React) */
   .navbar a.active {
-    color: #df1515;            
+    color: #DB3A34;            
   }
   

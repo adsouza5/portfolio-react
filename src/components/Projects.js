@@ -66,11 +66,31 @@ const Projects = () => {
 
   // When the image on the flipped side loads, measure its height and update the card.
   const handleImageLoad = (index, e) => {
-    const imgHeight = e.target.clientHeight;
-    // Add extra space for the card’s padding (assumed 60px top and 60px bottom = 120px).
-    const newHeight = imgHeight + 120;
+    const img = e.target;
+    const container = projectRefs.current[index];
+    if (!container) return;
+  
+    // Ensure the image scales to the container's width while maintaining its aspect ratio.
+    img.style.width = "100%";
+    img.style.height = "auto";
+    img.style.objectFit = "contain"; // Change to 'cover' if you prefer a different fit
+  
+    // Get the container's current width.
+    const containerWidth = container.clientWidth;
+  
+    // Get the image's natural dimensions.
+    const { naturalWidth, naturalHeight } = img;
+  
+    // Calculate the scale factor based on the container's width.
+    const scaleFactor = containerWidth / naturalWidth;
+    const scaledImageHeight = naturalHeight * scaleFactor;
+  
+    // Update the card height by adding extra space for padding (60px top + 60px bottom = 120px).
+    const newHeight = scaledImageHeight + 120;
+  
     setCardHeights((prev) => ({ ...prev, [index]: newHeight }));
   };
+  
 
   return (
     <section id="projects" className="projects-section">
@@ -116,7 +136,7 @@ const Projects = () => {
                   <img
                     src={"/images/linkedIn.png"}
                     alt={project.title}
-                    // onLoad={(e) => handleImageLoad(index, e)}
+                    onLoad={(e) => handleImageLoad(index, e)}
                   />
                 </div>
               </div>

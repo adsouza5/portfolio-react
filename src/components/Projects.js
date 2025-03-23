@@ -114,7 +114,7 @@ const Projects = () => {
                 <div className="flip-back">
                   {/* Add an image to the flipped side */}
                   <img
-                    src="/images/etherea1.png"
+                    src={"/images/etherea1.png"}
                     alt={project.title}
                     onLoad={(e) => handleImageLoad(index, e)}
                   />

@@ -1,6 +1,7 @@
 import React, { useRef, useLayoutEffect, useEffect, useState } from "react";
 import projects from "./ProjectsData";
 import "./Projects.css";
+import image from "./images/etherea1.png"
 
 const Projects = () => {
   const projectRefs = useRef([]);
@@ -114,7 +115,7 @@ const Projects = () => {
                 <div className="flip-back">
                   {/* Add an image to the flipped side */}
                   <img
-                    src={"/images/etherea1.png"}
+                    src={image}
                     alt={project.title}
                     onLoad={(e) => handleImageLoad(index, e)}
                   />

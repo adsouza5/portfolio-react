@@ -116,7 +116,7 @@ const Projects = () => {
                   <img
                     src={"/images/linkedIn.png"}
                     alt={project.title}
-                    onLoad={(e) => handleImageLoad(index, e)}
+                    // onLoad={(e) => handleImageLoad(index, e)}
                   />
                 </div>
               </div>

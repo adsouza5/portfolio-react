@@ -1,8 +1,5 @@
-/* Import Google Fonts and Font Awesome */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Source+Code+Pro:wght@400;600&display=swap');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
 
-/* Custom fonts from your original styles.css */
 @font-face {
   font-family: 'notes';
   src: url('/public/styles/notes.ttf') format('truetype');
@@ -16,28 +13,73 @@
   font-style: normal;
 }
 
-/* Global body styles */
+:root {
+  --bg: #181718;
+  --bg-projects: #0c1818;
+  --red: #DB3A34;
+  --teal: #177E89;
+  --teal-dark: #084C61;
+  --gold: #FFD700;
+  --text: #E8E8E8;
+  --text-muted: rgba(232, 232, 232, 0.5);
+  --card-bg: rgba(23, 126, 137, 0.06);
+  --card-border: rgba(23, 126, 137, 0.18);
+  --glow-teal: 0 0 8px rgba(23, 126, 137, 0.85), 0 0 22px rgba(23, 126, 137, 0.35);
+  --glow-red: 0 0 8px rgba(219, 58, 52, 0.85), 0 0 22px rgba(219, 58, 52, 0.35);
+  --glow-gold: 0 0 8px rgba(255, 215, 0, 0.85), 0 0 22px rgba(255, 215, 0, 0.35);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
-  color: white;
+  margin: 0;
+  color: var(--text);
   font-family: "Roboto", sans-serif;
   scroll-behavior: smooth;
-  background: linear-gradient(to right, #000000, #ff0000);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(23, 126, 137, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 126, 137, 0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
   min-height: 100vh;
-  transition: background 0.5s ease;
 }
 
-/* Navbar styles */
-.navbar a {
-  margin-left: 20px;
-  color: white;
-  font-size: 20px;
-  transition: color 0.3s;
-}
-.navbar a:hover {
-  color: #DB3A34;
+.App {
+  position: relative;
 }
 
-/* Section styles with fade-in effect */
+/* Ambient neon bleed — Tokyo atmosphere */
+.App::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 10% 45%, rgba(219, 58, 52, 0.07) 0%, transparent 52%),
+    radial-gradient(ellipse at 88% 18%, rgba(23, 126, 137, 0.06) 0%, transparent 52%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scanline overlay */
+.App::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.04) 3px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+
 .section {
   display: flex;
   flex-direction: column;
@@ -49,6 +91,8 @@ body {
   visibility: hidden;
   transform: translateY(20px);
   transition: opacity 1s ease, transform 1s ease, visibility 1s;
+  position: relative;
+  z-index: 1;
 }
 .section.visible {
   opacity: 1;
@@ -56,37 +100,13 @@ body {
   transform: translateY(0);
 }
 
-/* Image container and hover effects */
-.image-container {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
 .portfolio-img {
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-  z-index: 1;
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+.portfolio-img:hover {
+  box-shadow: var(--glow-teal);
 }
 
-.linkedin-img,
-.github-img {
-  position: absolute;
-  top: 40%;
-  left: 110%;
-  transform: translateY(-50%) scale(0);
-  opacity: 0;
-  transition: transform 0.5s ease, opacity 0.5s ease;
-  width: 50px;
-  height: auto;
-  border-radius: 10px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-}
-.image-container:hover .linkedin-img,
-.image-container:hover .github-img {
-  opacity: 1;
-  transform: translateY(-50%) scale(1);
-}
-
-/* Carousel container */
 .carousel-container {
   width: 100%;
   max-width: 1200px;

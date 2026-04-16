@@ -1,128 +1,106 @@
-import React, { useRef, useLayoutEffect, useEffect, useState } from "react";
-import projects from "./ProjectsData";
-import "./Projects.css";
+import React, { useRef, useEffect, useState } from 'react';
+import entries from './TimelineData';
+import Skills from './Skills';
+import './Projects.css';
+
+const TYPE_LABELS = {
+  project:   'Project',
+  work:      'Work',
+  education: 'Education',
+};
+
 
 const Projects = () => {
-  const projectRefs = useRef([]);
-  const [markerPositions, setMarkerPositions] = useState([]);
-  const [flippedCards, setFlippedCards] = useState({});
-  const [cardHeights, setCardHeights] = useState({});
-  const [originalHeights, setOriginalHeights] = useState({});
-  const prevPositionsRef = useRef([]);
+  const cardRefs   = useRef([]);
+  const [markerTops, setMarkerTops] = useState([]);
 
-  // On initial mount, measure each card’s original height.
-  useLayoutEffect(() => {
-    const heights = {};
-    projectRefs.current.forEach((card, index) => {
-      if (card) {
-        heights[index] = card.clientHeight;
-      }
-    });
-    setOriginalHeights(heights);
-    setCardHeights(heights);
+  useEffect(() => {
+    const measure = () =>
+      setMarkerTops(cardRefs.current.map((el) => el?.offsetTop ?? 0));
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
   }, []);
 
-  const handleCardClick = (index) => {
-    // Capture current vertical positions before state change.
-    prevPositionsRef.current = projectRefs.current.map(
-      (el) => (el ? el.getBoundingClientRect().top : 0)
-    );
-    setFlippedCards((prev) => {
-      const newFlipped = !prev[index];
-      // When unflipping, revert to the original measured height.
-      if (!newFlipped) {
-        setCardHeights((prevHeights) => ({
-          ...prevHeights,
-          [index]: originalHeights[index],
-        }));
-      }
-      return { ...prev, [index]: newFlipped };
-    });
+  const openLink = (link) => {
+    if (link) window.open(link, '_blank', 'noopener,noreferrer');
   };
-
-  // Animate repositioning after a flip using FLIP.
-  useLayoutEffect(() => {
-    projectRefs.current.forEach((el, index) => {
-      if (!el) return;
-      const prev = prevPositionsRef.current[index] || 0;
-      const newPos = el.getBoundingClientRect().top;
-      const delta = prev - newPos;
-      if (delta !== 0) {
-        el.style.transition = "transform 0s";
-        el.style.transform = `translateY(${delta}px)`;
-        requestAnimationFrame(() => {
-          el.style.transition = "transform 1s ease";
-          el.style.transform = "";
-        });
-      }
-    });
-  }, [flippedCards, cardHeights]);
-
-  // Update timeline marker positions.
-  useEffect(() => {
-    const positions = projectRefs.current.map((ref) => ref?.offsetTop || 0);
-    setMarkerPositions(positions);
-  }, [flippedCards, cardHeights]);
-
-  // When the image on the flipped side loads, measure its height and update the card.
-  // const handleImageLoad = (index, e) => {
-  //   const imgHeight = e.target.clientHeight;
-  //   // Add extra space for the card’s padding (assumed 60px top and 60px bottom = 120px).
-  //   const newHeight = imgHeight + 120;
-  //   setCardHeights((prev) => ({ ...prev, [index]: newHeight }));
-  // };
 
   return (
     <section id="projects" className="projects-section">
-      {/* Timeline (Left Side) */}
-      <div className="timeline">
-        <div className="timeline-line"></div>
-        {projects.map((project, index) => (
+
+      {/* ── Timeline spine ── */}
+      <div className="timeline" aria-hidden="true">
+        <div className="timeline-line" />
+        {entries.map((entry, i) => (
           <div
-            key={index}
-            className="timeline-entry"
-            style={{ top: `${(markerPositions[index] || 0) + 20}px` }}
+            key={i}
+            className={`timeline-entry timeline-entry--${entry.type}`}
+            style={{ top: `${(markerTops[i] ?? 0) + 28}px` }}
           >
-            <div className="timeline-marker"></div>
-            <div className="timeline-label">{project.timestamp}</div>
+            <div className="timeline-marker" />
+            <span className="timeline-label">{entry.date}</span>
           </div>
         ))}
       </div>
 
-      {/* Projects Content */}
+      {/* ── Cards ── */}
       <div className="projects-content">
-        <h1 className="h1-text">Projects Timeline</h1>
-        {projects.map((project, index) => {
-          const isFlipped = !!flippedCards[index];
-          const cardStyle = {
-            height: cardHeights[index] ? `${cardHeights[index]}px` : "auto",
-          };
+        <h1 className="projects-title">Timeline</h1>
+        <Skills />
 
-          return (
-            <div
-              key={index}
-              className="project-card"
-              ref={(el) => (projectRefs.current[index] = el)}
-              style={cardStyle}
-              onClick={() => handleCardClick(index)}
-            >
-              <div className={`flip-inner ${isFlipped ? "flipped" : ""}`}>
-                <div className="flip-front">
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                </div>
-                <div className="flip-back">
-                  {/* Add an image to the flipped side */}
-                  <img
-                    src={project.images}
-                    alt={project.title}
-                    // onLoad={(e) => handleImageLoad(index, e)}
-                  />
-                </div>
+        {entries.map((entry, i) => (
+          <div
+            key={i}
+            className={`project-card project-card--${entry.type}${entry.link ? ' clickable' : ''}`}
+            ref={(el) => (cardRefs.current[i] = el)}
+            onClick={() => openLink(entry.link)}
+            role={entry.link ? 'link' : undefined}
+            tabIndex={entry.link ? 0 : undefined}
+            onKeyDown={(e) => e.key === 'Enter' && openLink(entry.link)}
+          >
+            {/* Row 1 — type · status · date · location */}
+            <div className="card-meta">
+              <div className="card-meta-left">
+                <span className={`card-type card-type--${entry.type}`}>
+                  {TYPE_LABELS[entry.type]}
+                </span>
+                {entry.status && (
+                  <span className="card-status">{entry.status}</span>
+                )}
               </div>
+              {entry.location && (
+                <div className="card-meta-right">
+                  <span className="card-location">{entry.location}</span>
+                </div>
+              )}
             </div>
-          );
-        })}
+
+            {/* Row 2 — title + org */}
+            <div className="card-header">
+              <h3 className="card-title">{entry.title}</h3>
+              {entry.org && (
+                <span className="card-org">@ {entry.org}</span>
+              )}
+            </div>
+
+            <p className="card-desc">{entry.description}</p>
+
+            {entry.tags?.length > 0 && (
+              <div className="card-tags">
+                {entry.tags.map((tag) => (
+                  <span key={tag} className={`card-tag card-tag--${entry.type}`}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {entry.link && (
+              <span className="card-cta">View →</span>
+            )}
+          </div>
+        ))}
       </div>
     </section>
   );

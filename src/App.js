@@ -1,40 +1,42 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
-import Resume from './components/Resume';
 import Projects from './components/Projects';
+import Footer from './components/Footer';
+import Cursor from './components/Cursor';
+import Personal, { PersonalTrigger } from './components/Personal';
 import './App.css';
 
 function App() {
+  const [personalOpen, setPersonalOpen] = useState(false);
+
   useEffect(() => {
-    // Set the background to black once when the component mounts
-    document.body.style.background = "#181718";
-
-    // Intersection Observer to add 'visible' class to sections
     const sections = document.querySelectorAll('.section, .projects-section');
-    const observerOptions = { root: null, threshold: 0.2 };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        } else {
-          entry.target.classList.remove('visible');
-        }
-      });
-    }, observerOptions);
-    sections.forEach((section) => observer.observe(section));
-
-    return () => {
-      sections.forEach((section) => observer.unobserve(section));
-    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          } else {
+            entry.target.classList.remove('visible');
+          }
+        });
+      },
+      { root: null, threshold: 0.12 }
+    );
+    sections.forEach((s) => observer.observe(s));
+    return () => sections.forEach((s) => observer.unobserve(s));
   }, []);
 
   return (
     <div className="App">
+      <Cursor />
       <Navbar />
       <Home />
       <Projects />
-      <Resume />
+      <PersonalTrigger onOpen={() => setPersonalOpen(true)} />
+      <Footer />
+      <Personal isOpen={personalOpen} onClose={() => setPersonalOpen(false)} />
     </div>
   );
 }

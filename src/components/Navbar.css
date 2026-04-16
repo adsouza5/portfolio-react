@@ -1,35 +1,100 @@
-/* Navbar.css */
-
-/* Container styles */
 .navbar {
-    position: fixed;           
-    top: 50%;                  
-    left: 0;                   
-    transform: translateY(-50%);  
-    z-index: 10;               
-    padding: 20px;             
-    display: flex;             
-    flex-direction: column;    
-    align-items: center;       
-    background-color: transparent; 
-  }
-  
-  /* Link styles */
-  .navbar a {
-    font-size: 2rem;           
-    color: white;              
-    text-decoration: none;     
-    margin: 10px 0;            
-    transition: color 0.3s ease; 
-  }
-  
-  /* Hover state for links */
-  .navbar a:hover {
-    color: #DB3A34;            
-  }
-  
-  /* Active link state (can be applied dynamically in React) */
-  .navbar a.active {
-    color: #DB3A34;            
-  }
-  
+  position: fixed;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+/* ── Each nav item: label + dot ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 0;
+  text-decoration: none;
+}
+
+/* Label — hidden at rest, slides in on hover / active */
+.nav-label {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(232, 232, 232, 0.28);
+  white-space: nowrap;
+  transform: translateX(0);
+  opacity: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease,
+              color 0.25s ease, text-shadow 0.25s ease;
+}
+
+/* Dot */
+.nav-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(232, 232, 232, 0.18);
+  flex-shrink: 0;
+  transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+/* ── Hover state ── */
+.nav-item:hover .nav-label {
+  opacity: 1;
+  transform: translateX(0);
+  color: rgba(232, 232, 232, 0.65);
+}
+.nav-item:hover .nav-dot {
+  background: #DB3A34;
+  box-shadow: 0 0 8px rgba(219, 58, 52, 0.85), 0 0 18px rgba(219, 58, 52, 0.3);
+  transform: scale(1.35);
+}
+
+/* ── Active state ── */
+.nav-item.active .nav-label {
+  opacity: 1;
+  transform: translateX(0);
+  color: rgba(219, 58, 52, 0.7);
+  text-shadow: 0 0 8px rgba(219, 58, 52, 0.4);
+}
+.nav-item.active .nav-dot {
+  background: #DB3A34;
+  box-shadow: 0 0 8px rgba(219, 58, 52, 0.85), 0 0 18px rgba(219, 58, 52, 0.3);
+  animation: dotPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(219, 58, 52, 0.7),  0 0 14px rgba(219, 58, 52, 0.25); }
+  50%       { box-shadow: 0 0 12px rgba(219, 58, 52, 1),   0 0 28px rgba(219, 58, 52, 0.45); }
+}
+
+/* ── Divider between nav + external ── */
+.nav-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(23, 126, 137, 0.25);
+  margin: 6px 3px;
+  align-self: center;
+}
+
+/* ── External links (LinkedIn · GitHub · Resume) ── */
+.nav-item--external .nav-dot {
+  width: 5px;
+  height: 5px;
+  background: rgba(23, 126, 137, 0.25);
+}
+.nav-item--external:hover .nav-dot {
+  background: #177E89;
+  box-shadow: 0 0 8px rgba(23, 126, 137, 0.85), 0 0 18px rgba(23, 126, 137, 0.3);
+  transform: scale(1.4);
+}
+.nav-item--external:hover .nav-label {
+  color: rgba(23, 126, 137, 0.75);
+  text-shadow: 0 0 8px rgba(23, 126, 137, 0.4);
+}

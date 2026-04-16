@@ -1,150 +1,124 @@
-// Home.js
-import React from "react";
-import "./Home.css";
+import React, { useRef, useEffect } from 'react';
+import './Home.css';
 
-const addKeyframesRule = (rule) => {
-  // Ensure there is a stylesheet to add our rule to.
-  let styleSheet;
-  if (document.styleSheets.length > 0) {
-    styleSheet = document.styleSheets[0];
-  } else {
-    const styleEl = document.createElement("style");
-    document.head.appendChild(styleEl);
-    styleSheet = styleEl.sheet;
-  }
-  try {
-    styleSheet.insertRule(rule, styleSheet.cssRules.length);
-  } catch (e) {
-    console.error("Error inserting keyframes rule:", e);
-  }
-};
+const MatrixRain = () => {
+  const canvasRef = useRef(null);
 
-const Fireflies = () => {
-  const numFireflies = 15; // Adjust the number as desired
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
 
-  // Generate firefly data with random properties.
-  const fireflyData = Array.from({ length: numFireflies }).map((_, index) => {
-    // Random starting position (percentage values ensure they’re within the container)
-    const top = Math.random() * 100;
-    const left = Math.random() * 100;
+    let w, h, columns, rafId;
 
-    // Create random offsets for intermediate keyframe stops (in pixels)
-    const randomOffset = () => `${Math.floor(Math.random() * 100 - 50)}px`; // Range: -50px to 50px
-    const offset1x = randomOffset();
-    const offset1y = randomOffset();
-    const offset2x = randomOffset();
-    const offset2y = randomOffset();
+    const SPACING   = 90;
+    const DOT_R     = 2.2;
+    const GAP       = 20;
+    const TRAIL_LEN = 7;
+    const BASE_SPD  = 0.55;
 
-    // Create a unique animation name for the wander motion
-    const animationName = `fly_${index}_${Date.now()}`;
+    const init = () => {
+      w = canvas.offsetWidth;
+      h = canvas.offsetHeight;
+      canvas.width  = w;
+      canvas.height = h;
 
-    // Generate keyframes that make the firefly wander from its starting position
-    const keyframes = `
-      @keyframes ${animationName} {
-        0% { transform: translate(0, 0); }
-        33% { transform: translate(${offset1x}, ${offset1y}); }
-        66% { transform: translate(${offset2x}, ${offset2y}); }
-        100% { transform: translate(0, 0); }
-      }
-    `;
-    addKeyframesRule(keyframes);
-
-    // Randomize wander animation duration (e.g., between 5 and 10 seconds) and delay (0 to 4 seconds)
-    const duration = 5 + Math.random() * 7;
-    const delay = Math.random() * 4;
-
-    // Randomize blink delay
-    const blinkDelay = Math.random() * 2; // Up to 2 seconds delay
-
-    // Firefly color: keep the same values as before
-    const color = Math.random() < 0.5 ? "#FFD700" : "#FFE560";
-
-    return {
-      animationName,
-      top: `${top}%`,
-      left: `${left}%`,
-      duration,
-      delay,
-      blinkDelay,
-      color,
+      const count = Math.max(1, Math.floor(w / SPACING));
+      columns = Array.from({ length: count }, (_, i) => ({
+        x:     SPACING * 0.5 + i * SPACING + (Math.random() - 0.5) * 18,
+        y:     -Math.random() * h * 1.2,
+        speed: BASE_SPD + Math.random() * 0.55,
+      }));
     };
-  });
 
-  return (
-    <>
-      {fireflyData.map((firefly, index) => (
-        <div 
-          key={index}
-          className="firefly"
-          style={{
-            top: firefly.top,
-            left: firefly.left,
-            backgroundColor: firefly.color,
-            /* Combine three animations:
-               1. fadeIn: One-time fade in over 1s.
-               2. blink: 2s continuous blink with a random delay.
-               3. wander: Random movement animation.
-            */
-            animation: `
-              fadeIn 1s ease forwards, 
-              blink 6s ease-in-out ${firefly.blinkDelay}s infinite, 
-              ${firefly.animationName} ${firefly.duration}s ${firefly.delay}s ease-in-out infinite
-            `
-          }}
-        />
-      ))}
-    </>
-  );
+    const tick = () => {
+      ctx.clearRect(0, 0, w, h);
+
+      columns.forEach((col) => {
+        col.y += col.speed;
+
+        for (let t = 0; t < TRAIL_LEN; t++) {
+          const dotY = col.y - t * GAP;
+          if (dotY < 0 || dotY > h) continue;
+
+          const alpha = t === 0 ? 0.85 : 0.55 * (1 - t / TRAIL_LEN);
+          ctx.beginPath();
+          ctx.arc(col.x, dotY, DOT_R, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(23, 126, 137, ${alpha})`;
+          ctx.fill();
+        }
+
+        if (col.y - TRAIL_LEN * GAP > h) {
+          col.y     = -Math.random() * h * 0.6;
+          col.speed = BASE_SPD + Math.random() * 0.55;
+        }
+      });
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    init();
+    rafId = requestAnimationFrame(tick);
+
+    window.addEventListener('resize', init);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', init);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="matrix-canvas" />;
 };
 
-const Home = () => {
-  return (
-    <section
-      id="home"
-      className="section visible flex flex-col items-center justify-start pt-10 text-white"
-    >
-      <h3 className="h3-text">
-        <i>
-          Code is the canvas, curiosity the brush — innovation is what you create when you dare to wonder.
-        </i>
-      </h3>
-      <div className="image-container relative">
-        <img
-          src="/images/portfolio.jpg"
-          alt="Portfolio Photo"
-          className="portfolio-img"
-        />
-        <div className="social-icons">
-          <a
-            href="https://linkedin.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="/images/linkedIn.png"
-              alt="LinkedIn"
-              className="social-icon"
-            />
-          </a>
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="/images/github.png"
-              alt="GitHub"
-              className="social-icon"
-            />
-          </a>
-        </div>
+const Home = () => (
+  <section id="home" className="section visible">
+    <MatrixRain />
+
+    <div className="hero-content">
+      <p className="hero-eyebrow">
+        Open to full-time opportunities&nbsp;<span>▋</span>
+      </p>
+
+      <a
+        href="https://www.linkedin.com/in/adam-dsouza-/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hero-name"
+      >
+        Adam Dsouza
+      </a>
+
+      <p className="hero-role">Software Engineer</p>
+
+      <p className="hero-bio">
+        Software engineer based in the NYC area, currently at Synechron.
+        I'm drawn to large-scale, industrial-grade systems — the kind built
+        to handle real load, real failure, and real complexity. Deeply
+        interested in AI/ML and cloud architecture, and how they come
+        together to power the next generation of software.
+      </p>
+
+      <div className="hero-ctas">
+        <a href="#projects" className="cta-primary">
+          Explore Timeline ↓
+        </a>
+        <a
+          href="/images/resume.jpg"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cta-secondary"
+        >
+          Resume ↗
+        </a>
       </div>
-      <h1 className="h1-text">Adam Dsouza</h1>
-      <h2 className="h2-text">Learn. Create. Innovate.</h2>
-      {/* Render the fireflies */}
-      <Fireflies />
-    </section>
-  );
-};
+
+      <p className="hero-quote">
+        <i>
+          Code is the canvas, curiosity the brush —<br />
+          innovation is what you create when you dare to wonder.
+        </i>
+      </p>
+    </div>
+  </section>
+);
 
 export default Home;

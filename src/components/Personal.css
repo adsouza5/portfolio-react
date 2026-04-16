@@ -1,0 +1,340 @@
+/* ─────────────────────────────────────────
+   PERSONAL OVERLAY — Warm Editorial
+   Fonts: Playfair Display · Lora · Courier New
+   ───────────────────────────────────────── */
+
+:root {
+  --warm-bg:      #0e0c0a;
+  --warm-amber:   #C9963A;
+  --warm-amber-d: #a07828;
+  --warm-text:    #EDE8E0;
+  --warm-muted:   rgba(237, 232, 224, 0.48);
+  --warm-faint:   rgba(237, 232, 224, 0.18);
+  --warm-border:  rgba(201, 150, 58, 0.2);
+  --warm-glow:    0 0 20px rgba(201, 150, 58, 0.25);
+}
+
+/* ── Overlay panel ── */
+.personal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background-color: var(--warm-bg);
+  background-image: radial-gradient(rgba(201, 150, 58, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.45s ease;
+  pointer-events: none;
+}
+.personal-overlay.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Ambient warm glow */
+.personal-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 25% 20%, rgba(201, 150, 58, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 75%, rgba(201, 150, 58, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Close bar ── */
+.personal-close {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: flex-end;
+  padding: 24px 56px 0;
+  background: linear-gradient(to bottom, var(--warm-bg) 55%, transparent);
+}
+
+.personal-close-btn {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--warm-faint);
+  background: none;
+  border: 1px solid rgba(237, 232, 224, 0.1);
+  border-radius: 30px;
+  padding: 8px 22px;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.personal-close-btn:hover {
+  color: var(--warm-amber);
+  border-color: rgba(201, 150, 58, 0.45);
+  box-shadow: var(--warm-glow);
+}
+
+/* ── Content ── */
+.personal-content {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 80px 140px;
+}
+
+/* ── Header ── */
+.personal-header {
+  margin-bottom: 80px;
+  padding-bottom: 56px;
+  border-bottom: 1px solid var(--warm-border);
+}
+
+.personal-eyebrow {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--warm-amber);
+  opacity: 0.65;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.personal-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(42px, 6vw, 72px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.5px;
+  color: var(--warm-text);
+  margin: 0 0 24px;
+}
+
+.personal-intro {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.9;
+  color: var(--warm-muted);
+  max-width: 540px;
+}
+
+/* ── Section label ── */
+.personal-section {
+  margin-bottom: 80px;
+}
+
+.personal-section-label {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--warm-amber);
+  opacity: 0.5;
+  display: block;
+  margin-bottom: 28px;
+}
+
+/* ── Hobbies grid ── */
+.hobbies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(188px, 1fr));
+  gap: 16px;
+}
+
+.hobby-card {
+  background: rgba(201, 150, 58, 0.05);
+  border: 1px solid var(--warm-border);
+  border-radius: 12px;
+  padding: 24px 22px 20px;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease,
+              transform 0.25s ease;
+}
+.hobby-card:hover {
+  background: rgba(201, 150, 58, 0.1);
+  border-color: rgba(201, 150, 58, 0.4);
+  box-shadow: 0 4px 24px rgba(201, 150, 58, 0.1);
+  transform: translateY(-3px);
+}
+
+.hobby-icon {
+  font-size: 26px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.hobby-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--warm-text);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.hobby-desc {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--warm-muted);
+  line-height: 1.65;
+}
+
+/* ── Poetry ── */
+.poem-block {
+  text-align: center;
+  margin-bottom: 56px;
+  padding: 40px 0;
+  border-top: 1px solid var(--warm-border);
+}
+.poem-block:last-child {
+  border-bottom: 1px solid var(--warm-border);
+}
+
+.poem-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--warm-amber);
+  opacity: 0.7;
+  margin: 0 0 28px;
+  text-transform: uppercase;
+}
+
+.poem-body {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 16px;
+  line-height: 2.2;
+  color: rgba(237, 232, 224, 0.62);
+  white-space: pre-line;
+  margin: 0 auto;
+  max-width: 480px;
+  font-style: italic;
+}
+
+/* ── Photo grid ── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.photo-placeholder {
+  aspect-ratio: 4 / 5;
+  background: rgba(201, 150, 58, 0.04);
+  border: 1px solid var(--warm-border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(237, 232, 224, 0.15);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Alternating scrapbook tilt */
+.photo-placeholder:nth-child(odd)  { transform: rotate(-1.2deg); }
+.photo-placeholder:nth-child(even) { transform: rotate(0.8deg); }
+
+.photo-placeholder:hover {
+  transform: rotate(0) scale(1.03) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.photo-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Trigger section (on main page) ── */
+.personal-trigger-section {
+  position: relative;
+  z-index: 1;
+  padding: 60px 80px;
+  display: flex;
+  justify-content: center;
+  background-color: #0c1818;
+}
+
+.personal-trigger-card {
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  border: 1px solid rgba(201, 150, 58, 0.18);
+  border-radius: 12px;
+  padding: 44px 48px 40px;
+  background: rgba(201, 150, 58, 0.03);
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease,
+              background 0.3s ease, transform 0.3s ease;
+}
+.personal-trigger-card:hover {
+  border-color: rgba(201, 150, 58, 0.38);
+  box-shadow: 0 0 40px rgba(201, 150, 58, 0.08);
+  background: rgba(201, 150, 58, 0.06);
+  transform: translateY(-3px);
+}
+
+.trigger-eyebrow {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(201, 150, 58, 0.5);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.trigger-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #EDE8E0;
+  margin: 0 0 14px;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+.personal-trigger-card:hover .trigger-title {
+  color: #C9963A;
+  text-shadow: 0 0 20px rgba(201, 150, 58, 0.3);
+}
+
+.trigger-sub {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.75;
+  color: rgba(237, 232, 224, 0.38);
+  margin: 0 0 28px;
+}
+
+.trigger-btn {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(201, 150, 58, 0.6);
+  border: 1px solid rgba(201, 150, 58, 0.22);
+  background: rgba(201, 150, 58, 0.05);
+  border-radius: 30px;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.personal-trigger-card:hover .trigger-btn {
+  color: #C9963A;
+  border-color: rgba(201, 150, 58, 0.5);
+  box-shadow: 0 0 16px rgba(201, 150, 58, 0.2);
+}

@@ -1,0 +1,42 @@
+.skills-strip {
+  margin-bottom: 48px;
+}
+
+.skills-label {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(23, 126, 137, 0.55);
+  display: block;
+  margin-bottom: 14px;
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(232, 232, 232, 0.6);
+  border: 1px solid rgba(23, 126, 137, 0.25);
+  border-radius: 3px;
+  padding: 5px 12px;
+  background: rgba(23, 126, 137, 0.07);
+  cursor: default;
+  transition: color 0.2s ease, border-color 0.2s ease,
+              background 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.skill-tag:hover {
+  color: #177E89;
+  border-color: rgba(23, 126, 137, 0.6);
+  background: rgba(23, 126, 137, 0.14);
+  box-shadow: 0 0 10px rgba(23, 126, 137, 0.2);
+}

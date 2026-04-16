@@ -51,11 +51,12 @@ export const POEMS = [
 // 'https://adam-dsouza-portfolio.s3.us-east-1.amazonaws.com/personal/photo1.jpg'
 //
 // Add or remove entries freely — the grid adjusts automatically.
+const S3 = 'https://adam-dsouza-portfolio-891377045299-us-east-1-an.s3.us-east-1.amazonaws.com';
+
 export const PHOTOS = [
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
+  `${S3}/photo2.jpg`,
+  `${S3}/photo3.jpg`,
+  `${S3}/photo4.jpg`,
+  `${S3}/photo5.jpg`,
+  `${S3}/photo7.jpg`,
 ];

@@ -20,8 +20,16 @@
   inset: 0;
   z-index: 1001;
   background-color: var(--warm-bg);
-  background-image: radial-gradient(rgba(201, 150, 58, 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-image:
+    radial-gradient(rgba(201, 150, 58, 0.06) 1px, transparent 1px),
+    conic-gradient(from 200deg at 10% 5%, rgba(201, 150, 58, 0.07) 0deg, transparent 52deg),
+    linear-gradient(125deg, transparent 22%, rgba(201, 150, 58, 0.04) 42%, rgba(201, 150, 58, 0.03) 56%, transparent 74%),
+    radial-gradient(ellipse at 25% 20%, rgba(201, 150, 58, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(201, 150, 58, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 50%, rgba(201, 150, 58, 0.07) 0%, transparent 48%),
+    radial-gradient(ellipse at 25% 80%, rgba(201, 150, 58, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 80%, rgba(201, 150, 58, 0.08) 0%, transparent 55%);
+  background-size: 28px 28px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   overflow-y: auto;
   transform: translateY(100%);
   opacity: 0;
@@ -35,17 +43,6 @@
   pointer-events: all;
 }
 
-/* Ambient warm glow */
-.personal-overlay::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 25% 20%, rgba(201, 150, 58, 0.09) 0%, transparent 55%),
-    radial-gradient(ellipse at 75% 75%, rgba(201, 150, 58, 0.05) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
 
 /* ── Close bar ── */
 .personal-close {
@@ -141,136 +138,224 @@
 /* ── Hobbies grid ── */
 .hobbies-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(188px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 32px;
 }
 
 .hobby-card {
-  background: rgba(201, 150, 58, 0.05);
-  border: 1px solid var(--warm-border);
-  border-radius: 12px;
-  padding: 24px 22px 20px;
-  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease,
-              transform 0.25s ease;
+  padding: 20px 0 20px 20px;
+  border-left: 2px solid rgba(201, 150, 58, 0.22);
+  transition: border-color 0.35s ease;
 }
 .hobby-card:hover {
-  background: rgba(201, 150, 58, 0.1);
-  border-color: rgba(201, 150, 58, 0.4);
-  box-shadow: 0 4px 24px rgba(201, 150, 58, 0.1);
-  transform: translateY(-3px);
-}
-
-.hobby-icon {
-  font-size: 26px;
-  display: block;
-  margin-bottom: 12px;
+  border-color: rgba(201, 150, 58, 0.6);
 }
 
 .hobby-name {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 400;
+  font-style: italic;
   color: var(--warm-text);
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .hobby-desc {
   font-family: 'Lora', Georgia, serif;
-  font-size: 12px;
+  font-size: 12.5px;
   font-style: italic;
   color: var(--warm-muted);
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 /* ── Poetry ── */
+.personal-section--poems .personal-section-label {
+  margin-bottom: 48px;
+}
+
+.poems-nav {
+  position: relative;
+  padding: 0 52px;
+}
+
+.poem-carousel {
+  transition: opacity 0.32s ease;
+}
+
+.poems-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(calc(-50% - 40px));
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 26px;
+  color: var(--warm-amber);
+  opacity: 0.28;
+  transition: opacity 0.3s ease;
+  line-height: 1;
+  padding: 0;
+}
+.poems-arrow:hover {
+  opacity: 0.7;
+}
+.poems-arrow--prev { left: 0; }
+.poems-arrow--next { right: 0; }
+
+/* Short poems with no toggle: center the arrows exactly */
+.poems-nav--centered .poems-arrow {
+  transform: translateY(-50%);
+}
+
 .poem-block {
   text-align: center;
   margin-bottom: 56px;
-  padding: 40px 0;
-  border-top: 1px solid var(--warm-border);
+  padding: 0;
 }
 .poem-block:last-child {
-  border-bottom: 1px solid var(--warm-border);
+  padding-bottom: 0;
 }
 
 .poem-title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 16px;
+  font-size: 28px;
   font-style: italic;
   font-weight: 400;
-  letter-spacing: 2px;
   color: var(--warm-amber);
-  opacity: 0.7;
-  margin: 0 0 28px;
-  text-transform: uppercase;
+  opacity: 0.82;
+  margin: 0 0 36px;
 }
 
 .poem-body {
   font-family: 'Lora', Georgia, serif;
   font-size: 16px;
   line-height: 2.2;
-  color: rgba(237, 232, 224, 0.62);
+  color: rgba(237, 232, 224, 0.60);
   white-space: pre-line;
   margin: 0 auto;
-  max-width: 480px;
+  max-width: 500px;
   font-style: italic;
 }
 
-/* ── Hex beehive grid — pointy-top tessellation ── */
-/*
-   Pointy-top regular hexagon: W=155px, H=W*(2/√3)≈179px
-   Same-row gap = 0  (hexes share their vertical flat edge)
-   Vertical overlap = H/4 = 45px  (margin-bottom: -45px)
-   Row offset = W/2 = 78px  (centres offset rows in the gaps)
-   This produces mathematically exact edge-to-edge tessellation.
-*/
-.hex-grid {
+/* ── Poem read-more ── */
+/* ── Poem read-more ── */
+.poem-body-wrap {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 1%, black 99%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 1%, black 99%, transparent);
+}
+
+.poem-body-wrap--clipped {
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 1%, black 99%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 1%, black 99%, transparent);
+  transition: height 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.08s;
+}
+.poem-block--expanded .poem-body-wrap--clipped {
+  transition: height 1.85s cubic-bezier(0.25, 1, 0.35, 1);
+}
+
+.poem-toggle {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  gap: 18px;
+  margin: 48px auto 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 0;
+}
+.poem-toggle-rule {
+  display: block;
+  width: 44px;
+  height: 1px;
+  background: var(--warm-amber);
+  opacity: 0.28;
+  transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.35s ease;
+}
+.poem-toggle:hover .poem-toggle-rule,
+.poem-toggle--open .poem-toggle-rule {
+  width: 68px;
+  opacity: 0.52;
+}
+.poem-toggle-label {
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: 3.8px;
+  text-transform: uppercase;
+  color: var(--warm-amber);
+  opacity: 0.42;
+  white-space: nowrap;
+  transition: opacity 0.35s ease, letter-spacing 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.poem-toggle:hover .poem-toggle-label,
+.poem-toggle--open .poem-toggle-label {
+  opacity: 0.72;
+  letter-spacing: 5px;
 }
 
-.hex-row {
-  display: flex;
-  gap: 0;
-  margin-bottom: -45px;
+/* ── Apple Watch–style radial hex beehive ── */
+/*
+   Ring 0 (1 hex) + Ring 1 (6 hexes) = 7 core photos at full scale.
+   Every additional photo beyond index 6 lands on Ring 2 (12 slots),
+   Ring 3 (18 slots), etc., continuing the beehive outward.
+   Scale is driven by JS — distance from viewport centre → scale(0.62–1.0).
+   Deadzone of 180px keeps the core cluster always at 1.0 when centred.
+*/
+.hex-viewport {
+  width: 100%;
+  margin-top: 48px;
+  height: 520px;
+  overflow: visible;
+  cursor: grab;
+  background: radial-gradient(ellipse 88% 82% at 50% 50%, transparent 42%, rgba(0,0,0,0.26) 80%);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-mask-image:
+    linear-gradient(to right,  transparent, black 13%, black 87%, transparent),
+    linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-composite: destination-in;
+  mask-image:
+    linear-gradient(to right,  transparent, black 13%, black 87%, transparent),
+    linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  mask-composite: intersect;
 }
-.hex-row:last-child {
-  margin-bottom: 48px; /* restore space below last row */
+.hex-viewport.is-dragging { cursor: grabbing; }
+
+.hex-hint {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  letter-spacing: 2.8px;
+  text-transform: uppercase;
+  color: var(--warm-amber);
+  opacity: 0.38;
+  text-align: center;
+  margin-top: 22px;
+  transition: opacity 0.3s ease;
+}
+.hex-hint:hover { opacity: 0.65; }
+
+.hex-canvas {
+  position: relative;
 }
 
-.hex-row--offset {
-  margin-left: 78px;
-}
-
-.hex-row--partial {
-  align-self: stretch;
-  justify-content: center;
-  margin-left: 0;
-}
-
-.hex-item {
+.hex-cell {
+  position: absolute;
   width: 155px;
   height: 179px;
-  flex-shrink: 0;
-  position: relative;
+  transform-origin: center center;
+  will-change: transform;
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-              filter 0.3s ease;
+  transition: filter 0.3s ease;
 }
 
-.hex-item:hover {
-  transform: scale(1.08);
-  filter: drop-shadow(0 6px 18px rgba(201, 150, 58, 0.45));
-  z-index: 3;
+.hex-cell:hover {
+  filter: drop-shadow(0 6px 20px rgba(201, 150, 58, 0.65));
+  z-index: 5;
 }
 
-/*
-  hex-inner: 147×171px (4px inset on each side of 155×179 hex-item)
-  Rounded pointy-top hexagon via path() — R≈12px at each vertex
-  Vertices: (73.5,0) (147,42.75) (147,128.25) (73.5,171) (0,128.25) (0,42.75)
-*/
 .hex-inner {
   position: absolute;
   inset: 4px;
@@ -279,7 +364,7 @@
   transition: filter 0.3s ease;
 }
 
-.hex-item:hover .hex-inner {
+.hex-cell:hover .hex-inner {
   filter: brightness(1.15) saturate(1.1);
 }
 

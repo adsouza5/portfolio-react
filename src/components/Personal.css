@@ -18,7 +18,7 @@
 .personal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 500;
+  z-index: 1001;
   background-color: var(--warm-bg);
   background-image: radial-gradient(rgba(201, 150, 58, 0.06) 1px, transparent 1px);
   background-size: 28px 28px;
@@ -95,8 +95,8 @@
 
 .personal-eyebrow {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 10px;
-  letter-spacing: 3.5px;
+  font-size: 13px;
+  letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--warm-amber);
   opacity: 0.65;
@@ -129,8 +129,8 @@
 
 .personal-section-label {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
+  font-size: 13px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
   color: var(--warm-amber);
   opacity: 0.5;
@@ -196,7 +196,7 @@
 
 .poem-title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 13px;
+  font-size: 16px;
   font-style: italic;
   font-weight: 400;
   letter-spacing: 2px;
@@ -217,45 +217,154 @@
   font-style: italic;
 }
 
-/* ── Photo grid ── */
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.photo-placeholder {
-  aspect-ratio: 4 / 5;
-  background: rgba(201, 150, 58, 0.04);
-  border: 1px solid var(--warm-border);
-  border-radius: 10px;
+/* ── Hex beehive grid — pointy-top tessellation ── */
+/*
+   Pointy-top regular hexagon: W=155px, H=W*(2/√3)≈179px
+   Same-row gap = 0  (hexes share their vertical flat edge)
+   Vertical overlap = H/4 = 45px  (margin-bottom: -45px)
+   Row offset = W/2 = 78px  (centres offset rows in the gaps)
+   This produces mathematically exact edge-to-edge tessellation.
+*/
+.hex-grid {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hex-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: -45px;
+}
+.hex-row:last-child {
+  margin-bottom: 48px; /* restore space below last row */
+}
+
+.hex-row--offset {
+  margin-left: 78px;
+}
+
+.hex-row--partial {
+  align-self: stretch;
   justify-content: center;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(237, 232, 224, 0.15);
+  margin-left: 0;
+}
+
+.hex-item {
+  width: 155px;
+  height: 179px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: filter 0.3s ease;
 }
 
-/* Alternating scrapbook tilt */
-.photo-placeholder:nth-child(odd)  { transform: rotate(-1.2deg); }
-.photo-placeholder:nth-child(even) { transform: rotate(0.8deg); }
-
-.photo-placeholder:hover {
-  transform: rotate(0) scale(1.03) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  z-index: 2;
+.hex-item:hover {
+  filter: brightness(1.25) saturate(1.1);
+  z-index: 3;
 }
 
-.photo-placeholder img {
+.hex-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* ── Lightbox ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  animation: lbFadeIn 0.25s ease;
+}
+
+@keyframes lbFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.lightbox-inner {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+  animation: lbSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lbSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(201, 150, 58, 0.12);
+  border: 1px solid rgba(201, 150, 58, 0.3);
+  color: var(--warm-text);
+  font-size: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox-nav:hover:not(:disabled) {
+  background: rgba(201, 150, 58, 0.25);
+  box-shadow: 0 0 16px rgba(201, 150, 58, 0.3);
+}
+.lightbox-nav:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
+.lightbox-nav--prev { right: calc(100% + 16px); }
+.lightbox-nav--next { left:  calc(100% + 16px); }
+
+.lightbox-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  background: none;
+  border: none;
+  color: rgba(237, 232, 224, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+.lightbox-close:hover { color: var(--warm-amber); }
+
+.lightbox-counter {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(237, 232, 224, 0.35);
 }
 
 /* ── Trigger section (on main page) ── */

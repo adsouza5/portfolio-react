@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import './Personal.css';
 import { INTRO, HOBBIES, POEMS, PHOTOS } from './PersonalData';
 
@@ -14,7 +15,7 @@ const Lightbox = ({ photos, index, onClose, onNavigate }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, onNavigate]);
 
-  return (
+  return ReactDOM.createPortal(
     <div className="lightbox" onClick={onClose}>
       <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
         <img src={photos[index]} alt={`moment ${index + 1}`} className="lightbox-img" />
@@ -23,65 +24,42 @@ const Lightbox = ({ photos, index, onClose, onNavigate }) => {
         <button className="lightbox-close" onClick={onClose}>✕</button>
         <span className="lightbox-counter">{index + 1} / {photos.length}</span>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
-/* ── Hex photo gallery ─────────────────────────────────── */
+/* ── Hex beehive gallery ───────────────────────────────── */
 const PhotoGallery = ({ photos }) => {
-  const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [lightboxIndex, setLightbox] = useState(null);
   const visible = photos.filter(Boolean);
 
   const navigate = useCallback((dir) => {
-    setLightboxIndex((i) => {
+    setLightbox((i) => {
       const next = i + dir;
       if (next < 0 || next >= visible.length) return i;
       return next;
     });
   }, [visible.length]);
 
-  /* 7 photos → 2-3-2 hexagonal shape
-     other counts → rows of 3 with alternating offset */
-  const rowDefs = [];
-  if (visible.length === 7) {
-    rowDefs.push({ photos: visible.slice(0, 2), startIdx: 0, offset: true,  partial: false });
-    rowDefs.push({ photos: visible.slice(2, 5), startIdx: 2, offset: false, partial: false });
-    rowDefs.push({ photos: visible.slice(5, 7), startIdx: 5, offset: true,  partial: false });
-  } else {
-    let i = 0, r = 0;
-    while (i < visible.length) {
-      const chunk = visible.slice(i, i + 3);
-      rowDefs.push({
-        photos:   chunk,
-        startIdx: i,
-        offset:   r % 2 === 1 && chunk.length === 3,
-        partial:  chunk.length < 3,
-      });
-      i += 3; r++;
-    }
-  }
+  if (visible.length === 0) return null;
+
+  // 2-3-2 rows — centered alignment produces the hexagonal silhouette naturally
+  const rows = [visible.slice(0, 2), visible.slice(2, 5), visible.slice(5, 7)];
+  const startOf = [0, 2, 5];
 
   return (
     <>
       <div className="hex-grid">
-        {rowDefs.map((row, rowIdx) => (
-          <div
-            key={rowIdx}
-            className={[
-              'hex-row',
-              row.offset  ? 'hex-row--offset'  : '',
-              row.partial ? 'hex-row--partial' : '',
-            ].filter(Boolean).join(' ')}
-          >
-            {row.photos.map((src, colIdx) => {
-              const idx = row.startIdx + colIdx;
+        {rows.map((row, ri) => (
+          <div key={ri} className="hex-row">
+            {row.map((src, pi) => {
+              const gi = startOf[ri] + pi;
               return (
-                <div
-                  key={colIdx}
-                  className="hex-item"
-                  onClick={() => setLightboxIndex(idx)}
-                >
-                  <img src={src} alt={`moment ${idx + 1}`} />
+                <div key={gi} className="hex-item" onClick={() => setLightbox(gi)}>
+                  <div className="hex-inner">
+                    <img src={src} alt={`moment ${gi + 1}`} />
+                  </div>
                 </div>
               );
             })}
@@ -93,7 +71,93 @@ const PhotoGallery = ({ photos }) => {
         <Lightbox
           photos={visible}
           index={lightboxIndex}
-          onClose={() => setLightboxIndex(null)}
+          onClose={() => setLightbox(null)}
+          onNavigate={navigate}
+        />
+      )}
+    </>
+  );
+};
+
+/* ── Photo slider ──────────────────────────────────────── */
+const PhotoSlider = ({ photos }) => {
+  const [current, setCurrent]       = useState(0);
+  const [lightboxIndex, setLightbox] = useState(null);
+  const visible = photos.filter(Boolean);
+
+  const navigate = useCallback((dir) => {
+    setLightbox((i) => {
+      const next = i + dir;
+      if (next < 0 || next >= visible.length) return i;
+      return next;
+    });
+  }, [visible.length]);
+
+  const prev = () => setCurrent((i) => Math.max(0, i - 1));
+  const next = () => setCurrent((i) => Math.min(visible.length - 1, i + 1));
+
+  if (visible.length === 0) return null;
+
+  return (
+    <>
+      <div className="photo-slider">
+        {/* Slide track */}
+        <div className="slider-track">
+          <div
+            className="slider-reel"
+            style={{ transform: `translateX(${-current * 100}%)` }}
+          >
+            {visible.map((src, i) => (
+              <div
+                key={i}
+                className="slider-slide"
+                onClick={() => setLightbox(i)}
+              >
+                <img src={src} alt={`moment ${i + 1}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <button
+          className="slider-nav slider-nav--prev"
+          onClick={prev}
+          disabled={current === 0}
+          aria-label="Previous"
+        >
+          ←
+        </button>
+        <button
+          className="slider-nav slider-nav--next"
+          onClick={next}
+          disabled={current === visible.length - 1}
+          aria-label="Next"
+        >
+          →
+        </button>
+
+        {/* Dot indicators + counter */}
+        <div className="slider-footer">
+          <div className="slider-dots">
+            {visible.map((_, i) => (
+              <button
+                key={i}
+                className={`slider-dot${i === current ? ' active' : ''}`}
+                onClick={() => setCurrent(i)}
+                aria-label={`Go to photo ${i + 1}`}
+              />
+            ))}
+          </div>
+          <span className="slider-counter">{current + 1} / {visible.length}</span>
+        </div>
+      </div>
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          photos={visible}
+          index={lightboxIndex}
+          onClose={() => setLightbox(null)}
           onNavigate={navigate}
         />
       )}

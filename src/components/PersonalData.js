@@ -60,5 +60,5 @@ export const PHOTOS = [
   `${S3}/photo4.jpg`,
   `${S3}/photo5.jpg`,
   `${S3}/photo7.jpg`,
-  `${S3}/photo6.jpg`, // ← replace with your 7th S3 URL
+  `${S3}/photo6.jpg`,
 ];

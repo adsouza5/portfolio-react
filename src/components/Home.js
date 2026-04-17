@@ -75,7 +75,7 @@ const Home = () => (
 
     <div className="hero-content">
       <p className="hero-eyebrow">
-        Open to full-time opportunities&nbsp;<span>▋</span>
+        Open to full-time opportunities <span>▋</span>
       </p>
 
       <a

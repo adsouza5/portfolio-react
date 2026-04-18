@@ -54,7 +54,7 @@ function canvasMetrics(cells) {
   };
 }
 
-/* ── Lightbox ──────────────────────────────────────────── */
+/* ── Lightbox — editorial centered fade ────────────────── */
 const Lightbox = ({ photos, index, onClose, onNavigate }) => {
   useEffect(() => {
     const onKey = (e) => {
@@ -66,15 +66,47 @@ const Lightbox = ({ photos, index, onClose, onNavigate }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, onNavigate]);
 
+  const counter = `${String(index + 1).padStart(2, '0')} · ${String(photos.length).padStart(2, '0')}`;
+
   return ReactDOM.createPortal(
     <div className="lightbox" onClick={onClose}>
-      <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
-        <img src={photos[index]} alt={`moment ${index + 1}`} className="lightbox-img" />
-        <button className="lightbox-nav lightbox-nav--prev" onClick={() => onNavigate(-1)} disabled={index === 0}>←</button>
-        <button className="lightbox-nav lightbox-nav--next" onClick={() => onNavigate(1)} disabled={index === photos.length - 1}>→</button>
-        <button className="lightbox-close" onClick={onClose}>✕</button>
-        <span className="lightbox-counter">{index + 1} / {photos.length}</span>
-      </div>
+      {/* Prev arrow */}
+      {index > 0 && (
+        <button
+          className="lightbox-nav lightbox-nav--prev"
+          onClick={(e) => { e.stopPropagation(); onNavigate(-1); }}
+          aria-label="Previous image"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <polyline points="15,4 7,12 15,20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+
+      {/* Image — key triggers re-animation on navigate */}
+      <img
+        key={index}
+        src={photos[index]}
+        alt={`moment ${index + 1}`}
+        className="lightbox-img"
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* Next arrow */}
+      {index < photos.length - 1 && (
+        <button
+          className="lightbox-nav lightbox-nav--next"
+          onClick={(e) => { e.stopPropagation(); onNavigate(1); }}
+          aria-label="Next image"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <polyline points="9,4 17,12 9,20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+
+      {/* Counter */}
+      <span className="lightbox-counter">{counter}</span>
     </div>,
     document.body
   );
@@ -137,7 +169,6 @@ const PhotoGallery = ({ photos }) => {
     // ── Drag-to-pan ──────────────────────────────────────
     const onPointerDown = (e) => {
       if (e.button > 0) return;
-      e.preventDefault();
       vp.setPointerCapture(e.pointerId); // locks all pointermove to this element
       dragRef.current = {
         sx: e.clientX, sy: e.clientY,
@@ -165,12 +196,18 @@ const PhotoGallery = ({ photos }) => {
     };
 
     const onPointerUp = (e) => {
-      if (dragRef.current?.moved) {
-        window.addEventListener('click', e => e.stopPropagation(), { once: true, capture: true });
-      }
+      if (!dragRef.current) return; // guard against lostpointercapture double-fire
+      const wasDrag = dragRef.current.moved;
       dragRef.current = null;
       vp.classList.remove('is-dragging');
       if (vp.hasPointerCapture(e.pointerId)) vp.releasePointerCapture(e.pointerId);
+
+      if (!wasDrag) {
+        // Use elementFromPoint so click detection works regardless of capture
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        const cell = target?.closest('[data-hex-index]');
+        if (cell) setLightbox(parseInt(cell.dataset.hexIndex, 10));
+      }
     };
 
     // All listeners on vp — pointer capture routes events here during drag
@@ -207,11 +244,11 @@ const PhotoGallery = ({ photos }) => {
                 key={i}
                 ref={el => { hexRefs.current[i] = el; }}
                 className="hex-cell"
+                data-hex-index={i}
                 style={{ left: cm.ox + x - HEX_W / 2, top: cm.oy + y - HEX_H / 2 }}
-                onClick={() => setLightbox(i)}
               >
                 <div className="hex-inner">
-                  <img src={src} alt={`moment ${i + 1}`} />
+                  <img src={src} alt={`moment ${i + 1}`} draggable={false} />
                 </div>
               </div>
             );
@@ -366,30 +403,42 @@ const Personal = ({ isOpen, onClose }) => {
   const overlayRef = React.useRef(null);
   const [contentKey,  setContentKey]  = useState(0);
   const [poemIndex,      setPoemIndex]      = useState(0);
-  const [poemFading,     setPoemFading]     = useState(false);
   const [poemHasToggle,  setPoemHasToggle]  = useState(false);
   const [sectionFading,  setSectionFading]  = useState(false);
   const poemsSectionRef = useRef(null);
 
   const handlePoemCollapse = useCallback(() => {
-    setSectionFading(true);
     requestAnimationFrame(() => {
-      poemsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const section = poemsSectionRef.current;
+      const overlay = overlayRef.current;
+      if (!section || !overlay) return;
+      const sectionDocTop = section.getBoundingClientRect().top + overlay.scrollTop;
+      const targetScrollTop = Math.max(0, sectionDocTop - overlay.clientHeight * 0.25);
+      overlay.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
     });
-    setTimeout(() => setSectionFading(false), 650);
   }, []);
 
   const navigatePoem = useCallback((dir) => {
-    setPoemFading(true);
+    // Fade out old poem + scroll to center simultaneously
+    setSectionFading(true);
+    requestAnimationFrame(() => {
+      const section = poemsSectionRef.current;
+      const overlay = overlayRef.current;
+      if (!section || !overlay) return;
+      const sectionDocTop = section.getBoundingClientRect().top + overlay.scrollTop;
+      const targetScrollTop = Math.max(0, sectionDocTop - overlay.clientHeight * 0.25);
+      overlay.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+    });
+    // After fade-out completes, swap poem then fade in slowly
     setTimeout(() => {
       setPoemIndex(i => i + dir);
-      setPoemFading(false);
-    }, 320);
+      requestAnimationFrame(() => requestAnimationFrame(() => setSectionFading(false)));
+    }, 380);
   }, []);
 
   useEffect(() => {
     if (isOpen && overlayRef.current) overlayRef.current.scrollTop = 0;
-    if (isOpen) { setContentKey(k => k + 1); setPoemIndex(0); setPoemHasToggle(false); }
+    if (isOpen) { setContentKey(k => k + 1); setPoemIndex(0); setPoemHasToggle(false); setSectionFading(false); }
     document.body.style.overflow = isOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
@@ -433,14 +482,12 @@ const Personal = ({ isOpen, onClose }) => {
 
         {POEMS.length > 0 && (
           <FadeIn>
-            <div
-              style={{
-                opacity: sectionFading ? 0 : 1,
-                transition: sectionFading
-                  ? 'opacity 0.25s ease'
-                  : 'opacity 0.7s cubic-bezier(0.25, 1, 0.35, 1)',
-              }}
-            >
+            <div style={{
+              opacity: sectionFading ? 0 : 1,
+              transition: sectionFading
+                ? 'opacity 0.35s ease'
+                : 'opacity 0.9s cubic-bezier(0.25, 1, 0.35, 1)',
+            }}>
             <div ref={poemsSectionRef} className="personal-section personal-section--poems">
               <span className="personal-section-label">{'// things I write'}</span>
               <div className={`poems-nav${poemHasToggle ? '' : ' poems-nav--centered'}`}>
@@ -451,7 +498,7 @@ const Personal = ({ isOpen, onClose }) => {
                   style={{ visibility: poemIndex > 0 ? 'visible' : 'hidden' }}
                 >←</button>
 
-                <div className="poem-carousel" style={{ opacity: poemFading ? 0 : 1 }}>
+                <div className="poem-carousel">
                   <PoemBlock
                     key={poemIndex}
                     poem={POEMS[poemIndex]}

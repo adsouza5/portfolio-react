@@ -43,6 +43,24 @@
   pointer-events: all;
 }
 
+/* Ambient pulse — left at 25%, right at 75% — never touches top or bottom */
+.personal-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 22% 18% at 100% 75%, rgba(201, 150, 58, 0.13) 0%, transparent 100%);
+  animation: ambientPulse 12s ease-in-out infinite;
+}
+
+@keyframes ambientPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 1;    }
+}
+
+
 
 /* ── Close bar ── */
 .personal-close {
@@ -340,7 +358,8 @@
 
 .hex-canvas {
   position: relative;
-  will-change: transform;
+  /* No will-change here — the JS-animated translate already promotes this
+     to a GPU layer automatically. Explicit will-change clips child drop-shadows. */
 }
 
 .hex-cell {
@@ -351,6 +370,8 @@
   will-change: transform;
   cursor: pointer;
   transition: filter 0.3s ease;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .hex-cell:hover {
@@ -363,11 +384,13 @@
   inset: 4px;
   clip-path: path('M 63.1 6 Q 73.5 0 83.9 6 L 136.6 36.75 Q 147 42.75 147 54.75 L 147 116.25 Q 147 128.25 136.6 134.25 L 83.9 165 Q 73.5 171 63.1 165 L 10.4 134.25 Q 0 128.25 0 116.25 L 0 54.75 Q 0 42.75 10.4 36.75 Z');
   overflow: hidden;
-  transition: filter 0.3s ease;
+  transform-origin: center center;
+  transition: filter 0.35s ease, transform 0.45s cubic-bezier(0.25, 1, 0.35, 1);
 }
 
 .hex-cell:hover .hex-inner {
-  filter: brightness(1.15) saturate(1.1);
+  filter: brightness(1.12) saturate(1.1);
+  transform: scale(1.08);
 }
 
 .hex-inner img {
@@ -375,130 +398,97 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  pointer-events: none;   /* pass events to hex-cell; prevents native img drag */
+  user-select: none;
+  -webkit-user-drag: none;
+  draggable: false;
 }
 
-/* ── Lightbox — bottom sheet ── */
+/* ── Lightbox — editorial centered fade ── */
 .lightbox {
   position: fixed;
   inset: 0;
   z-index: 1002;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(6, 4, 2, 0.97);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   display: flex;
-  align-items: flex-end;
-  backdrop-filter: blur(6px);
-  animation: lbFadeIn 0.25s ease;
+  align-items: center;
+  justify-content: center;
+  animation: lbOverlayIn 0.4s ease forwards;
 }
 
-@keyframes lbFadeIn {
+@keyframes lbOverlayIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-@keyframes lbSheetUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-
-.lightbox-inner {
-  position: relative;
-  width: 100%;
-  max-height: 82vh;
-  background: #0f0d0b;
-  border-top: 1px solid rgba(201, 150, 58, 0.18);
-  border-radius: 20px 20px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 56px 80px 40px;
-  animation: lbSheetUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* drag-handle hint */
-.lightbox-inner::before {
-  content: '';
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 36px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(201, 150, 58, 0.25);
+@keyframes lbReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .lightbox-img {
-  max-width: calc(100% - 140px);
-  max-height: calc(82vh - 120px);
+  display: block;
+  max-width: min(78vw, 900px);
+  max-height: 80vh;
   object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  animation: lbReveal 0.55s cubic-bezier(0.25, 1, 0.35, 1) forwards;
 }
 
+/* Navigation arrows — thin amber line + chevron at screen edges */
 .lightbox-nav {
-  position: absolute;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(201, 150, 58, 0.12);
-  border: 1px solid rgba(201, 150, 58, 0.3);
-  color: var(--warm-text);
-  font-size: 20px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.lightbox-nav:hover:not(:disabled) {
-  background: rgba(201, 150, 58, 0.25);
-  box-shadow: 0 0 16px rgba(201, 150, 58, 0.3);
-}
-.lightbox-nav:disabled {
-  opacity: 0.2;
-  cursor: default;
-}
-.lightbox-nav--prev { left: 20px; }
-.lightbox-nav--next { right: 20px; }
-
-.lightbox-close {
-  position: absolute;
-  top: 18px;
-  right: 24px;
   background: none;
   border: none;
-  color: rgba(237, 232, 224, 0.4);
-  font-size: 18px;
+  padding: 28px 22px;
   cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.2s ease;
+  color: var(--warm-amber);
+  opacity: 0.25;
+  transition: opacity 0.3s ease;
+  line-height: 0;
 }
-.lightbox-close:hover { color: var(--warm-amber); }
+.lightbox-nav:hover { opacity: 0.75; }
+.lightbox-nav--prev { left: 0; }
+.lightbox-nav--next { right: 0; }
 
+/* Counter */
 .lightbox-counter {
-  position: absolute;
-  bottom: 16px;
+  position: fixed;
+  bottom: 36px;
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Courier New', Courier, monospace;
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: rgba(237, 232, 224, 0.35);
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: rgba(201, 150, 58, 0.45);
+  pointer-events: none;
 }
 
 /* ─────────────────────────────────────────
    MOBILE — 768 px (tablet)
    ───────────────────────────────────────── */
 @media (max-width: 768px) {
+  /* ── Close bar ── */
   .personal-close {
     padding: 18px 32px 0;
   }
 
+  /* ── Content ── */
   .personal-content {
     padding: 28px 40px 100px;
   }
 
+  /* ── Header ── */
   .personal-header {
     margin-bottom: 56px;
     padding-bottom: 40px;
@@ -509,19 +499,35 @@
     max-width: 100%;
   }
 
+  /* ── Sections ── */
   .personal-section {
     margin-bottom: 64px;
   }
 
-  .lightbox-inner {
-    padding: 48px 48px 36px;
+  /* ── Poems ── */
+  .personal-section--poems .personal-section-label {
+    margin-bottom: 36px;
   }
 
-  .lightbox-img {
-    max-width: calc(100% - 100px);
-    max-height: calc(82vh - 100px);
+  .poems-nav {
+    padding: 0 44px;
   }
 
+  .poem-body {
+    max-width: 100%;
+  }
+
+  /* ── Hex gallery ── */
+  .hex-viewport {
+    height: 440px;
+  }
+
+  /* ── Lightbox — arrows must be visible without hover on touch ── */
+  .lightbox-nav {
+    opacity: 0.45;
+  }
+
+  /* ── Trigger card ── */
   .personal-trigger-section {
     padding: 48px 48px;
   }
@@ -600,15 +606,23 @@
 
   /* ── Poems ── */
   .personal-section--poems .personal-section-label {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
 
+  /* Give arrows enough room so they don't overlap poem text */
   .poems-nav {
-    padding: 0 28px;
+    padding: 0 36px;
   }
 
+  /* Larger touch targets for poem nav arrows */
   .poems-arrow {
     font-size: 20px;
+    padding: 14px 8px;
+    min-width: 36px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .poem-block {
@@ -626,8 +640,19 @@
     max-width: 100%;
   }
 
+  /* Scale toggle rules down proportionally for narrow screens */
   .poem-toggle {
     margin-top: 32px;
+    gap: 14px;
+  }
+
+  .poem-toggle-rule {
+    width: 32px;
+  }
+
+  .poem-toggle:hover .poem-toggle-rule,
+  .poem-toggle--open .poem-toggle-rule {
+    width: 50px;
   }
 
   /* ── Hex gallery ── */
@@ -642,32 +667,26 @@
     margin-top: 16px;
   }
 
-  /* ── Lightbox ── */
-  .lightbox-inner {
-    padding: 44px 16px 28px;
-    max-height: 88vh;
-    border-radius: 16px 16px 0 0;
+  /* ── Lightbox — more visible on touch (no hover state) ── */
+  .lightbox-nav {
+    opacity: 0.5;
+    padding: 20px 14px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .lightbox-img {
-    max-width: calc(100% - 72px);
-    max-height: calc(88vh - 96px);
-    border-radius: 6px;
+    max-width: 92vw;
+    max-height: 75vh;
   }
 
-  .lightbox-nav {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-  }
-
-  .lightbox-nav--prev { left: 10px; }
-  .lightbox-nav--next { right: 10px; }
-
-  .lightbox-close {
-    top: 14px;
-    right: 16px;
-    font-size: 16px;
+  .lightbox-counter {
+    font-size: 11px;
+    bottom: 28px;
+    letter-spacing: 3px;
   }
 
   /* ── Trigger card ── */

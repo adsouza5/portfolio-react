@@ -6,7 +6,7 @@ const projects = [
     tags: ['Python', 'Machine Learning', 'React', 'Firebase', 'REST APIs'],
     images: [],
     timestamp: '2024',
-    link: 'https://github.com/adamdso',
+    link: 'https://github.com/adsouza5',
     status: 'In Progress',
   },
   {
@@ -16,7 +16,7 @@ const projects = [
     tags: ['React', 'Node.js', 'WebRTC', 'Firebase', 'Docker'],
     images: ['/images/realTime1.png', '/images/realTime2.png'],
     timestamp: '2024',
-    link: 'https://github.com/adamdso',
+    link: 'https://github.com/adsouza5',
     status: null,
   },
   {
@@ -26,7 +26,7 @@ const projects = [
     tags: ['React Native', 'ARCore', 'ARKit', 'Kotlin', 'Firebase'],
     images: [],
     timestamp: '2024',
-    link: 'https://github.com/adamdso',
+    link: 'https://github.com/adsouza5',
     status: 'In Progress',
   },
   {
@@ -41,7 +41,7 @@ const projects = [
       '/images/etherea4.png',
     ],
     timestamp: '2023',
-    link: 'https://github.com/adamdso',
+    link: 'https://github.com/adsouza5',
     status: 'Internship',
   },
 ];

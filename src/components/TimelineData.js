@@ -23,7 +23,7 @@ const timelineEntries = [
     description:
       'Full-stack real-time collaboration tool with live code editing, syntax highlighting, and WebRTC video conferencing. Architected 100+ WebSocket events and Firebase integrations for live sync, chat, and video streaming. Boosted data synchronisation speed 25% through differential syncing and WebRTC optimisations.',
     tags: ['React', 'Node.js', 'WebRTC', 'Firebase', 'WebSockets', 'Docker'],
-    link: 'https://github.com/adamdso',
+    link: 'https://github.com/adsouza5',
     status: null,
   },
   {

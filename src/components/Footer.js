@@ -21,10 +21,10 @@ const Footer = () => (
           Say Hello ↗
         </a>
         <div className="footer-socials">
-          <a href="https://www.linkedin.com/in/adam-dsouza-/" target="_blank" rel="noopener noreferrer" className="footer-social">
+          <a href="https://www.linkedin.com/in/adam-dsouza/" target="_blank" rel="noopener noreferrer" className="footer-social">
             LinkedIn
           </a>
-          <a href="https://github.com/adamdso" target="_blank" rel="noopener noreferrer" className="footer-social">
+          <a href="https://github.com/adsouza5" target="_blank" rel="noopener noreferrer" className="footer-social">
             GitHub
           </a>
           <a href="/images/resume.jpg" target="_blank" rel="noopener noreferrer" className="footer-social">

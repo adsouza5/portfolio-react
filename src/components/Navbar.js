@@ -58,7 +58,7 @@ const Navbar = () => {
       <div className="nav-divider" />
 
       <a
-        href="https://www.linkedin.com/in/adam-dsouza-/"
+        href="https://www.linkedin.com/in/adam-dsouza/"
         target="_blank"
         rel="noopener noreferrer"
         className="nav-item nav-item--external"
@@ -67,7 +67,7 @@ const Navbar = () => {
         <span className="nav-dot" />
       </a>
       <a
-        href="https://github.com/adamdso"
+        href="https://github.com/adsouza5"
         target="_blank"
         rel="noopener noreferrer"
         className="nav-item nav-item--external"

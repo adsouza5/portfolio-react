@@ -79,7 +79,7 @@ const Home = () => (
       </p>
 
       <a
-        href="https://www.linkedin.com/in/adam-dsouza-/"
+        href="https://www.linkedin.com/in/adam-dsouza/"
         target="_blank"
         rel="noopener noreferrer"
         className="hero-name"

@@ -340,6 +340,7 @@
 
 .hex-canvas {
   position: relative;
+  will-change: transform;
 }
 
 .hex-cell {

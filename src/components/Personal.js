@@ -127,16 +127,18 @@ const PhotoGallery = ({ photos }) => {
       });
     };
 
-    // Centre the canvas on mount
+    // Centre the canvas on mount; double-rAF ensures layout is settled
     setPos(
       -(cm.width  - vp.clientWidth)  / 2,
       -(cm.height - vp.clientHeight) / 2,
     );
-    requestAnimationFrame(updateScales);
+    requestAnimationFrame(() => requestAnimationFrame(updateScales));
 
     // ── Drag-to-pan ──────────────────────────────────────
     const onPointerDown = (e) => {
       if (e.button > 0) return;
+      e.preventDefault();
+      vp.setPointerCapture(e.pointerId); // locks all pointermove to this element
       dragRef.current = {
         sx: e.clientX, sy: e.clientY,
         ox: posRef.current.x, oy: posRef.current.y,
@@ -162,26 +164,28 @@ const PhotoGallery = ({ photos }) => {
       rafRef.current = requestAnimationFrame(updateScales);
     };
 
-    const onPointerUp = () => {
-      // If the pointer moved during this interaction, swallow the upcoming
-      // click so it doesn't open the lightbox on drag-release
+    const onPointerUp = (e) => {
       if (dragRef.current?.moved) {
         window.addEventListener('click', e => e.stopPropagation(), { once: true, capture: true });
       }
       dragRef.current = null;
       vp.classList.remove('is-dragging');
+      if (vp.hasPointerCapture(e.pointerId)) vp.releasePointerCapture(e.pointerId);
     };
 
-    vp.addEventListener('pointerdown',   onPointerDown);
-    window.addEventListener('pointermove',   onPointerMove);
-    window.addEventListener('pointerup',     onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
+    // All listeners on vp — pointer capture routes events here during drag
+    vp.addEventListener('pointerdown',        onPointerDown);
+    vp.addEventListener('pointermove',        onPointerMove);
+    vp.addEventListener('pointerup',          onPointerUp);
+    vp.addEventListener('pointercancel',      onPointerUp);
+    vp.addEventListener('lostpointercapture', onPointerUp);
 
     return () => {
-      vp.removeEventListener('pointerdown',   onPointerDown);
-      window.removeEventListener('pointermove',   onPointerMove);
-      window.removeEventListener('pointerup',     onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
+      vp.removeEventListener('pointerdown',        onPointerDown);
+      vp.removeEventListener('pointermove',        onPointerMove);
+      vp.removeEventListener('pointerup',          onPointerUp);
+      vp.removeEventListener('pointercancel',      onPointerUp);
+      vp.removeEventListener('lostpointercapture', onPointerUp);
       cancelAnimationFrame(rafRef.current);
     };
   }, [cells, cm]);
@@ -215,92 +219,6 @@ const PhotoGallery = ({ photos }) => {
         </div>
       </div>
       <p className="hex-hint">drag to explore &nbsp;·&nbsp; click to expand</p>
-
-      {lightboxIndex !== null && (
-        <Lightbox
-          photos={visible}
-          index={lightboxIndex}
-          onClose={() => setLightbox(null)}
-          onNavigate={navigate}
-        />
-      )}
-    </>
-  );
-};
-
-/* ── Photo slider ──────────────────────────────────────── */
-const PhotoSlider = ({ photos }) => {
-  const [current, setCurrent]       = useState(0);
-  const [lightboxIndex, setLightbox] = useState(null);
-  const visible = photos.filter(Boolean);
-
-  const navigate = useCallback((dir) => {
-    setLightbox((i) => {
-      const next = i + dir;
-      if (next < 0 || next >= visible.length) return i;
-      return next;
-    });
-  }, [visible.length]);
-
-  const prev = () => setCurrent((i) => Math.max(0, i - 1));
-  const next = () => setCurrent((i) => Math.min(visible.length - 1, i + 1));
-
-  if (visible.length === 0) return null;
-
-  return (
-    <>
-      <div className="photo-slider">
-        {/* Slide track */}
-        <div className="slider-track">
-          <div
-            className="slider-reel"
-            style={{ transform: `translateX(${-current * 100}%)` }}
-          >
-            {visible.map((src, i) => (
-              <div
-                key={i}
-                className="slider-slide"
-                onClick={() => setLightbox(i)}
-              >
-                <img src={src} alt={`moment ${i + 1}`} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <button
-          className="slider-nav slider-nav--prev"
-          onClick={prev}
-          disabled={current === 0}
-          aria-label="Previous"
-        >
-          ←
-        </button>
-        <button
-          className="slider-nav slider-nav--next"
-          onClick={next}
-          disabled={current === visible.length - 1}
-          aria-label="Next"
-        >
-          →
-        </button>
-
-        {/* Dot indicators + counter */}
-        <div className="slider-footer">
-          <div className="slider-dots">
-            {visible.map((_, i) => (
-              <button
-                key={i}
-                className={`slider-dot${i === current ? ' active' : ''}`}
-                onClick={() => setCurrent(i)}
-                aria-label={`Go to photo ${i + 1}`}
-              />
-            ))}
-          </div>
-          <span className="slider-counter">{current + 1} / {visible.length}</span>
-        </div>
-      </div>
 
       {lightboxIndex !== null && (
         <Lightbox
@@ -350,7 +268,7 @@ const PoemBlock = ({ poem, onToggle, onCollapse }) => {
       setNeedsToggle(false);
       onToggle?.(false);
     }
-  }, [poem.body]);
+  }, [poem.body, onToggle]);
 
   const wrapHeight = !needsToggle
     ? undefined

@@ -454,9 +454,10 @@ const Personal = ({ isOpen, onClose }) => {
   const poemsSectionRef = useRef(null);
 
   const handlePoemCollapse = useCallback(() => {
-    // Fade out + scroll at the same time, then fade back in once settled
     setSectionFading(true);
-    poemsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    requestAnimationFrame(() => {
+      poemsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
     setTimeout(() => setSectionFading(false), 650);
   }, []);
 
@@ -522,9 +523,9 @@ const Personal = ({ isOpen, onClose }) => {
                   : 'opacity 0.7s cubic-bezier(0.25, 1, 0.35, 1)',
               }}
             >
-            <div className="personal-section personal-section--poems">
+            <div ref={poemsSectionRef} className="personal-section personal-section--poems">
               <span className="personal-section-label">{'// things I write'}</span>
-              <div ref={poemsSectionRef} className={`poems-nav${poemHasToggle ? '' : ' poems-nav--centered'}`}>
+              <div className={`poems-nav${poemHasToggle ? '' : ' poems-nav--centered'}`}>
                 <button
                   className="poems-arrow poems-arrow--prev"
                   onClick={() => navigatePoem(-1)}

@@ -485,6 +485,213 @@
   color: rgba(237, 232, 224, 0.35);
 }
 
+/* ─────────────────────────────────────────
+   MOBILE — 768 px (tablet)
+   ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .personal-close {
+    padding: 18px 32px 0;
+  }
+
+  .personal-content {
+    padding: 28px 40px 100px;
+  }
+
+  .personal-header {
+    margin-bottom: 56px;
+    padding-bottom: 40px;
+  }
+
+  .personal-intro {
+    font-size: 16px;
+    max-width: 100%;
+  }
+
+  .personal-section {
+    margin-bottom: 64px;
+  }
+
+  .lightbox-inner {
+    padding: 48px 48px 36px;
+  }
+
+  .lightbox-img {
+    max-width: calc(100% - 100px);
+    max-height: calc(82vh - 100px);
+  }
+
+  .personal-trigger-section {
+    padding: 48px 48px;
+  }
+
+  .personal-trigger-card {
+    padding: 36px 36px 32px;
+  }
+}
+
+/* ─────────────────────────────────────────
+   MOBILE — 480 px (phone)
+   ───────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* ── Close bar ── */
+  .personal-close {
+    padding: 16px 20px 0;
+  }
+
+  /* ── Content container ── */
+  .personal-content {
+    max-width: 100%;
+    padding: 24px 22px 72px;
+  }
+
+  /* ── Header ── */
+  .personal-header {
+    margin-bottom: 44px;
+    padding-bottom: 32px;
+  }
+
+  .personal-eyebrow {
+    font-size: 10px;
+    letter-spacing: 2.2px;
+    margin-bottom: 16px;
+  }
+
+  .personal-title {
+    font-size: clamp(34px, 9vw, 52px);
+    margin: 0 0 16px;
+  }
+
+  .personal-intro {
+    font-size: 15px;
+    line-height: 1.85;
+    max-width: 100%;
+  }
+
+  /* ── Sections ── */
+  .personal-section {
+    margin-bottom: 48px;
+  }
+
+  .personal-section-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  /* ── Hobbies: single column ── */
+  .hobbies-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .hobby-card {
+    padding: 14px 0 14px 16px;
+  }
+
+  .hobby-name {
+    font-size: 16px;
+  }
+
+  .hobby-desc {
+    font-size: 12px;
+  }
+
+  /* ── Poems ── */
+  .personal-section--poems .personal-section-label {
+    margin-bottom: 32px;
+  }
+
+  .poems-nav {
+    padding: 0 28px;
+  }
+
+  .poems-arrow {
+    font-size: 20px;
+  }
+
+  .poem-block {
+    margin-bottom: 40px;
+  }
+
+  .poem-title {
+    font-size: 22px;
+    margin: 0 0 24px;
+  }
+
+  .poem-body {
+    font-size: 14px;
+    line-height: 2.0;
+    max-width: 100%;
+  }
+
+  .poem-toggle {
+    margin-top: 32px;
+  }
+
+  /* ── Hex gallery ── */
+  .hex-viewport {
+    height: 360px;
+    margin-top: 32px;
+  }
+
+  .hex-hint {
+    font-size: 9px;
+    letter-spacing: 2.2px;
+    margin-top: 16px;
+  }
+
+  /* ── Lightbox ── */
+  .lightbox-inner {
+    padding: 44px 16px 28px;
+    max-height: 88vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .lightbox-img {
+    max-width: calc(100% - 72px);
+    max-height: calc(88vh - 96px);
+    border-radius: 6px;
+  }
+
+  .lightbox-nav {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .lightbox-nav--prev { left: 10px; }
+  .lightbox-nav--next { right: 10px; }
+
+  .lightbox-close {
+    top: 14px;
+    right: 16px;
+    font-size: 16px;
+  }
+
+  /* ── Trigger card ── */
+  .personal-trigger-section {
+    padding: 40px 20px;
+  }
+
+  .personal-trigger-card {
+    padding: 28px 22px 24px;
+  }
+
+  .trigger-title {
+    font-size: 26px;
+  }
+
+  .trigger-sub {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .trigger-btn {
+    font-size: 9px;
+    padding: 9px 22px;
+  }
+}
+
 /* ── Trigger section (on main page) ── */
 .personal-trigger-section {
   position: relative;

@@ -368,7 +368,7 @@
   }
 
   .timeline-marker {
-    left: 7px;
+    left: 9px;   /* center = 9 + 8 = 17px, matches line at left: 17px */
     width: 16px;
     height: 16px;
   }
@@ -410,9 +410,9 @@
   }
 
   .timeline-marker {
-    left: 2px;
-    width: 13px;
-    height: 13px;
+    left: 5px;   /* center = 5 + 7 = 12px, matches line at left: 12px */
+    width: 14px;
+    height: 14px;
   }
 
   .projects-content {
@@ -432,28 +432,30 @@
   }
 
   .card-date {
-    display: inline;
+    display: block;
+    text-align: right;
   }
 
+  /* Keep meta as a row: badges left, date+location stacked top-right */
   .card-meta {
-    flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
     margin-bottom: 10px;
   }
 
   .card-meta-right {
     display: flex;
-    gap: 8px;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
   }
 
   .card-location::before {
-    content: '·';
+    display: none;
   }
 
   .card-location {
     font-size: 10px;
+    text-align: right;
   }
 
   .card-header {

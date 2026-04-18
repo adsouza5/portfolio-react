@@ -69,11 +69,12 @@ const Projects = () => {
                   <span className="card-status">{entry.status}</span>
                 )}
               </div>
-              {entry.location && (
-                <div className="card-meta-right">
+              <div className="card-meta-right">
+                <span className="card-date">{entry.date}</span>
+                {entry.location && (
                   <span className="card-location">{entry.location}</span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Row 2 — title + org */}

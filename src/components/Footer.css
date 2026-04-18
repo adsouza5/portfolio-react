@@ -120,3 +120,29 @@
   text-transform: uppercase;
   color: rgba(232, 232, 232, 0.2);
 }
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 64px 40px 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 52px 22px 36px;
+  }
+
+  .footer-title {
+    font-size: clamp(26px, 7vw, 40px);
+  }
+
+  .footer-sub {
+    font-size: 13px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 44px;
+  }
+}

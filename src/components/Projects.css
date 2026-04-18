@@ -339,3 +339,130 @@
 .project-card.clickable:hover .card-cta { opacity: 1; }
 .project-card--work:hover    .card-cta { color: var(--type-work); }
 .project-card--education:hover .card-cta { color: var(--type-education); }
+
+/* ─────────────────────────────────────────
+   MOBILE — 768 px (tablet)
+   ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .projects-section {
+    padding: 60px 28px 80px 0;
+  }
+
+  /* Collapse timeline to a thin strip — just line + dots, no labels */
+  .timeline {
+    width: 36px;
+    flex-shrink: 0;
+  }
+
+  .timeline-line {
+    left: 17px;
+  }
+
+  .timeline-marker {
+    left: 7px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .timeline-label {
+    display: none;
+  }
+
+  .projects-content {
+    padding-left: 20px;
+  }
+
+  .projects-title {
+    font-size: 36px;
+    letter-spacing: 1px;
+    margin-bottom: 40px;
+  }
+
+  .project-card {
+    padding: 20px 20px 16px;
+    margin-bottom: 28px;
+  }
+}
+
+/* ─────────────────────────────────────────
+   MOBILE — 480 px (phone)
+   ───────────────────────────────────────── */
+@media (max-width: 480px) {
+  .projects-section {
+    padding: 44px 14px 60px 0;
+  }
+
+  .timeline {
+    width: 26px;
+  }
+
+  .timeline-line {
+    left: 12px;
+  }
+
+  .timeline-marker {
+    left: 2px;
+    width: 13px;
+    height: 13px;
+  }
+
+  .projects-content {
+    padding-left: 14px;
+  }
+
+  .projects-title {
+    font-size: 28px;
+    letter-spacing: 0.5px;
+    margin-bottom: 32px;
+  }
+
+  .project-card {
+    padding: 16px 14px 14px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+  }
+
+  .card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .card-location::before {
+    display: none;
+  }
+
+  .card-location {
+    font-size: 10px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+
+  .card-org {
+    font-size: 11px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .card-tag {
+    font-size: 9px;
+    padding: 2px 7px;
+  }
+
+  /* Show CTAs on touch (no hover) */
+  .project-card.clickable .card-cta {
+    opacity: 0.55;
+  }
+}

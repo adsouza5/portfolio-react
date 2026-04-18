@@ -169,9 +169,59 @@
 /* ── Responsive ── */
 @media (max-width: 800px) {
   #home {
-    padding: 80px 24px 80px 24px;
+    padding: 80px 28px 80px 28px;
   }
   .hero-content {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  #home {
+    padding: 64px 20px 72px 20px;
+    align-items: flex-start;
+    padding-top: 80px;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    margin-bottom: 14px;
+  }
+
+  .hero-name {
+    font-size: clamp(44px, 11vw, 64px);
+    margin: 0 0 10px;
+  }
+
+  .hero-role {
+    font-size: 12px;
+    letter-spacing: 4px;
+    margin: 0 0 24px;
+  }
+
+  .hero-bio {
+    font-size: 14px;
+    line-height: 1.75;
+    margin: 0 0 28px;
+    max-width: 100%;
+  }
+
+  .hero-ctas {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .cta-primary,
+  .cta-secondary {
+    font-size: 10px;
+    padding: 11px 22px;
+    letter-spacing: 2px;
+  }
+
+  .hero-quote {
+    font-size: 11px;
+    margin-top: 32px;
     max-width: 100%;
   }
 }

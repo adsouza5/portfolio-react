@@ -79,9 +79,9 @@
   font-size: 10px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--warm-faint);
+  color: rgba(237, 232, 224, 0.55);
   background: none;
-  border: 1px solid rgba(237, 232, 224, 0.1);
+  border: 1px solid rgba(237, 232, 224, 0.28);
   border-radius: 30px;
   padding: 8px 22px;
   cursor: pointer;
@@ -89,7 +89,7 @@
 }
 .personal-close-btn:hover {
   color: var(--warm-amber);
-  border-color: rgba(201, 150, 58, 0.45);
+  border-color: rgba(201, 150, 58, 0.55);
   box-shadow: var(--warm-glow);
 }
 

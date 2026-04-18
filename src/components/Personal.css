@@ -214,6 +214,8 @@
   transition: opacity 0.3s ease;
   line-height: 1;
   padding: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .poems-arrow:hover {
   opacity: 0.7;
@@ -283,6 +285,10 @@
   border: none;
   cursor: pointer;
   padding: 10px 0;
+  position: relative;
+  z-index: 2;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .poem-toggle-rule {
   display: block;

@@ -313,6 +313,7 @@
   background: radial-gradient(ellipse 88% 82% at 50% 50%, transparent 42%, rgba(0,0,0,0.26) 80%);
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
   -webkit-mask-image:
     linear-gradient(to right,  transparent, black 13%, black 87%, transparent),
     linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);

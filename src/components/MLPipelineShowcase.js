@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-/* ─────────────────────────────────────────────────────────────
-   Design tokens — teal-glass, distinct from main portfolio
-   ───────────────────────────────────────────────────────────── */
+/* ── Design tokens ───────────────────────────────────────────── */
 const C = {
   bg:       "#091515",
   card:     "rgba(255,255,255,0.05)",
@@ -40,23 +38,34 @@ const STAGES = [
   { id:"serve",      label:"API\nResponse",         icon:"→",  color:C.accent,  glow:C.glowSm   },
 ];
 
-const SAMPLES = [
-  { input:'{"ticker":"AAPL","price":198.5,"volume":12400}',  prediction:"BULLISH", confidence:0.87, latency:23 },
-  { input:'{"ticker":"TSLA","price":245.2,"volume":38200}',  prediction:"BEARISH", confidence:0.72, latency:31 },
-  { input:'{"ticker":"MSFT","price":412.8,"volume":8900}',   prediction:"NEUTRAL", confidence:0.91, latency:18 },
-  { input:'{"ticker":"NVDA","price":875.3,"volume":54100}',  prediction:"BULLISH", confidence:0.94, latency:27 },
-  { input:'{"ticker":"AMZN","price":186.4,"volume":15700}',  prediction:"BEARISH", confidence:0.68, latency:35 },
-  { input:'{"ticker":"META","price":502.1,"volume":22300}',  prediction:"BULLISH", confidence:0.82, latency:21 },
+const DEFAULT_STOCKS = [
+  { ticker:"AAPL", price:198.5,  volume:12400, prediction:"BULLISH", confidence:0.87, latency:23 },
+  { ticker:"TSLA", price:245.2,  volume:38200, prediction:"BEARISH", confidence:0.72, latency:31 },
+  { ticker:"MSFT", price:412.8,  volume:8900,  prediction:"NEUTRAL", confidence:0.91, latency:18 },
+  { ticker:"NVDA", price:875.3,  volume:54100, prediction:"BULLISH", confidence:0.94, latency:27 },
+  { ticker:"AMZN", price:186.4,  volume:15700, prediction:"BEARISH", confidence:0.68, latency:35 },
+  { ticker:"META", price:502.1,  volume:22300, prediction:"BULLISH", confidence:0.82, latency:21 },
 ];
 
 const ARCH = [
-  { title:"Data Ingestion",   color:C.accent, desc:"Pub/Sub topic receives streaming market data events. Cloud Functions trigger on new messages, batching for throughput.", details:["Message ordering guarantees","Dead-letter queue for failures","Auto-scaling subscribers"] },
-  { title:"Preprocessing",    color:C.amber,  desc:"Cloud Run service normalises raw data into feature vectors. Stateless containers scale to zero when idle.",               details:["Feature normalisation pipeline","Schema validation","Scale-to-zero cost optimisation"] },
-  { title:"Model Inference",  color:C.purple, desc:"Vertex AI endpoint hosts the sentiment classifier. Custom prediction routines handle pre/post processing at model layer.", details:["Custom container serving","A/B model deployment","Auto-scaling on GPU"] },
-  { title:"Storage & Serving",color:C.green,  desc:"Predictions land in BigQuery partitioned by date. FastAPI serves real-time results via Cloud Run with Redis caching.",    details:["Partitioned tables by date","Sub-second API responses","Grafana monitoring dashboard"] },
+  { title:"Data Ingestion",    color:C.accent, desc:"Pub/Sub topic receives streaming market data events. Cloud Functions trigger on new messages, batching for throughput.", details:["Message ordering guarantees","Dead-letter queue for failures","Auto-scaling subscribers"] },
+  { title:"Preprocessing",     color:C.amber,  desc:"Cloud Run service normalises raw data into feature vectors. Stateless containers scale to zero when idle.",               details:["Feature normalisation pipeline","Schema validation","Scale-to-zero cost optimisation"] },
+  { title:"Model Inference",   color:C.purple, desc:"Vertex AI endpoint hosts the sentiment classifier. Custom prediction routines handle pre/post processing at model layer.", details:["Custom container serving","A/B model deployment","Auto-scaling on GPU"] },
+  { title:"Storage & Serving", color:C.green,  desc:"Predictions land in BigQuery partitioned by date. FastAPI serves real-time results via Cloud Run with Redis caching.",    details:["Partitioned tables by date","Sub-second API responses","Grafana monitoring dashboard"] },
 ];
 
-/* ─── Sub-components ──────────────────────────────────────── */
+/* deterministic pseudo-prediction for custom tickers */
+function simulateStock(ticker) {
+  const hash = ticker.toUpperCase().split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffff, 7);
+  const confidence  = parseFloat((0.60 + (hash % 35) / 100).toFixed(2));
+  const latency     = 17 + (hash % 24);
+  const predictions = ["BULLISH","BEARISH","NEUTRAL"];
+  return { prediction: predictions[hash % 3], confidence, latency };
+}
+
+const predColor = p => p === "BULLISH" ? C.green : p === "BEARISH" ? C.red : C.amber;
+
+/* ── Sub-components ──────────────────────────────────────────── */
 
 function GlassCard({ children, style, accent }) {
   return (
@@ -89,8 +98,7 @@ function Tag({ children }) {
     <span style={{
       fontFamily:F.mono, fontSize:12, letterSpacing:"0.5px",
       color:"#091515", background:C.accentDk,
-      borderRadius:3, padding:"4px 11px", whiteSpace:"nowrap",
-      fontWeight:700,
+      borderRadius:3, padding:"4px 11px", whiteSpace:"nowrap", fontWeight:700,
     }}>{children}</span>
   );
 }
@@ -105,9 +113,7 @@ function PipelineNode({ stage, active, complete, progress }) {
         position:"relative", overflow:"hidden",
         background: active ? `${stage.glow}` : complete ? C.card : "rgba(9,21,21,0.6)",
         border:`1.5px solid ${active ? stage.color : complete ? stage.color+"60" : C.border}`,
-        boxShadow: active
-          ? `0 0 20px ${stage.glow}, 0 0 50px ${stage.glow}, inset 0 0 20px ${stage.glow}`
-          : complete ? `0 0 8px ${stage.glow}` : "none",
+        boxShadow: active ? `0 0 20px ${stage.glow}, 0 0 50px ${stage.glow}, inset 0 0 20px ${stage.glow}` : complete ? `0 0 8px ${stage.glow}` : "none",
         transition:"all 0.35s ease",
       }}>
         {active && (
@@ -123,9 +129,7 @@ function PipelineNode({ stage, active, complete, progress }) {
           color: active ? stage.color : complete ? C.muted : C.dim,
           filter: active ? `drop-shadow(0 0 8px ${stage.color})` : "none",
           transition:"all 0.3s",
-        }}>
-          {stage.icon}
-        </span>
+        }}>{stage.icon}</span>
       </div>
       <span style={{
         fontFamily:F.mono, fontSize:12, letterSpacing:"0.5px",
@@ -133,13 +137,10 @@ function PipelineNode({ stage, active, complete, progress }) {
         textAlign:"center", whiteSpace:"pre", lineHeight:1.5,
         transition:"color 0.3s",
         textShadow: active ? `0 0 12px ${stage.color}` : "none",
-      }}>
-        {stage.label}
-      </span>
+      }}>{stage.label}</span>
       {active && (
         <div style={{
-          position:"absolute", top:-4, right:-4,
-          width:10, height:10, borderRadius:"50%",
+          position:"absolute", top:-4, right:-4, width:10, height:10, borderRadius:"50%",
           background:stage.color, boxShadow:`0 0 10px ${stage.color}, 0 0 20px ${stage.color}`,
           animation:"pulse 1.4s ease-in-out infinite",
         }} />
@@ -170,19 +171,10 @@ function Connector({ active, complete, color }) {
 function MetricCard({ label, value, unit, color, note }) {
   return (
     <div style={{
-      flex:1, minWidth:110,
-      background: C.card,
-      border:`1px solid ${C.border}`,
-      borderRadius:8,
-      padding:"16px 18px",
-      position:"relative",
-      overflow:"hidden",
+      flex:1, minWidth:110, background:C.card, border:`1px solid ${C.border}`,
+      borderRadius:8, padding:"16px 18px", position:"relative", overflow:"hidden",
     }}>
-      <div style={{
-        position:"absolute", top:0, left:0, right:0, height:2,
-        background:`linear-gradient(90deg, ${color||C.accent}, transparent)`,
-        boxShadow:`0 0 8px ${color||C.accent}`,
-      }} />
+      <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg, ${color||C.accent}, transparent)`, boxShadow:`0 0 8px ${color||C.accent}` }} />
       <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:10 }}>{label}</div>
       <div style={{ display:"flex", alignItems:"baseline", gap:5 }}>
         <span style={{ fontFamily:F.mono, fontSize:30, fontWeight:700, color:color||C.text, lineHeight:1 }}>{value}</span>
@@ -214,11 +206,10 @@ function LatencyChart({ history }) {
       <div style={{ display:"flex", alignItems:"flex-end", gap:3, height:64 }}>
         {history.map((h, i) => {
           const ht  = (h.latency/max)*64;
-          const col = h.latency<25 ? C.green : h.latency<35 ? C.amber : C.red;
+          const col = h.latency < 25 ? C.green : h.latency < 35 ? C.amber : C.red;
           return (
             <div key={i} title={`${h.latency}ms — ${h.ticker}`} style={{
-              width:barW, height:ht, borderRadius:"2px 2px 0 0",
-              background:col,
+              width:barW, height:ht, borderRadius:"2px 2px 0 0", background:col,
               boxShadow: i===history.length-1 ? `0 0 8px ${col}` : "none",
               opacity: i===history.length-1 ? 1 : 0.4,
               transition:"height 0.35s ease",
@@ -234,79 +225,310 @@ function LatencyChart({ history }) {
   );
 }
 
-/* ─── Main component ──────────────────────────────────────── */
+function ResultsChart({ results }) {
+  return (
+    <div>
+      <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:16 }}>Confidence by Stock</div>
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+        {results.map(r => {
+          const col = predColor(r.prediction);
+          return (
+            <div key={r.ticker} style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ fontFamily:F.mono, fontSize:12, fontWeight:700, color:C.text, width:46, flexShrink:0 }}>{r.ticker}</span>
+              <div style={{ flex:1, height:26, background:"rgba(0,0,0,0.35)", borderRadius:4, overflow:"hidden", position:"relative" }}>
+                <div style={{
+                  position:"absolute", left:0, top:0, bottom:0,
+                  width:`${(r.confidence*100).toFixed(0)}%`,
+                  background:col, opacity:0.8, borderRadius:4,
+                  boxShadow:`0 0 10px ${col}50`,
+                  transition:"width 0.6s ease",
+                }} />
+                <span style={{
+                  position:"absolute", left:10, top:0, bottom:0,
+                  display:"flex", alignItems:"center",
+                  fontFamily:F.mono, fontSize:11, fontWeight:700,
+                  color:"rgba(0,0,0,0.85)", zIndex:1, letterSpacing:"1px",
+                }}>{r.prediction}</span>
+              </div>
+              <span style={{ fontFamily:F.mono, fontSize:12, fontWeight:700, color:col, width:38, textAlign:"right", flexShrink:0 }}>
+                {(r.confidence*100).toFixed(0)}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ResultsTable({ results }) {
+  const sorted = [...results].sort((a,b) => b.confidence - a.confidence);
+  return (
+    <div>
+      <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:16 }}>All Results</div>
+      <div style={{ overflowX:"auto" }}>
+        <table style={{ width:"100%", borderCollapse:"collapse" }}>
+          <thead>
+            <tr>
+              {["Ticker","Signal","Confidence","Latency","Price"].map(h => (
+                <th key={h} style={{
+                  fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase",
+                  color:C.dim, padding:"6px 10px", textAlign:"left",
+                  borderBottom:`1px solid ${C.border}`,
+                }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((r, i) => {
+              const col = predColor(r.prediction);
+              return (
+                <tr key={r.ticker} style={{ background: i%2===0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                  <td style={{ fontFamily:F.mono, fontSize:13, fontWeight:700, color:C.text, padding:"9px 10px" }}>{r.ticker}</td>
+                  <td style={{ padding:"9px 10px" }}>
+                    <span style={{
+                      fontFamily:F.mono, fontSize:11, fontWeight:700, letterSpacing:"1px",
+                      color:col, background:`${col}18`,
+                      padding:"2px 8px", borderRadius:3, border:`1px solid ${col}40`,
+                    }}>{r.prediction}</span>
+                  </td>
+                  <td style={{ fontFamily:F.mono, fontSize:13, color:col, padding:"9px 10px" }}>{(r.confidence*100).toFixed(1)}%</td>
+                  <td style={{ fontFamily:F.mono, fontSize:13, color:r.latency<25?C.green:r.latency<35?C.amber:C.red, padding:"9px 10px" }}>{r.latency}ms</td>
+                  <td style={{ fontFamily:F.mono, fontSize:13, color:C.muted, padding:"9px 10px" }}>${r.price.toLocaleString()}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, onRemoveCustom, disabled }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm]         = useState({ ticker:"", price:"", volume:"" });
+  const [err, setErr]           = useState("");
+
+  function handleAdd() {
+    const t = form.ticker.trim().toUpperCase();
+    const p = parseFloat(form.price);
+    const v = parseInt(form.volume);
+    if (!/^[A-Z]{1,5}$/.test(t))                                           { setErr("Ticker must be 1–5 letters");    return; }
+    if (DEFAULT_STOCKS.some(s=>s.ticker===t)||customStocks.some(s=>s.ticker===t)) { setErr("Ticker already in list"); return; }
+    if (isNaN(p) || p <= 0)                                                 { setErr("Enter a valid price");           return; }
+    if (isNaN(v) || v <= 0)                                                 { setErr("Enter a valid volume");          return; }
+    onAddCustom({ ticker:t, price:p, volume:v });
+    setForm({ ticker:"", price:"", volume:"" });
+    setErr(""); setShowForm(false);
+  }
+
+  const inputStyle = {
+    fontFamily:F.mono, fontSize:13, padding:"7px 10px",
+    background:"rgba(0,0,0,0.3)", border:`1px solid ${C.border}`,
+    borderRadius:4, color:C.text, outline:"none",
+  };
+
+  return (
+    <GlassCard style={{ padding:"20px 24px", marginBottom:16 }}>
+      <SectionHeader>Configure Stocks</SectionHeader>
+
+      {/* Default stock toggles */}
+      <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:16 }}>
+        {DEFAULT_STOCKS.map(s => {
+          const sel = selectedTickers.has(s.ticker);
+          return (
+            <button key={s.ticker} onClick={()=>!disabled&&onToggle(s.ticker)} style={{
+              fontFamily:F.mono, fontSize:12, fontWeight:700,
+              padding:"7px 16px", borderRadius:6,
+              cursor: disabled ? "not-allowed" : "pointer",
+              border:`1.5px solid ${sel ? C.accent : C.border}`,
+              background: sel ? "rgba(26,172,190,0.12)" : "rgba(0,0,0,0.2)",
+              color: sel ? C.accent : C.dim,
+              opacity: disabled ? 0.5 : 1,
+              transition:"all 0.15s",
+              display:"flex", flexDirection:"column", alignItems:"center", gap:2, lineHeight:1,
+            }}>
+              <span>{s.ticker}</span>
+              <span style={{ fontSize:10, opacity:0.65 }}>${s.price}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Custom stock chips */}
+      {customStocks.length > 0 && (
+        <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:14 }}>
+          {customStocks.map(s => (
+            <div key={s.ticker} style={{
+              display:"flex", alignItems:"center", gap:6,
+              fontFamily:F.mono, fontSize:12, fontWeight:700,
+              padding:"7px 10px 7px 14px", borderRadius:6,
+              border:`1.5px solid ${C.accentDk}`,
+              background:"rgba(23,126,137,0.12)", color:C.text,
+              lineHeight:1,
+            }}>
+              <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:2 }}>
+                <span>{s.ticker}</span>
+                <span style={{ fontSize:10, opacity:0.65 }}>${s.price.toLocaleString()}</span>
+              </span>
+              <button onClick={()=>!disabled&&onRemoveCustom(s.ticker)} style={{
+                background:"transparent", border:"none", color:C.dim,
+                cursor: disabled ? "not-allowed" : "pointer",
+                fontSize:16, lineHeight:1, padding:"0 2px", marginLeft:2,
+              }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add stock form */}
+      {!showForm ? (
+        <button onClick={()=>!disabled&&setShowForm(true)} disabled={disabled} style={{
+          fontFamily:F.mono, fontSize:11, letterSpacing:"1px",
+          padding:"6px 16px", borderRadius:4,
+          border:`1px dashed ${C.border}`,
+          background:"transparent", color:C.dim,
+          cursor: disabled ? "not-allowed" : "pointer",
+          transition:"all 0.15s",
+        }}>+ Add Stock</button>
+      ) : (
+        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+          <input
+            placeholder="TICKER" maxLength={5}
+            value={form.ticker}
+            onChange={e=>setForm(f=>({...f,ticker:e.target.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,5)}))}
+            style={{ ...inputStyle, width:80 }}
+          />
+          <input
+            placeholder="Price $" type="number" min="0"
+            value={form.price}
+            onChange={e=>setForm(f=>({...f,price:e.target.value}))}
+            style={{ ...inputStyle, width:100 }}
+          />
+          <input
+            placeholder="Volume" type="number" min="0"
+            value={form.volume}
+            onChange={e=>setForm(f=>({...f,volume:e.target.value}))}
+            style={{ ...inputStyle, width:110 }}
+          />
+          <button onClick={handleAdd} style={{
+            fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"1px",
+            padding:"7px 18px", borderRadius:4, border:"none",
+            background:C.accent, color:"#091515", cursor:"pointer",
+          }}>Add</button>
+          <button onClick={()=>{setShowForm(false);setErr("");}} style={{
+            fontFamily:F.mono, fontSize:12, padding:"7px 14px", borderRadius:4,
+            border:`1px solid ${C.border}`, background:"transparent", color:C.dim, cursor:"pointer",
+          }}>Cancel</button>
+          {err && <span style={{ fontFamily:F.mono, fontSize:11, color:C.red }}>{err}</span>}
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+
+/* ── Main component ──────────────────────────────────────────── */
 
 export default function MLPipelineShowcase() {
   const navigate = useNavigate();
-  const [view, setView]         = useState("architecture");
-  const [running, setRunning]   = useState(false);
-  const [activeStage, setActive]= useState(-1);
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs]         = useState([]);
-  const [count, setCount]       = useState(0);
-  const [latHist, setLatHist]   = useState([]);
-  const [pred, setPred]         = useState(null);
-  const [avgLat, setAvgLat]     = useState(0);
-  const [avgConf, setAvgConf]   = useState(0);
-  const logRef = useRef(null);
-  const runRef = useRef(false);
+  const [view, setView]                 = useState("architecture");
+  const [running, setRunning]           = useState(false);
+  const [activeStage, setActive]        = useState(-1);
+  const [progress, setProgress]         = useState(0);
+  const [logs, setLogs]                 = useState([]);
+  const [count, setCount]               = useState(0);
+  const [latHist, setLatHist]           = useState([]);
+  const [pred, setPred]                 = useState(null);
+  const [avgLat, setAvgLat]             = useState(0);
+  const [avgConf, setAvgConf]           = useState(0);
+  const [allResults, setAllResults]     = useState([]);
+  const [selectedTickers, setSelected]  = useState(new Set(DEFAULT_STOCKS.map(s=>s.ticker)));
+  const [customStocks, setCustomStocks] = useState([]);
+  const logRef  = useRef(null);
+  const runRef  = useRef(false);
+  const queueRef = useRef([]);  // snapshot of stocks at run-start
 
   const addLog = useCallback((message, type="info") => {
     const d  = new Date();
     const ts = [d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,"0")).join(":")
       + "." + String(d.getMilliseconds()).padStart(3,"0");
-    setLogs(p => [...p.slice(-50), { message, type, timestamp:ts }]);
+    setLogs(p => [...p.slice(-60), { message, type, timestamp:ts }]);
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, []);
-
-  useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [logs]);
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   const runPipeline = useCallback(async () => {
     if (runRef.current) return;
-    runRef.current=true; setRunning(true); setLogs([]); setActive(-1); setCount(0);
-    setLatHist([]); setPred(null); setAvgLat(0); setAvgConf(0);
-    addLog("Initialising ML inference pipeline…","info");                         await sleep(600);
-    addLog("Connected to Pub/Sub — topic: market-data-stream","success");         await sleep(400);
-    addLog("Vertex AI endpoint healthy — model: sentiment-v3","success");         await sleep(400);
-    addLog("BigQuery dataset: predictions.market_signals ready","success");       await sleep(500);
-    addLog("Pipeline active — awaiting incoming data…","info");                   await sleep(700);
-    let tLat=0, tConf=0;
-    for (let i=0; i<SAMPLES.length; i++) {
+    // snapshot the queue so mid-run changes don't affect it
+    queueRef.current = [
+      ...DEFAULT_STOCKS.filter(s => selectedTickers.has(s.ticker)),
+      ...customStocks.map(s => ({ ...s, ...simulateStock(s.ticker) })),
+    ];
+    if (queueRef.current.length === 0) return;
+
+    runRef.current = true;
+    setRunning(true); setLogs([]); setActive(-1); setCount(0);
+    setLatHist([]); setPred(null); setAvgLat(0); setAvgConf(0); setAllResults([]);
+
+    addLog("Initialising ML inference pipeline…","info");                   await sleep(600);
+    addLog("Connected to Pub/Sub — topic: market-data-stream","success");   await sleep(400);
+    addLog("Vertex AI endpoint healthy — model: sentiment-v3","success");   await sleep(400);
+    addLog("BigQuery dataset: predictions.market_signals ready","success"); await sleep(500);
+    addLog(`Pipeline active — processing ${queueRef.current.length} stocks…`,"info"); await sleep(700);
+
+    let tLat = 0, tConf = 0;
+    const queue = queueRef.current;
+
+    for (let i = 0; i < queue.length; i++) {
       if (!runRef.current) break;
-      const s=SAMPLES[i], p=JSON.parse(s.input);
-      setActive(0); addLog(`Pub/Sub message — ${p.ticker} @ $${p.price}`,"data");
+      const s = queue[i];
+
+      setActive(0); addLog(`Pub/Sub message — ${s.ticker} @ $${s.price}`,"data");
       for (let x=0;x<=10;x++){setProgress(x/10);await sleep(55);}  await sleep(180);
-      setActive(1); addLog(`Preprocessing: normalising price/volume for ${p.ticker}`,"processing");
+
+      setActive(1); addLog(`Preprocessing: normalising price/volume for ${s.ticker}`,"processing");
       for (let x=0;x<=10;x++){setProgress(x/10);await sleep(45);}
-      addLog("Feature vector: [0.72, −0.15, 0.88, 0.33, −0.41]","data");        await sleep(260);
+      addLog("Feature vector: [0.72, −0.15, 0.88, 0.33, −0.41]","data"); await sleep(260);
+
       setActive(2); addLog("Running inference on Vertex AI endpoint…","processing");
       for (let x=0;x<=10;x++){setProgress(x/10);await sleep(65);}
       addLog(`Prediction: ${s.prediction} (conf: ${(s.confidence*100).toFixed(1)}%) — ${s.latency}ms`,"success");
-      setPred({ ticker:p.ticker, prediction:s.prediction, confidence:s.confidence, latency:s.latency });
+      setPred({ ticker:s.ticker, prediction:s.prediction, confidence:s.confidence, latency:s.latency });
       await sleep(280);
+
       setActive(3); addLog("Writing to BigQuery: predictions.market_signals","processing");
       for (let x=0;x<=10;x++){setProgress(x/10);await sleep(38);}
       addLog(`Row inserted — partition: ${new Date().toISOString().split("T")[0]}`,"success"); await sleep(180);
+
       setActive(4); addLog("API response served — 200 OK","success");
       for (let x=0;x<=10;x++){setProgress(x/10);await sleep(28);}  await sleep(180);
-      tLat+=s.latency; tConf+=s.confidence;
-      const n=i+1;
+
+      tLat += s.latency; tConf += s.confidence;
+      const n = i + 1;
       setCount(n); setAvgLat(Math.round(tLat/n)); setAvgConf(Math.round((tConf/n)*100));
-      setLatHist(prev=>[...prev,{latency:s.latency,ticker:p.ticker}]);
-      if (i<SAMPLES.length-1){ setActive(-1); addLog("Awaiting next message…","info"); await sleep(750); }
+      setLatHist(prev => [...prev, { latency:s.latency, ticker:s.ticker }]);
+      setAllResults(prev => [...prev, { ticker:s.ticker, prediction:s.prediction, confidence:s.confidence, latency:s.latency, price:s.price }]);
+
+      if (i < queue.length-1) { setActive(-1); addLog("Awaiting next message…","info"); await sleep(750); }
     }
+
     setActive(-1);
-    addLog(`Batch complete — ${SAMPLES.length} predictions processed`,"success");
-    setRunning(false); runRef.current=false;
-  }, [addLog]);
+    addLog(`Batch complete — ${queue.length} predictions processed`,"success");
+    setRunning(false); runRef.current = false;
+  }, [addLog, selectedTickers, customStocks]);
 
   const stopPipeline = useCallback(() => {
-    runRef.current=false; setRunning(false); setActive(-1);
+    runRef.current = false; setRunning(false); setActive(-1);
     addLog("Pipeline stopped by user","warning");
   }, [addLog]);
 
-  const predColor = pred?.prediction==="BULLISH" ? C.green : pred?.prediction==="BEARISH" ? C.red : C.amber;
+  const toggleTicker   = t => setSelected(prev => { const n=new Set(prev); n.has(t)?n.delete(t):n.add(t); return n; });
+  const addCustom      = s => setCustomStocks(prev => [...prev, s]);
+  const removeCustom   = t => setCustomStocks(prev => prev.filter(s => s.ticker !== t));
+  const totalStocks    = selectedTickers.size + customStocks.length;
+  const pc             = pred ? predColor(pred.prediction) : C.dim;
 
   return (
     <div style={{ background:C.bg, minHeight:"100vh", color:C.text, fontFamily:F.sans, overflowX:"hidden" }}>
@@ -315,18 +537,19 @@ export default function MLPipelineShowcase() {
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.5)}}
         @keyframes flowRight{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
         *{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:4px;height:4px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(23,126,137,0.4);border-radius:2px}
         ::-webkit-scrollbar-thumb:hover{background:rgba(26,172,190,0.6)}
+        table{border-spacing:0}
+        input[type=number]::-webkit-inner-spin-button{opacity:0}
       `}</style>
 
       {/* Hex grid background */}
       <svg style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}} aria-hidden="true">
         <defs>
-          <pattern id="mlhex" x="0" y="0" width="38" height="66" patternUnits="userSpaceOnUse">
+          <pattern id="mlhex"  x="0"  y="0"  width="38" height="66" patternUnits="userSpaceOnUse">
             <path d="M19 11 L38 22 L38 44 L19 55 L0 44 L0 22 Z" fill="none" stroke="rgba(23,126,137,0.14)" strokeWidth="0.7"/>
           </pattern>
           <pattern id="mlhex2" x="19" y="33" width="38" height="66" patternUnits="userSpaceOnUse">
@@ -336,14 +559,7 @@ export default function MLPipelineShowcase() {
         <rect width="100%" height="100%" fill="url(#mlhex)"/>
         <rect width="100%" height="100%" fill="url(#mlhex2)"/>
       </svg>
-      {/* Ambient glow */}
-      <div style={{
-        position:"fixed", inset:0, pointerEvents:"none", zIndex:0,
-        background:`
-          radial-gradient(ellipse 55% 35% at 5% 0%, rgba(23,126,137,0.12) 0%, transparent 65%),
-          radial-gradient(ellipse 45% 30% at 95% 100%, rgba(26,172,190,0.08) 0%, transparent 60%)
-        `,
-      }} />
+      <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, background:`radial-gradient(ellipse 55% 35% at 5% 0%, rgba(23,126,137,0.12) 0%, transparent 65%), radial-gradient(ellipse 45% 30% at 95% 100%, rgba(26,172,190,0.08) 0%, transparent 60%)` }} />
 
       {/* Back button */}
       <button
@@ -359,40 +575,23 @@ export default function MLPipelineShowcase() {
         }}
         onMouseEnter={e=>{e.currentTarget.style.color=C.text;e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.boxShadow=`0 0 20px ${C.glowSm}`;}}
         onMouseLeave={e=>{e.currentTarget.style.color=C.dim;e.currentTarget.style.borderColor=C.border;e.currentTarget.style.boxShadow="none";}}
-      >
-        ← Timeline
-      </button>
+      >← Timeline</button>
 
-      <div style={{ maxWidth:1020, margin:"0 auto", padding:"68px 28px 60px", position:"relative", zIndex:1 }}>
+      <div style={{ maxWidth:1060, margin:"0 auto", padding:"68px 28px 60px", position:"relative", zIndex:1 }}>
 
         {/* ── Hero ── */}
         <div style={{ marginBottom:48, animation:"fadeUp 0.5s ease" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
-            <span style={{
-              fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase",
-              color:"#091515", background:C.accent,
-              padding:"4px 12px", borderRadius:3,
-              boxShadow:`0 0 16px ${C.glowSm}`,
-            }}>Project</span>
-            <span style={{ fontFamily:F.mono, fontSize:12, letterSpacing:"1.5px", color:C.dim }}>
-              GCP · Vertex AI · Cloud Run · BigQuery
-            </span>
+            <span style={{ fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"#091515", background:C.accent, padding:"4px 12px", borderRadius:3, boxShadow:`0 0 16px ${C.glowSm}` }}>Project</span>
+            <span style={{ fontFamily:F.mono, fontSize:12, letterSpacing:"1.5px", color:C.dim }}>GCP · Vertex AI · Cloud Run · BigQuery</span>
           </div>
-
-          <h1 style={{
-            fontFamily:F.display, fontSize:"clamp(28px,4.5vw,44px)",
-            fontWeight:700, letterSpacing:"1px",
-            color:C.text, lineHeight:1.1, marginBottom:16,
-            textShadow:`0 0 60px ${C.glowSm}`,
-          }}>
+          <h1 style={{ fontFamily:F.display, fontSize:"clamp(28px,4.5vw,44px)", fontWeight:700, letterSpacing:"1px", color:C.text, lineHeight:1.1, marginBottom:16, textShadow:`0 0 60px ${C.glowSm}` }}>
             Real-Time ML Inference Pipeline
           </h1>
-
           <p style={{ fontFamily:F.sans, fontSize:17, color:C.muted, lineHeight:1.85, maxWidth:600, marginBottom:20 }}>
             Streaming market data through a serverless ML pipeline — ingestion via Pub/Sub,
             preprocessing on Cloud Run, inference on Vertex AI, storage in BigQuery.
           </p>
-
           <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
             {["Vertex AI","Cloud Run","Pub/Sub","BigQuery","Terraform","Python","FastAPI"].map(t => <Tag key={t}>{t}</Tag>)}
           </div>
@@ -463,26 +662,36 @@ export default function MLPipelineShowcase() {
         {/* ── Simulation ── */}
         {view==="simulation" && (
           <div style={{ animation:"fadeUp 0.35s ease" }}>
+
+            {/* Stock selector */}
+            <StockSelector
+              selectedTickers={selectedTickers}
+              onToggle={toggleTicker}
+              customStocks={customStocks}
+              onAddCustom={addCustom}
+              onRemoveCustom={removeCustom}
+              disabled={running}
+            />
+
+            {/* Pipeline status */}
             <GlassCard style={{ padding:"24px 28px", marginBottom:16 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24 }}>
                 <div>
                   <SectionHeader>Pipeline Status</SectionHeader>
-                  <div style={{
-                    fontFamily:F.mono, fontSize:14, letterSpacing:"1px",
-                    color: running ? C.green : logs.length>0 ? C.muted : C.dim,
-                    textShadow: running ? `0 0 12px ${C.green}` : "none",
-                  }}>
+                  <div style={{ fontFamily:F.mono, fontSize:14, letterSpacing:"1px", color:running?C.green:logs.length>0?C.muted:C.dim, textShadow:running?`0 0 12px ${C.green}`:"none" }}>
                     {running ? "● RUNNING" : logs.length>0 ? "● COMPLETE" : "○ IDLE"}
                   </div>
                 </div>
                 <button
                   onClick={running ? stopPipeline : runPipeline}
+                  disabled={!running && totalStocks===0}
                   style={{
                     fontFamily:F.mono, fontSize:13, letterSpacing:"2px", textTransform:"uppercase",
                     padding:"12px 30px", borderRadius:6, border:"none", cursor:"pointer", fontWeight:700,
                     background: running ? C.red : C.accent,
                     color:"#091515",
                     boxShadow: running ? `0 4px 20px rgba(248,113,113,0.4)` : `0 4px 24px ${C.glow}`,
+                    opacity: !running && totalStocks===0 ? 0.4 : 1,
                     transition:"all 0.2s",
                   }}
                 >{running ? "■ Stop" : "▶ Run Pipeline"}</button>
@@ -497,27 +706,23 @@ export default function MLPipelineShowcase() {
               </div>
             </GlassCard>
 
+            {/* Metrics */}
             <div style={{ display:"flex", gap:12, marginBottom:16, flexWrap:"wrap" }}>
-              <MetricCard label="Processed"      value={count}                     unit={`/ ${SAMPLES.length}`} color={C.accent}                                note="messages" />
-              <MetricCard label="Avg Latency"    value={avgLat||"—"}               unit={avgLat?"ms":""}        color={avgLat<25?C.green:avgLat?C.amber:C.dim}  note={avgLat?"inference time":""} />
-              <MetricCard label="Avg Confidence" value={avgConf?`${avgConf}`:"—"}  unit={avgConf?"%":""}        color={C.purple}                                note={avgConf?"model certainty":""} />
-              <MetricCard label="Uptime"         value="99.9"                       unit="%"                     color={C.green}                                 note="last 30 days" />
+              <MetricCard label="Processed"      value={count}               unit={`/ ${totalStocks}`}    color={C.accent}                               note="messages" />
+              <MetricCard label="Avg Latency"    value={avgLat||"—"}         unit={avgLat?"ms":""}        color={avgLat<25?C.green:avgLat?C.amber:C.dim} note={avgLat?"inference time":""} />
+              <MetricCard label="Avg Confidence" value={avgConf?`${avgConf}`:"—"} unit={avgConf?"%":""}  color={C.purple}                               note={avgConf?"model certainty":""} />
+              <MetricCard label="Uptime"         value="99.9"                unit="%"                     color={C.green}                                note="last 30 days" />
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+            {/* Latest prediction + logs */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
               <GlassCard style={{ padding:22 }}>
                 <SectionHeader>Latest Prediction</SectionHeader>
                 {pred ? (
                   <>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
                       <span style={{ fontFamily:F.display, fontSize:32, fontWeight:700, color:C.text, letterSpacing:"2px" }}>{pred.ticker}</span>
-                      <span style={{
-                        fontFamily:F.mono, fontSize:13, fontWeight:700, letterSpacing:"2px",
-                        color:predColor, background:`${predColor}18`,
-                        padding:"5px 14px", borderRadius:4,
-                        border:`1px solid ${predColor}50`,
-                        boxShadow:`0 0 16px ${predColor}30`,
-                      }}>{pred.prediction}</span>
+                      <span style={{ fontFamily:F.mono, fontSize:13, fontWeight:700, letterSpacing:"2px", color:pc, background:`${pc}18`, padding:"5px 14px", borderRadius:4, border:`1px solid ${pc}50`, boxShadow:`0 0 16px ${pc}30` }}>{pred.prediction}</span>
                     </div>
                     <div style={{ display:"flex", gap:28, marginBottom:22 }}>
                       <div>
@@ -540,28 +745,28 @@ export default function MLPipelineShowcase() {
 
               <GlassCard style={{ padding:22, display:"flex", flexDirection:"column" }}>
                 <SectionHeader>Pipeline Logs</SectionHeader>
-                <div ref={logRef} style={{
-                  flex:1, minHeight:240, maxHeight:320, overflowY:"auto",
-                  background:"rgba(0,0,0,0.45)", borderRadius:6, padding:14,
-                  border:`1px solid ${C.border}`,
-                  position:"relative",
-                }}>
-                  {/* Scanline effect */}
-                  <div style={{
-                    position:"absolute", inset:0, pointerEvents:"none", zIndex:1,
-                    backgroundImage:"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)",
-                    borderRadius:6,
-                  }} />
+                <div ref={logRef} style={{ flex:1, minHeight:240, maxHeight:320, overflowY:"auto", background:"rgba(0,0,0,0.45)", borderRadius:6, padding:14, border:`1px solid ${C.border}`, position:"relative" }}>
+                  <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:1, backgroundImage:"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)", borderRadius:6 }} />
                   <div style={{ position:"relative", zIndex:2 }}>
                     {logs.length===0 ? (
-                      <div style={{ fontFamily:F.mono, fontSize:13, color:C.dim, padding:"40px 0", textAlign:"center" }}>
-                        Waiting for pipeline execution…
-                      </div>
+                      <div style={{ fontFamily:F.mono, fontSize:13, color:C.dim, padding:"40px 0", textAlign:"center" }}>Waiting for pipeline execution…</div>
                     ) : logs.map((l,i) => <LogEntry key={i} {...l} />)}
                   </div>
                 </div>
               </GlassCard>
             </div>
+
+            {/* Batch results */}
+            {allResults.length > 0 && (
+              <GlassCard style={{ padding:"24px 28px", animation:"fadeUp 0.4s ease" }}>
+                <SectionHeader>Batch Results</SectionHeader>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32 }}>
+                  <ResultsChart results={allResults} />
+                  <ResultsTable results={allResults} />
+                </div>
+              </GlassCard>
+            )}
+
           </div>
         )}
       </div>

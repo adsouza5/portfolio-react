@@ -27,8 +27,8 @@ const C = {
 };
 
 const F = {
-  mono:    "'Courier New', Courier, monospace",
-  display: "'Franklin Gothic Medium','Arial Narrow',Arial,sans-serif",
+  mono:    "'JetBrains Mono','Courier New',monospace",
+  display: "'Rajdhani','Franklin Gothic Medium',Arial,sans-serif",
   sans:    "'Segoe UI',system-ui,sans-serif",
 };
 
@@ -311,6 +311,7 @@ export default function MLPipelineShowcase() {
   return (
     <div style={{ background:C.bg, minHeight:"100vh", color:C.text, fontFamily:F.sans, overflowX:"hidden" }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap');
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.5)}}
         @keyframes flowRight{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}

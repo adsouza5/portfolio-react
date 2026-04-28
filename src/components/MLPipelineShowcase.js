@@ -87,9 +87,9 @@ function SectionHeader({ children }) {
 function Tag({ children }) {
   return (
     <span style={{
-      fontFamily:F.mono, fontSize:10, letterSpacing:"0.5px",
+      fontFamily:F.mono, fontSize:12, letterSpacing:"0.5px",
       color:"#091515", background:C.accentDk,
-      borderRadius:3, padding:"3px 9px", whiteSpace:"nowrap",
+      borderRadius:3, padding:"4px 11px", whiteSpace:"nowrap",
       fontWeight:700,
     }}>{children}</span>
   );
@@ -128,9 +128,9 @@ function PipelineNode({ stage, active, complete, progress }) {
         </span>
       </div>
       <span style={{
-        fontFamily:F.mono, fontSize:10, letterSpacing:"0.5px",
+        fontFamily:F.mono, fontSize:12, letterSpacing:"0.5px",
         color: active ? stage.color : complete ? C.muted : C.dim,
-        textAlign:"center", whiteSpace:"pre", lineHeight:1.45,
+        textAlign:"center", whiteSpace:"pre", lineHeight:1.5,
         transition:"color 0.3s",
         textShadow: active ? `0 0 12px ${stage.color}` : "none",
       }}>
@@ -183,12 +183,12 @@ function MetricCard({ label, value, unit, color, note }) {
         background:`linear-gradient(90deg, ${color||C.accent}, transparent)`,
         boxShadow:`0 0 8px ${color||C.accent}`,
       }} />
-      <div style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:8 }}>{label}</div>
-      <div style={{ display:"flex", alignItems:"baseline", gap:4 }}>
-        <span style={{ fontFamily:F.mono, fontSize:26, fontWeight:700, color:color||C.text, lineHeight:1 }}>{value}</span>
-        {unit && <span style={{ fontFamily:F.mono, fontSize:12, color:C.dim }}>{unit}</span>}
+      <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:10 }}>{label}</div>
+      <div style={{ display:"flex", alignItems:"baseline", gap:5 }}>
+        <span style={{ fontFamily:F.mono, fontSize:30, fontWeight:700, color:color||C.text, lineHeight:1 }}>{value}</span>
+        {unit && <span style={{ fontFamily:F.mono, fontSize:14, color:C.dim }}>{unit}</span>}
       </div>
-      {note && <div style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"0.5px", color:C.dim, marginTop:5 }}>{note}</div>}
+      {note && <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"0.5px", color:C.dim, marginTop:6 }}>{note}</div>}
     </div>
   );
 }
@@ -197,7 +197,7 @@ function LogEntry({ message, type, timestamp }) {
   const typeColor = { info:C.accent, success:C.green, warning:C.amber, processing:C.purple, data:C.muted };
   const typeIcon  = { success:"✓", warning:"!", processing:"◌", data:"›", info:"·" };
   return (
-    <div style={{ fontFamily:F.mono, fontSize:11, lineHeight:1.8, display:"flex", gap:12 }}>
+    <div style={{ fontFamily:F.mono, fontSize:13, lineHeight:1.85, display:"flex", gap:12 }}>
       <span style={{ color:C.dim, flexShrink:0, opacity:0.7 }}>{timestamp}</span>
       <span style={{ color:typeColor[type]||C.dim, flexShrink:0 }}>{typeIcon[type]||"·"}</span>
       <span style={{ color:C.muted }}>{message}</span>
@@ -210,7 +210,7 @@ function LatencyChart({ history }) {
   const barW = Math.max(4, Math.min(14, 220/history.length));
   return (
     <div>
-      <div style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:10 }}>Latency (ms)</div>
+      <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:10 }}>Latency (ms)</div>
       <div style={{ display:"flex", alignItems:"flex-end", gap:3, height:64 }}>
         {history.map((h, i) => {
           const ht  = (h.latency/max)*64;
@@ -227,8 +227,8 @@ function LatencyChart({ history }) {
         })}
       </div>
       <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
-        <span style={{ fontFamily:F.mono, fontSize:9, color:C.dim }}>0ms</span>
-        <span style={{ fontFamily:F.mono, fontSize:9, color:C.dim }}>{max}ms</span>
+        <span style={{ fontFamily:F.mono, fontSize:11, color:C.dim }}>0ms</span>
+        <span style={{ fontFamily:F.mono, fontSize:11, color:C.dim }}>{max}ms</span>
       </div>
     </div>
   );
@@ -350,7 +350,7 @@ export default function MLPipelineShowcase() {
         style={{
           position:"fixed", top:20, left:20, zIndex:100,
           display:"inline-flex", alignItems:"center", gap:8,
-          fontFamily:F.mono, fontSize:10, letterSpacing:"2px", textTransform:"uppercase",
+          fontFamily:F.mono, fontSize:12, letterSpacing:"2px", textTransform:"uppercase",
           color:C.dim, background:"rgba(9,21,21,0.9)",
           border:`1px solid ${C.border}`, borderRadius:6,
           padding:"9px 16px", cursor:"pointer", backdropFilter:"blur(16px)",
@@ -368,12 +368,12 @@ export default function MLPipelineShowcase() {
         <div style={{ marginBottom:48, animation:"fadeUp 0.5s ease" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
             <span style={{
-              fontFamily:F.mono, fontSize:10, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase",
+              fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase",
               color:"#091515", background:C.accent,
-              padding:"3px 10px", borderRadius:3,
+              padding:"4px 12px", borderRadius:3,
               boxShadow:`0 0 16px ${C.glowSm}`,
             }}>Project</span>
-            <span style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", color:C.dim }}>
+            <span style={{ fontFamily:F.mono, fontSize:12, letterSpacing:"1.5px", color:C.dim }}>
               GCP · Vertex AI · Cloud Run · BigQuery
             </span>
           </div>
@@ -387,7 +387,7 @@ export default function MLPipelineShowcase() {
             Real-Time ML Inference Pipeline
           </h1>
 
-          <p style={{ fontFamily:F.sans, fontSize:15, color:C.muted, lineHeight:1.8, maxWidth:600, marginBottom:20 }}>
+          <p style={{ fontFamily:F.sans, fontSize:17, color:C.muted, lineHeight:1.85, maxWidth:600, marginBottom:20 }}>
             Streaming market data through a serverless ML pipeline — ingestion via Pub/Sub,
             preprocessing on Cloud Run, inference on Vertex AI, storage in BigQuery.
           </p>
@@ -401,8 +401,8 @@ export default function MLPipelineShowcase() {
         <div style={{ display:"flex", gap:0, marginBottom:32, animation:"fadeUp 0.5s ease 0.1s both" }}>
           {[{id:"architecture",label:"Architecture"},{id:"simulation",label:"Live Simulation"}].map(tab => (
             <button key={tab.id} onClick={()=>setView(tab.id)} style={{
-              fontFamily:F.mono, fontSize:11, letterSpacing:"1.5px", textTransform:"uppercase",
-              padding:"10px 24px", border:"none", cursor:"pointer", background:"transparent",
+              fontFamily:F.mono, fontSize:13, letterSpacing:"1.5px", textTransform:"uppercase",
+              padding:"12px 28px", border:"none", cursor:"pointer", background:"transparent",
               color: view===tab.id ? C.accent : C.dim,
               borderBottom: view===tab.id ? `2px solid ${C.accent}` : `2px solid ${C.border}`,
               boxShadow: view===tab.id ? `0 1px 0 0 ${C.glowSm}` : "none",
@@ -432,12 +432,12 @@ export default function MLPipelineShowcase() {
                 <GlassCard key={s.title} style={{ padding:22, borderLeft:`3px solid ${s.color}`, boxShadow:`inset 0 0 40px ${s.color}08` }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
                     <span style={{ width:6, height:6, borderRadius:"50%", background:s.color, flexShrink:0, boxShadow:`0 0 8px ${s.color}` }} />
-                    <span style={{ fontFamily:F.display, fontSize:15, letterSpacing:"0.5px", color:C.text }}>{s.title}</span>
+                    <span style={{ fontFamily:F.display, fontSize:17, letterSpacing:"0.5px", color:C.text }}>{s.title}</span>
                   </div>
-                  <p style={{ fontFamily:F.sans, fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:14 }}>{s.desc}</p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                  <p style={{ fontFamily:F.sans, fontSize:15, color:C.muted, lineHeight:1.8, marginBottom:14 }}>{s.desc}</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                     {s.details.map(d => (
-                      <div key={d} style={{ fontFamily:F.mono, fontSize:11, color:C.dim, display:"flex", gap:8 }}>
+                      <div key={d} style={{ fontFamily:F.mono, fontSize:13, color:C.dim, display:"flex", gap:8 }}>
                         <span style={{ color:s.color }}>›</span>{d}
                       </div>
                     ))}
@@ -449,8 +449,8 @@ export default function MLPipelineShowcase() {
             <GlassCard style={{ padding:"16px 22px", display:"flex", alignItems:"center", gap:16 }}>
               <span style={{ fontSize:22, color:C.accent, opacity:0.8, flexShrink:0 }}>⎔</span>
               <div>
-                <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"1px", color:C.text, marginBottom:5 }}>Infrastructure as Code</div>
-                <div style={{ fontFamily:F.sans, fontSize:13, color:C.muted, lineHeight:1.7 }}>
+                <div style={{ fontFamily:F.mono, fontSize:14, letterSpacing:"1px", color:C.text, marginBottom:6 }}>Infrastructure as Code</div>
+                <div style={{ fontFamily:F.sans, fontSize:15, color:C.muted, lineHeight:1.75 }}>
                   Entire pipeline provisioned via Terraform — Pub/Sub topics, Cloud Run services,
                   Vertex AI endpoints, BigQuery datasets, IAM bindings, and monitoring alerts.
                 </div>
@@ -467,7 +467,7 @@ export default function MLPipelineShowcase() {
                 <div>
                   <SectionHeader>Pipeline Status</SectionHeader>
                   <div style={{
-                    fontFamily:F.mono, fontSize:12, letterSpacing:"1px",
+                    fontFamily:F.mono, fontSize:14, letterSpacing:"1px",
                     color: running ? C.green : logs.length>0 ? C.muted : C.dim,
                     textShadow: running ? `0 0 12px ${C.green}` : "none",
                   }}>
@@ -477,8 +477,8 @@ export default function MLPipelineShowcase() {
                 <button
                   onClick={running ? stopPipeline : runPipeline}
                   style={{
-                    fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase",
-                    padding:"10px 26px", borderRadius:6, border:"none", cursor:"pointer", fontWeight:700,
+                    fontFamily:F.mono, fontSize:13, letterSpacing:"2px", textTransform:"uppercase",
+                    padding:"12px 30px", borderRadius:6, border:"none", cursor:"pointer", fontWeight:700,
                     background: running ? C.red : C.accent,
                     color:"#091515",
                     boxShadow: running ? `0 4px 20px rgba(248,113,113,0.4)` : `0 4px 24px ${C.glow}`,
@@ -511,7 +511,7 @@ export default function MLPipelineShowcase() {
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
                       <span style={{ fontFamily:F.display, fontSize:32, fontWeight:700, color:C.text, letterSpacing:"2px" }}>{pred.ticker}</span>
                       <span style={{
-                        fontFamily:F.mono, fontSize:11, fontWeight:700, letterSpacing:"2px",
+                        fontFamily:F.mono, fontSize:13, fontWeight:700, letterSpacing:"2px",
                         color:predColor, background:`${predColor}18`,
                         padding:"5px 14px", borderRadius:4,
                         border:`1px solid ${predColor}50`,
@@ -520,18 +520,18 @@ export default function MLPipelineShowcase() {
                     </div>
                     <div style={{ display:"flex", gap:28, marginBottom:22 }}>
                       <div>
-                        <div style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:4 }}>Confidence</div>
-                        <div style={{ fontFamily:F.mono, fontSize:22, fontWeight:700, color:C.purple, textShadow:`0 0 16px ${C.purple}` }}>{(pred.confidence*100).toFixed(1)}%</div>
+                        <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:6 }}>Confidence</div>
+                        <div style={{ fontFamily:F.mono, fontSize:26, fontWeight:700, color:C.purple, textShadow:`0 0 16px ${C.purple}` }}>{(pred.confidence*100).toFixed(1)}%</div>
                       </div>
                       <div>
-                        <div style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:4 }}>Latency</div>
-                        <div style={{ fontFamily:F.mono, fontSize:22, fontWeight:700, color:pred.latency<25?C.green:C.amber, textShadow:`0 0 16px ${pred.latency<25?C.green:C.amber}` }}>{pred.latency}ms</div>
+                        <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:6 }}>Latency</div>
+                        <div style={{ fontFamily:F.mono, fontSize:26, fontWeight:700, color:pred.latency<25?C.green:C.amber, textShadow:`0 0 16px ${pred.latency<25?C.green:C.amber}` }}>{pred.latency}ms</div>
                       </div>
                     </div>
                     <LatencyChart history={latHist} />
                   </>
                 ) : (
-                  <div style={{ fontFamily:F.mono, fontSize:12, letterSpacing:"0.5px", color:C.dim, padding:"40px 0", textAlign:"center" }}>
+                  <div style={{ fontFamily:F.mono, fontSize:14, letterSpacing:"0.5px", color:C.dim, padding:"40px 0", textAlign:"center" }}>
                     Run the pipeline to see live predictions
                   </div>
                 )}
@@ -553,7 +553,7 @@ export default function MLPipelineShowcase() {
                   }} />
                   <div style={{ position:"relative", zIndex:2 }}>
                     {logs.length===0 ? (
-                      <div style={{ fontFamily:F.mono, fontSize:11, color:C.dim, padding:"40px 0", textAlign:"center" }}>
+                      <div style={{ fontFamily:F.mono, fontSize:13, color:C.dim, padding:"40px 0", textAlign:"center" }}>
                         Waiting for pipeline execution…
                       </div>
                     ) : logs.map((l,i) => <LogEntry key={i} {...l} />)}

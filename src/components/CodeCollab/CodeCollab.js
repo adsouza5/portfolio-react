@@ -594,6 +594,7 @@ export default function CodeCollab() {
             </div>
             <Editor
               key={activeId}
+              onMount={handleEditorMount}
               height="calc(100vh - 128px)"
               language={activeSegment.language}
               theme="vs-dark"

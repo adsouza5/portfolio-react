@@ -11,12 +11,14 @@
     "react-router-dom": "^7.14.2",
     "react-scripts": "5.0.1",
     "socket.io-client": "^4.8.3",
-    "web-vitals": "^4.2.4"
+    "web-vitals": "^4.2.4",
+    "y-webrtc": "^10.3.0",
+    "yjs": "^13.6.30"
   },
   "scripts": {
-    "start": "concurrently -n \"portfolio,manager\" -c \"cyan,yellow\" \"react-scripts start\" \"node server-manager.js\"",
+    "start": "react-scripts start",
     "build": "react-scripts build",
-    "serve": "concurrently -n \"portfolio,manager\" -c \"cyan,yellow\" \"serve -s build -l 3000\" \"node server-manager.js\"",
+    "serve": "serve -s build -l 3000",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",

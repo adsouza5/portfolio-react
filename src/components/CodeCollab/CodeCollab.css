@@ -48,6 +48,16 @@
   margin-bottom: 4px;
 }
 
+.cc-join-label {
+  width: 100%;
+  font-size: 11px;
+  font-family: var(--cc-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--cc-dim);
+  margin-bottom: -6px;
+}
+
 .cc-join-input {
   width: 100%;
   background: var(--cc-surface);

@@ -1,22 +1,35 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Editor } from '@monaco-editor/react';
-import io from 'socket.io-client';
+import * as Y from 'yjs';
+import { WebrtcProvider } from 'y-webrtc';
 import './CodeCollab.css';
 
-const SOCKET_URL   = 'http://localhost:5000';
-const MANAGER_URL  = 'http://localhost:5001';
-const LANGUAGES = [
-  'javascript', 'typescript', 'python', 'go', 'rust',
-  'java', 'html', 'css', 'json', 'markdown',
+const SIGNALING = ['wss://signaling.yjs.dev'];
+const LANGUAGES  = ['javascript','typescript','python','go','rust','java','html','css','json','markdown'];
+const USER_COLORS = [
+  '#5b9cf6','#6bcb8b','#c084fc','#f9a96b',
+  '#5dd8d8','#f87ba6','#fbbf24','#93c5fd',
+  '#86efac','#d8b4fe',
 ];
 
+function colorFromId(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) { h = Math.imul(31, h) + id.charCodeAt(i) | 0; }
+  return USER_COLORS[Math.abs(h) % USER_COLORS.length];
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
 // ── Join Screen ───────────────────────────────────────────────
-function JoinScreen({ onJoin, onBack, starting, error }) {
+function JoinScreen({ onJoin, onBack }) {
+  const [room, setRoom] = useState('');
   const [name, setName] = useState('');
 
   const submit = () => {
-    if (name.trim() && !starting) onJoin(name.trim());
+    if (room.trim() && name.trim()) onJoin({ room: room.trim(), name: name.trim() });
   };
 
   return (
@@ -24,20 +37,34 @@ function JoinScreen({ onJoin, onBack, starting, error }) {
       <button className="cc-back-btn" onClick={onBack}>← Timeline</button>
       <div className="cc-join-card">
         <div className="cc-logo">◈ CodeCollab</div>
-        <p className="cc-join-sub">Segment-based collaborative coding</p>
+        <p className="cc-join-sub">Peer-to-peer collaborative coding — no server required</p>
+
+        <label className="cc-join-label">Session name</label>
         <input
           className="cc-join-input"
-          placeholder="Your name"
+          placeholder="Share this name with collaborators"
+          value={room}
+          onChange={(e) => setRoom(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && name.trim() && submit()}
+        />
+
+        <label className="cc-join-label">Your name</label>
+        <input
+          className="cc-join-input"
+          placeholder="e.g. Adam"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
-          disabled={starting}
           autoFocus
         />
-        <button className="cc-join-btn" onClick={submit} disabled={starting}>
-          {starting ? 'Starting server…' : 'Join Session →'}
+
+        <button className="cc-join-btn" onClick={submit}>
+          Join Session →
         </button>
-        {error && <p className="cc-join-error">{error}</p>}
+
+        <p className="cc-join-note">
+          Peers connect directly via WebRTC. Anyone using the same session name joins the same room.
+        </p>
       </div>
     </div>
   );
@@ -58,7 +85,7 @@ function UserPill({ user, isYou }) {
 
 // ── New Segment Form ──────────────────────────────────────────
 function NewSegmentForm({ onConfirm, onCancel }) {
-  const [name, setName] = useState('');
+  const [name, setName]         = useState('');
   const [language, setLanguage] = useState('javascript');
 
   const submit = () => {
@@ -72,20 +99,11 @@ function NewSegmentForm({ onConfirm, onCancel }) {
         placeholder="Segment name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') submit();
-          if (e.key === 'Escape') onCancel();
-        }}
+        onKeyDown={(e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onCancel(); }}
         autoFocus
       />
-      <select
-        className="cc-tab-new-lang"
-        value={language}
-        onChange={(e) => setLanguage(e.target.value)}
-      >
-        {LANGUAGES.map((l) => (
-          <option key={l} value={l}>{l}</option>
-        ))}
+      <select className="cc-tab-new-lang" value={language} onChange={(e) => setLanguage(e.target.value)}>
+        {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
       </select>
       <button className="cc-tab-new-confirm" onClick={submit}>Create</button>
       <button className="cc-tab-new-cancel" onClick={onCancel}>✕</button>
@@ -96,97 +114,103 @@ function NewSegmentForm({ onConfirm, onCancel }) {
 // ── Main ──────────────────────────────────────────────────────
 export default function CodeCollab() {
   const navigate = useNavigate();
-  const [user, setUser]         = useState(null);
-  const [users, setUsers]       = useState([]);
-  const [segments, setSegments] = useState([]);
-  const [activeId, setActiveId] = useState(null);
+
+  const [user, setUser]           = useState(null);
+  const [users, setUsers]         = useState([]);
+  const [segments, setSegments]   = useState([]);
+  const [activeId, setActiveId]   = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const [error, setError]       = useState(null);
-  const socketRef = useRef(null);
+
+  const docRef       = useRef(null);
+  const providerRef  = useRef(null);
+  const ySegmentsRef = useRef(null);
 
   const goBack = useCallback(() => {
     navigate('/', { state: { scrollTo: 'projects' } });
   }, [navigate]);
 
-  const join = useCallback(async (name) => {
-    setError(null);
-    setStarting(true);
-
-    try {
-      await fetch(`${MANAGER_URL}/start`, { method: 'POST' });
-    } catch {
-      // Manager unreachable — try connecting directly (server may already be up)
-    }
-
-    setStarting(false);
-
-    const socket = io(SOCKET_URL, { timeout: 5000 });
-    socketRef.current = socket;
-
-    socket.on('connect_error', () => {
-      setError('Could not reach the CodeCollab server. Run npm start in the portfolio to launch everything automatically.');
-      socket.disconnect();
-    });
-
-    socket.on('joined', ({ user, users, segments }) => {
-      setUser(user);
-      setUsers(users);
-      setSegments(segments);
-      if (segments.length > 0) setActiveId(segments[0].id);
-    });
-
-    socket.on('users:update', setUsers);
-    socket.on('segments:update', setSegments);
-    socket.on('segment:content', ({ segmentId, content }) => {
-      setSegments((prev) =>
-        prev.map((s) => (s.id === segmentId ? { ...s, content } : s))
-      );
-    });
-
-    socket.emit('join', { name });
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      providerRef.current?.destroy();
+      docRef.current?.destroy();
+    };
   }, []);
 
-  // Auto-focus newly created own segment
-  useEffect(() => {
-    if (!user) return;
-    const mine = segments.find((s) => s.ownerId === user.id);
-    if (mine && !activeId) setActiveId(mine.id);
-  }, [segments, user, activeId]);
+  const join = useCallback(({ room, name }) => {
+    const id    = uid();
+    const color = colorFromId(id);
+    const me    = { id, name, color };
 
-  // Disconnect on unmount
-  useEffect(() => {
-    return () => socketRef.current?.disconnect();
+    const doc      = new Y.Doc();
+    const provider = new WebrtcProvider(`codecollab-${room}`, doc, { signaling: SIGNALING });
+    const ySegs    = doc.getMap('segments');
+
+    docRef.current      = doc;
+    providerRef.current = provider;
+    ySegmentsRef.current = ySegs;
+
+    // Broadcast own presence
+    provider.awareness.setLocalState(me);
+
+    // Sync user list from awareness
+    const syncUsers = () => {
+      const list = [];
+      provider.awareness.getStates().forEach((s) => { if (s?.id) list.push(s); });
+      setUsers(list);
+    };
+    provider.awareness.on('change', syncUsers);
+    syncUsers();
+
+    // Sync segments from Y.Map
+    const syncSegments = () => {
+      const list = [];
+      ySegs.forEach((val, key) => list.push({ id: key, ...val }));
+      setSegments(list);
+    };
+    ySegs.observe(syncSegments);
+    syncSegments();
+
+    setUser(me);
   }, []);
 
   const createSegment = ({ name, language }) => {
-    socketRef.current?.emit('segment:create', { name, language });
+    if (!user) return;
+    const id = `seg_${Date.now()}`;
+    ySegmentsRef.current?.set(id, {
+      name,
+      language,
+      ownerId:    user.id,
+      ownerName:  user.name,
+      ownerColor: user.color,
+      content:    `// ${name}\n// ${user.name}'s workspace\n\n`,
+    });
     setShowNewForm(false);
+    setActiveId(id);
   };
 
-  const deleteSegment = (segmentId, e) => {
+  const deleteSegment = (segId, e) => {
     e.stopPropagation();
-    socketRef.current?.emit('segment:delete', { segmentId });
-    if (activeId === segmentId) {
-      const rest = segments.filter((s) => s.id !== segmentId);
+    const seg = ySegmentsRef.current?.get(segId);
+    if (!seg || seg.ownerId !== user?.id) return;
+    ySegmentsRef.current.delete(segId);
+    if (activeId === segId) {
+      const rest = segments.filter((s) => s.id !== segId);
       setActiveId(rest.length > 0 ? rest[0].id : null);
     }
   };
 
   const handleEditorChange = (content) => {
     if (!activeSegment || activeSegment.ownerId !== user?.id) return;
-    socketRef.current?.emit('segment:update', { segmentId: activeId, content });
-    setSegments((prev) =>
-      prev.map((s) => (s.id === activeId ? { ...s, content } : s))
-    );
+    const current = ySegmentsRef.current?.get(activeId);
+    if (!current) return;
+    ySegmentsRef.current.set(activeId, { ...current, content });
   };
 
   const activeSegment = segments.find((s) => s.id === activeId) ?? null;
-  const isOwner = activeSegment?.ownerId === user?.id;
+  const isOwner       = activeSegment?.ownerId === user?.id;
 
-  if (!user) {
-    return <JoinScreen onJoin={join} onBack={goBack} starting={starting} error={error} />;
-  }
+  if (!user) return <JoinScreen onJoin={join} onBack={goBack} />;
 
   return (
     <div className="cc-app">
@@ -217,18 +241,13 @@ export default function CodeCollab() {
             <span className="cc-tab-dot" style={{ background: seg.ownerColor }} />
             <span className="cc-tab-name">{seg.name}</span>
             {seg.ownerId === user.id && (
-              <span className="cc-tab-close" onClick={(e) => deleteSegment(seg.id, e)}>
-                ×
-              </span>
+              <span className="cc-tab-close" onClick={(e) => deleteSegment(seg.id, e)}>×</span>
             )}
           </button>
         ))}
 
         {showNewForm ? (
-          <NewSegmentForm
-            onConfirm={createSegment}
-            onCancel={() => setShowNewForm(false)}
-          />
+          <NewSegmentForm onConfirm={createSegment} onCancel={() => setShowNewForm(false)} />
         ) : (
           <button className="cc-tab-add" onClick={() => setShowNewForm(true)}>
             + New Segment
@@ -237,10 +256,7 @@ export default function CodeCollab() {
       </div>
 
       {/* ── Editor ──────────────────────────────────────── */}
-      <div
-        className="cc-editor-wrap"
-        style={{ '--owner-color': activeSegment?.ownerColor ?? 'transparent' }}
-      >
+      <div className="cc-editor-wrap" style={{ '--owner-color': activeSegment?.ownerColor ?? 'transparent' }}>
         {activeSegment ? (
           <>
             <div className="cc-editor-header">
@@ -250,9 +266,7 @@ export default function CodeCollab() {
               <span className="cc-editor-seg-name">{activeSegment.name}</span>
               <div className="cc-editor-header-right">
                 <span className="cc-editor-lang">{activeSegment.language}</span>
-                {!isOwner && (
-                  <span className="cc-editor-readonly-badge">read-only</span>
-                )}
+                {!isOwner && <span className="cc-editor-readonly-badge">read-only</span>}
               </div>
             </div>
 
@@ -264,31 +278,28 @@ export default function CodeCollab() {
               value={activeSegment.content}
               onChange={handleEditorChange}
               options={{
-                automaticLayout: true,
-                readOnly: !isOwner,
-                fontSize: 14,
-                lineHeight: 22,
-                fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', monospace",
-                minimap: { enabled: false },
+                automaticLayout:      true,
+                readOnly:             !isOwner,
+                fontSize:             14,
+                lineHeight:           22,
+                fontFamily:           "'JetBrains Mono', 'Fira Code', 'SF Mono', monospace",
+                minimap:              { enabled: false },
                 scrollBeyondLastLine: false,
-                renderLineHighlight: isOwner ? 'line' : 'none',
-                cursorStyle: isOwner ? 'line' : 'underline',
-                padding: { top: 20, bottom: 20 },
-                lineNumbers: 'on',
-                glyphMargin: false,
-                folding: true,
+                renderLineHighlight:  isOwner ? 'line' : 'none',
+                cursorStyle:          isOwner ? 'line' : 'underline',
+                padding:              { top: 20, bottom: 20 },
+                lineNumbers:          'on',
+                glyphMargin:          false,
+                folding:              true,
                 bracketPairColorization: { enabled: true },
-                smoothScrolling: true,
+                smoothScrolling:      true,
               }}
             />
           </>
         ) : (
           <div className="cc-editor-empty">
             <p>No segments yet — create one to start coding.</p>
-            <button
-              className="cc-editor-empty-btn"
-              onClick={() => setShowNewForm(true)}
-            >
+            <button className="cc-editor-empty-btn" onClick={() => setShowNewForm(true)}>
               + Create your first segment
             </button>
           </div>

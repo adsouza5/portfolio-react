@@ -489,6 +489,30 @@ export default function CodeCollab() {
   const activeSegment = segments.find(s => s.id === activeId) ?? null;
   const isOwner       = activeSegment?.ownerId === user?.id;
 
+  // Apply per-owner color decorations to Monaco on mount
+  const handleEditorMount = useCallback((editor, monaco) => {
+    if (!activeSegment) return;
+    const { ownerColor, ownerId } = activeSegment;
+    const styleId = `cc-owner-style-${ownerId}`;
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        .cc-gutter-${ownerId} { background:${ownerColor}; margin-left:2px; width:3px !important; }
+        .cc-bg-${ownerId} { background:${ownerColor}12 !important; }
+      `;
+      document.head.appendChild(style);
+    }
+    editor.deltaDecorations([], [{
+      range: new monaco.Range(1, 1, 999999, 1),
+      options: {
+        isWholeLine: true,
+        linesDecorationsClassName: `cc-gutter-${ownerId}`,
+        className: `cc-bg-${ownerId}`,
+      },
+    }]);
+  }, [activeSegment]);
+
   // ── Render ────────────────────────────────────────────────
   if (view === 'lobby') return (
     <SessionLobby

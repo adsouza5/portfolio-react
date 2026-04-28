@@ -34,10 +34,11 @@ const timelineEntries = [
     date: '2023',
     location: null,
     description:
-      'Full-stack real-time collaboration tool with live code editing, syntax highlighting, and WebRTC video conferencing. Architected 100+ WebSocket events and Firebase integrations for live sync, chat, and video streaming. Boosted data synchronisation speed 25% through differential syncing and WebRTC optimisations.',
-    tags: ['React', 'Node.js', 'WebRTC', 'Firebase', 'WebSockets', 'Docker'],
-    link: 'https://github.com/adsouza5',
+      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique color, editable only by them and read-only for others. Eliminates merge conflicts by design. Built on Socket.io, Monaco Editor, and Node.js.',
+    tags: ['React', 'Node.js', 'Socket.io', 'Monaco Editor', 'WebSockets'],
+    link: 'https://github.com/adsouza5/RealTimeCoding',
     status: null,
+    showcase: 'CodeCollab',
   },
   {
     type: 'education',

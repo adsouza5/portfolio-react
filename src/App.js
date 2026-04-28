@@ -9,6 +9,7 @@ import Personal, { PersonalTrigger } from './components/Personal';
 import './App.css';
 
 const MLPipelineShowcase = lazy(() => import('./components/MLPipelineShowcase'));
+const CodeCollab = lazy(() => import('./components/CodeCollab/CodeCollab'));
 
 function Portfolio() {
   const [personalOpen, setPersonalOpen] = useState(false);
@@ -70,6 +71,10 @@ function App() {
       <Route
         path="/projects/sentinel"
         element={<ShowcasePage component={MLPipelineShowcase} />}
+      />
+      <Route
+        path="/projects/codecollab"
+        element={<ShowcasePage component={CodeCollab} />}
       />
     </Routes>
   );

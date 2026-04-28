@@ -126,3 +126,16 @@ body {
   opacity: 0;
   transform: scale(0.95);
 }
+
+
+.showcase-loading {
+  min-height: 100vh;
+  background: #0a0a0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: rgba(232, 232, 232, 0.3);
+}

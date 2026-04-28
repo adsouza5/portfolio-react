@@ -3,6 +3,19 @@
 
 const timelineEntries = [
   {
+    type: 'project',
+    title: 'Sentinel — Real-Time Market Prediction Engine',
+    org: null,
+    date: '2024',
+    location: null,
+    description:
+      'Serverless GCP pipeline that streams live market data through Pub/Sub, normalises features on Cloud Run, runs a sentiment classifier on Vertex AI, and stores predictions in BigQuery — all provisioned with Terraform and served via FastAPI.',
+    tags: ['Vertex AI', 'Cloud Run', 'Pub/Sub', 'BigQuery', 'Terraform', 'Python', 'FastAPI'],
+    link: 'https://github.com/adsouza5/sentinel-ml-pipeline',
+    status: null,
+    showcase: 'MLPipelineShowcase',
+  },
+  {
     type: 'work',
     title: 'Software Developer',
     org: 'Synechron',

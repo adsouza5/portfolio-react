@@ -1,7 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import entries from './TimelineData';
 import Skills from './Skills';
 import './Projects.css';
+
+const SHOWCASE_ROUTES = {
+  MLPipelineShowcase: '/projects/sentinel',
+};
 
 const TYPE_LABELS = {
   project:   'Project',
@@ -9,10 +14,10 @@ const TYPE_LABELS = {
   education: 'Education',
 };
 
-
 const Projects = () => {
-  const cardRefs   = useRef([]);
+  const cardRefs = useRef([]);
   const [markerTops, setMarkerTops] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const measure = () =>
@@ -22,9 +27,13 @@ const Projects = () => {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  const openLink = (link) => {
-    if (link) window.open(link, '_blank', 'noopener,noreferrer');
-  };
+  const handleCardClick = useCallback((entry) => {
+    if (entry.showcase) {
+      navigate(SHOWCASE_ROUTES[entry.showcase]);
+    } else if (entry.link) {
+      window.open(entry.link, '_blank', 'noopener,noreferrer');
+    }
+  }, [navigate]);
 
   return (
     <section id="projects" className="projects-section">
@@ -52,12 +61,12 @@ const Projects = () => {
         {entries.map((entry, i) => (
           <div
             key={i}
-            className={`project-card project-card--${entry.type}${entry.link ? ' clickable' : ''}`}
+            className={`project-card project-card--${entry.type}${(entry.link || entry.showcase) ? ' clickable' : ''}`}
             ref={(el) => (cardRefs.current[i] = el)}
-            onClick={() => openLink(entry.link)}
-            role={entry.link ? 'link' : undefined}
-            tabIndex={entry.link ? 0 : undefined}
-            onKeyDown={(e) => e.key === 'Enter' && openLink(entry.link)}
+            onClick={() => handleCardClick(entry)}
+            role={(entry.link || entry.showcase) ? 'button' : undefined}
+            tabIndex={(entry.link || entry.showcase) ? 0 : undefined}
+            onKeyDown={(e) => e.key === 'Enter' && handleCardClick(entry)}
           >
             {/* Row 1 — type · status · date · location */}
             <div className="card-meta">
@@ -97,8 +106,10 @@ const Projects = () => {
               </div>
             )}
 
-            {entry.link && (
-              <span className="card-cta">View →</span>
+            {(entry.showcase || entry.link) && (
+              <span className="card-cta">
+                {entry.showcase ? 'Explore →' : 'View →'}
+              </span>
             )}
           </div>
         ))}

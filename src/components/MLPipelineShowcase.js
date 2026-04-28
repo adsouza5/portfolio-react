@@ -54,10 +54,10 @@ const ARCH = [
   { title:"Storage & Serving", color:C.green,  desc:"Predictions land in BigQuery partitioned by date. FastAPI serves real-time results via Cloud Run with Redis caching.",    details:["Partitioned tables by date","Sub-second API responses","Grafana monitoring dashboard"] },
 ];
 
-/* live stock quote via Yahoo Finance public chart API */
+/* live stock quote — Yahoo Finance via CORS proxy */
 async function fetchStockQuote(ticker) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker.toUpperCase()}?interval=1d&range=1d&includePrePost=false`;
-  const res = await fetch(url);
+  const target = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker.toUpperCase()}?interval=1d&range=1d&includePrePost=false`;
+  const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(target)}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const meta = data?.chart?.result?.[0]?.meta;

@@ -16,6 +16,7 @@
   "scripts": {
     "start": "concurrently -n \"portfolio,manager\" -c \"cyan,yellow\" \"react-scripts start\" \"node server-manager.js\"",
     "build": "react-scripts build",
+    "serve": "concurrently -n \"portfolio,manager\" -c \"cyan,yellow\" \"serve -s build -l 3000\" \"node server-manager.js\"",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
@@ -43,6 +44,7 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/plugin-transform-private-property-in-object": "^7.25.9",
     "concurrently": "^9.2.1",
-    "gh-pages": "^6.3.0"
+    "gh-pages": "^6.3.0",
+    "serve": "^14.2.6"
   }
 }

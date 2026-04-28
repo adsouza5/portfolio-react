@@ -6,7 +6,7 @@ import { WebsocketProvider } from 'y-websocket';
 import './CodeCollab.css';
 
 // ── Constants ─────────────────────────────────────────────────
-const RELAY_URL  = 'wss://codecollab-relay.onrender.com';
+const RELAY_URL  = 'wss://portfolio-react-1e8x.onrender.com';
 const LOBBY_ROOM = 'codecollab-lobby-v1';
 const LANGUAGES  = ['javascript','typescript','python','go','rust','java','html','css','json','markdown'];
 const USER_COLORS = [

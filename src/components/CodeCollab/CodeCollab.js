@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Editor } from '@monaco-editor/react';
 import * as Y from 'yjs';
-import { WebrtcProvider } from 'y-webrtc';
+import { WebsocketProvider } from 'y-websocket';
 import './CodeCollab.css';
 
 // ── Constants ─────────────────────────────────────────────────
-const SIGNALING  = ['wss://signaling.yjs.dev'];
+const RELAY_URL  = 'wss://codecollab-relay.onrender.com';
 const LOBBY_ROOM = 'codecollab-lobby-v1';
 const LANGUAGES  = ['javascript','typescript','python','go','rust','java','html','css','json','markdown'];
 const USER_COLORS = [
@@ -342,10 +342,7 @@ export default function CodeCollab() {
   // ── Lobby connection (awareness-based) ────────────────────
   useEffect(() => {
     const doc      = new Y.Doc();
-    const provider = new WebrtcProvider(LOBBY_ROOM, doc, {
-      signaling: SIGNALING,
-      filterBcConns: false,
-    });
+    const provider = new WebsocketProvider(RELAY_URL, LOBBY_ROOM, doc);
 
     lobbyDocRef.current      = doc;
     lobbyProviderRef.current = provider;
@@ -375,10 +372,7 @@ export default function CodeCollab() {
   // ── Enter a Y.js session room ──────────────────────────────
   const enterSession = useCallback((roomCode, me) => {
     const doc      = new Y.Doc();
-    const provider = new WebrtcProvider(`codecollab-${roomCode}`, doc, {
-      signaling: SIGNALING,
-      filterBcConns: false,
-    });
+    const provider = new WebsocketProvider(RELAY_URL, `codecollab-${roomCode}`, doc);
     const ySegs = doc.getMap('segments');
 
     sessionDocRef.current  = doc;

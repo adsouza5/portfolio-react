@@ -255,7 +255,6 @@ export default function CodeCollab() {
   // Y.js refs
   const lobbyDocRef      = useRef(null);
   const lobbyProviderRef = useRef(null);
-  const yLobbyRef        = useRef(null);
   const sessionDocRef    = useRef(null);
   const sessionProvRef   = useRef(null);
   const ySegmentsRef     = useRef(null);
@@ -266,33 +265,38 @@ export default function CodeCollab() {
   }, [navigate]);
 
   // ── Connect to lobby on mount ──────────────────────────────
+  // Awareness is used (not Y.Map) — it's a lightweight real-time broadcast
+  // protocol that propagates immediately without full CRDT sync overhead.
   useEffect(() => {
     const doc      = new Y.Doc();
-    const provider = new WebrtcProvider(LOBBY_ROOM, doc, { signaling: SIGNALING });
-    const yLobby   = doc.getMap('sessions');
+    const provider = new WebrtcProvider(LOBBY_ROOM, doc, {
+      signaling: SIGNALING,
+      filterBcConns: false, // allow BroadcastChannel sync across same-browser tabs
+    });
 
     lobbyDocRef.current      = doc;
     lobbyProviderRef.current = provider;
-    yLobbyRef.current        = yLobby;
 
-    const sync = () => {
+    const syncSessions = () => {
       const list = [];
-      yLobby.forEach((val, id) => list.push({ id, ...val }));
+      provider.awareness.getStates().forEach((state) => {
+        if (state?.type === 'session') {
+          list.push({ id: state.sessionId, ...state });
+        }
+      });
       setSessions(list.sort((a, b) => b.createdAt - a.createdAt));
     };
-    yLobby.observe(sync);
-    provider.on('synced', sync);  // fires when WebRTC peer sync completes
-    sync();
+
+    provider.awareness.on('change', syncSessions);
+    syncSessions();
 
     return () => {
-      // If we created a session, remove it on cleanup
-      if (createdSessionId.current) yLobby.delete(createdSessionId.current);
       provider.destroy();
       doc.destroy();
     };
   }, []);
 
-  // ── Cleanup session on unmount ─────────────────────────────
+  // ── Cleanup session provider on unmount ────────────────────
   useEffect(() => {
     return () => {
       sessionProvRef.current?.destroy();
@@ -339,7 +343,10 @@ export default function CodeCollab() {
     const color     = colorFromId(id);
     const me        = { id, name: yourName, color };
 
-    yLobbyRef.current?.set(sessionId, {
+    // Advertise via awareness — visible to all lobby peers instantly
+    lobbyProviderRef.current?.awareness.setLocalState({
+      type: 'session',
+      sessionId,
       displayName,
       passcodeHash,
       creatorName: yourName,
@@ -359,8 +366,8 @@ export default function CodeCollab() {
 
   // ── Leave session ──────────────────────────────────────────
   const leaveSession = useCallback(() => {
-    if (createdSessionId.current && yLobbyRef.current) {
-      yLobbyRef.current.delete(createdSessionId.current);
+    if (createdSessionId.current) {
+      lobbyProviderRef.current?.awareness.setLocalState(null);
       createdSessionId.current = null;
     }
     sessionProvRef.current?.destroy();

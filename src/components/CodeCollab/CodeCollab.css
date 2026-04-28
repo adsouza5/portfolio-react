@@ -4,18 +4,20 @@
 .cc-app,
 .cc-join-screen {
   --cc-bg:      #091515;
-  --cc-surface: rgba(23,126,137,0.07);
-  --cc-border:  rgba(23,126,137,0.22);
+  --cc-surface: rgba(255,255,255,0.05);
+  --cc-border:  rgba(23,126,137,0.28);
   --cc-text:    #daeaea;
-  --cc-muted:   rgba(200,230,230,0.72);
-  --cc-dim:     rgba(180,215,215,0.40);
+  --cc-muted:   rgba(200,230,230,0.84);
+  --cc-dim:     rgba(180,215,215,0.55);
   --cc-accent:  #1aacbe;
   --cc-accentDk:#177E89;
   --cc-glow:    rgba(26,172,190,0.50);
   --cc-glowSm:  rgba(26,172,190,0.18);
   --cc-mono:    'JetBrains Mono','Courier New',monospace;
   --cc-sans:    'Segoe UI',system-ui,sans-serif;
-  --cc-dots:    radial-gradient(circle, rgba(23,126,137,0.20) 1px, transparent 1px);
+  --cc-mesh:
+    repeating-linear-gradient(60deg,  transparent 0px, transparent 39px, rgba(23,126,137,0.07) 39px, rgba(23,126,137,0.07) 40px),
+    repeating-linear-gradient(-60deg, transparent 0px, transparent 39px, rgba(23,126,137,0.07) 39px, rgba(23,126,137,0.07) 40px);
 }
 
 /* ── Join / Lobby screen ─────────────────────────────────────── */
@@ -23,8 +25,7 @@
 .cc-join-screen {
   min-height: 100vh;
   background: var(--cc-bg);
-  background-image: var(--cc-dots);
-  background-size: 24px 24px;
+  background-image: var(--cc-mesh);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,13 +49,13 @@
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  width: 320px;
+  width: 340px;
   padding: 28px 24px;
   background: var(--cc-surface);
   border: 1px solid var(--cc-border);
   border-radius: 6px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(26,172,190,0.06) inset;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07);
   position: relative;
   z-index: 1;
 }
@@ -190,9 +191,7 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: var(--cc-bg);
-  background-image: var(--cc-dots);
-  background-size: 24px 24px;
+  background: #080d0d;
   font-family: var(--cc-sans);
   color: var(--cc-text);
   -webkit-font-smoothing: antialiased;
@@ -515,13 +514,13 @@
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  width: 380px;
+  width: 340px;
   padding: 28px 24px;
   background: var(--cc-surface);
   border: 1px solid var(--cc-border);
   border-radius: 6px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(26,172,190,0.06) inset;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07);
   position: relative;
   z-index: 1;
 }
@@ -552,7 +551,7 @@
   gap: 10px;
   width: 100%;
   padding: 10px 14px;
-  background: rgba(0,0,0,0.22);
+  background: rgba(255,255,255,0.03);
   border: 1px solid var(--cc-border);
   border-left: 2px solid var(--cc-accent);
   border-radius: 4px;

@@ -6,13 +6,13 @@ import { useNavigate } from "react-router-dom";
    ───────────────────────────────────────────────────────────── */
 const C = {
   bg:       "#091515",
-  card:     "rgba(23,126,137,0.07)",
-  cardHov:  "rgba(23,126,137,0.12)",
-  border:   "rgba(23,126,137,0.22)",
-  borderBr: "rgba(23,126,137,0.45)",
+  card:     "rgba(255,255,255,0.05)",
+  cardHov:  "rgba(255,255,255,0.08)",
+  border:   "rgba(23,126,137,0.28)",
+  borderBr: "rgba(23,126,137,0.55)",
   text:     "#daeaea",
-  muted:    "rgba(200,230,230,0.65)",
-  dim:      "rgba(180,215,215,0.38)",
+  muted:    "rgba(200,230,230,0.84)",
+  dim:      "rgba(180,215,215,0.50)",
   accent:   "#1aacbe",
   accentDk: "#177E89",
   glow:     "rgba(26,172,190,0.5)",
@@ -26,8 +26,6 @@ const C = {
   red:      "#f87171",
 };
 
-const DOT_BG = `radial-gradient(circle, rgba(23,126,137,0.18) 1px, transparent 1px)`;
-
 const F = {
   mono:    "'Courier New', Courier, monospace",
   display: "'Franklin Gothic Medium','Arial Narrow',Arial,sans-serif",
@@ -35,11 +33,11 @@ const F = {
 };
 
 const STAGES = [
-  { id:"ingest",     label:"Pub/Sub\nIngest",       icon:"⟐", color:C.accent,  glow:C.glowSm   },
+  { id:"ingest",     label:"Pub/Sub\nIngest",       icon:"IN", color:C.accent,  glow:C.glowSm   },
   { id:"preprocess", label:"Cloud Run\nPreprocess", icon:"⚙",  color:C.amber,   glow:C.amberGl  },
-  { id:"inference",  label:"Vertex AI\nInference",  icon:"◈",  color:C.purple,  glow:C.purpleGl },
-  { id:"store",      label:"BigQuery\nStore",       icon:"⬡",  color:C.green,   glow:C.greenGl  },
-  { id:"serve",      label:"API\nResponse",         icon:"↗",  color:C.accent,  glow:C.glowSm   },
+  { id:"inference",  label:"Vertex AI\nInference",  icon:"AI", color:C.purple,  glow:C.purpleGl },
+  { id:"store",      label:"BigQuery\nStore",       icon:"DB", color:C.green,   glow:C.greenGl  },
+  { id:"serve",      label:"API\nResponse",         icon:"→",  color:C.accent,  glow:C.glowSm   },
 ];
 
 const SAMPLES = [
@@ -66,7 +64,8 @@ function GlassCard({ children, style, accent }) {
       background: C.card,
       border: `1px solid ${accent ? C.borderBr : C.border}`,
       borderRadius: 8,
-      backdropFilter: "blur(8px)",
+      backdropFilter: "blur(10px)",
+      boxShadow: `0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)`,
       ...style,
     }}>
       {children}
@@ -76,9 +75,9 @@ function GlassCard({ children, style, accent }) {
 
 function SectionHeader({ children }) {
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
-      <div style={{ width:3, height:14, background:C.accent, borderRadius:2, boxShadow:`0 0 8px ${C.glow}` }} />
-      <span style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"2px", textTransform:"uppercase", color:C.dim }}>
+    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24 }}>
+      <div style={{ width:3, height:22, background:C.accent, borderRadius:2, boxShadow:`0 0 10px ${C.glow}, 0 0 20px ${C.glowSm}`, flexShrink:0 }} />
+      <span style={{ fontFamily:F.display, fontSize:13, letterSpacing:"3px", textTransform:"uppercase", color:C.text, fontWeight:700 }}>
         {children}
       </span>
     </div>
@@ -102,7 +101,8 @@ function PipelineNode({ stage, active, complete, progress }) {
       <div style={{
         width:72, height:72, borderRadius:12,
         display:"flex", alignItems:"center", justifyContent:"center",
-        fontSize:26, position:"relative", overflow:"hidden",
+        fontSize:14, fontFamily:F.mono, fontWeight:700, letterSpacing:"1px",
+        position:"relative", overflow:"hidden",
         background: active ? `${stage.glow}` : complete ? C.card : "rgba(9,21,21,0.6)",
         border:`1.5px solid ${active ? stage.color : complete ? stage.color+"60" : C.border}`,
         boxShadow: active
@@ -322,13 +322,19 @@ export default function MLPipelineShowcase() {
         ::-webkit-scrollbar-thumb:hover{background:rgba(26,172,190,0.6)}
       `}</style>
 
-      {/* Dot-matrix background — distinct from portfolio grid */}
-      <div style={{
-        position:"fixed", inset:0, pointerEvents:"none", zIndex:0,
-        backgroundImage:DOT_BG,
-        backgroundSize:"24px 24px",
-        opacity:0.5,
-      }} />
+      {/* Hex grid background */}
+      <svg style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}} aria-hidden="true">
+        <defs>
+          <pattern id="mlhex" x="0" y="0" width="38" height="66" patternUnits="userSpaceOnUse">
+            <path d="M19 11 L38 22 L38 44 L19 55 L0 44 L0 22 Z" fill="none" stroke="rgba(23,126,137,0.14)" strokeWidth="0.7"/>
+          </pattern>
+          <pattern id="mlhex2" x="19" y="33" width="38" height="66" patternUnits="userSpaceOnUse">
+            <path d="M19 11 L38 22 L38 44 L19 55 L0 44 L0 22 Z" fill="none" stroke="rgba(23,126,137,0.14)" strokeWidth="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#mlhex)"/>
+        <rect width="100%" height="100%" fill="url(#mlhex2)"/>
+      </svg>
       {/* Ambient glow */}
       <div style={{
         position:"fixed", inset:0, pointerEvents:"none", zIndex:0,

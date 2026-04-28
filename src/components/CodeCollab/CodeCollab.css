@@ -534,6 +534,13 @@
   padding: 24px 0;
 }
 
+.cc-lobby-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .cc-create-btn {
   width: 100%;
   padding: 10px;
@@ -550,6 +557,87 @@
   border-color: var(--cc-accent);
   color: var(--cc-text);
 }
+
+.cc-code-join-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--cc-border);
+  border-radius: 6px;
+  color: var(--cc-muted);
+  font-size: 13px;
+  font-family: var(--cc-mono);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: border-color 0.2s, color 0.2s;
+}
+.cc-code-join-btn:hover {
+  border-color: var(--cc-accent);
+  color: var(--cc-text);
+}
+
+/* ── Join by Code input ───────────────────────────────────── */
+
+.cc-join-code-input {
+  font-family: var(--cc-mono) !important;
+  font-size: 20px !important;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ── Session Code Badge (in session header) ──────────────── */
+
+.cc-code-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--cc-surface2);
+  border: 1px solid var(--cc-border);
+  border-radius: 6px;
+  padding: 3px 8px 3px 10px;
+  flex-shrink: 0;
+}
+
+.cc-code-badge-label {
+  font-family: var(--cc-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cc-dim);
+}
+
+.cc-code-badge-value {
+  font-family: var(--cc-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cc-text);
+  letter-spacing: 0.1em;
+}
+
+.cc-code-badge-copy {
+  font-family: var(--cc-mono);
+  font-size: 10px;
+  color: var(--cc-accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: opacity 0.15s;
+}
+.cc-code-badge-copy:hover { opacity: 0.75; }
+
+.cc-code-badge-dismiss {
+  font-size: 12px;
+  color: var(--cc-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.cc-code-badge-dismiss:hover { color: var(--cc-muted); }
 
 /* ── Camera Button ───────────────────────────────────────────── */
 

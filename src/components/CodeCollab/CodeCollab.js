@@ -13,6 +13,7 @@ const USER_COLORS = [
   '#5b9cf6','#6bcb8b','#c084fc','#f9a96b','#5dd8d8',
   '#f87ba6','#fbbf24','#93c5fd','#86efac','#d8b4fe',
 ];
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I O 0 1
 
 // ── Helpers ───────────────────────────────────────────────────
 function colorFromId(id) {
@@ -21,6 +22,14 @@ function colorFromId(id) {
   return USER_COLORS[Math.abs(h) % USER_COLORS.length];
 }
 function uid() { return Math.random().toString(36).slice(2, 10); }
+
+// Human-readable 8-char session code: "ABCD 1234"
+function genCode() {
+  return Array.from({ length: 8 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+}
+function formatCode(code) {
+  return `${code.slice(0, 4)} ${code.slice(4)}`;
+}
 
 async function hashPasscode(raw) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw.trim()));
@@ -54,13 +63,12 @@ function useCamera() {
     }
   }, [on]);
 
-  // cleanup on unmount
   useEffect(() => () => streamRef.current?.getTracks().forEach(t => t.stop()), []);
 
   return { on, toggle, videoRef, error };
 }
 
-// ── Camera Preview (floating) ─────────────────────────────────
+// ── Camera Preview ────────────────────────────────────────────
 function CameraPreview({ videoRef, userColor }) {
   return (
     <div className="cc-camera-wrap" style={{ borderColor: userColor }}>
@@ -69,7 +77,7 @@ function CameraPreview({ videoRef, userColor }) {
   );
 }
 
-// ── Camera Icon SVGs ──────────────────────────────────────────
+// ── Camera Icons ──────────────────────────────────────────────
 const IconCamera = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
@@ -82,8 +90,8 @@ const IconCameraOff = () => (
   </svg>
 );
 
-// ── Lobby: session list ───────────────────────────────────────
-function SessionLobby({ sessions, onJoin, onCreate, onBack }) {
+// ── Lobby ─────────────────────────────────────────────────────
+function SessionLobby({ sessions, onJoin, onCreate, onJoinByCode, onBack }) {
   return (
     <div className="cc-join-screen">
       <button className="cc-back-btn" onClick={onBack}>← Timeline</button>
@@ -93,7 +101,7 @@ function SessionLobby({ sessions, onJoin, onCreate, onBack }) {
 
         <div className="cc-session-list">
           {sessions.length === 0 ? (
-            <p className="cc-session-empty">No active sessions yet.</p>
+            <p className="cc-session-empty">No sessions visible on this network.</p>
           ) : (
             sessions.map(s => (
               <button key={s.id} className="cc-session-item" onClick={() => onJoin(s)}>
@@ -106,7 +114,10 @@ function SessionLobby({ sessions, onJoin, onCreate, onBack }) {
           )}
         </div>
 
-        <button className="cc-create-btn" onClick={onCreate}>+ New Session</button>
+        <div className="cc-lobby-actions">
+          <button className="cc-create-btn" onClick={onCreate}>+ New Session</button>
+          <button className="cc-code-join-btn" onClick={onJoinByCode}>Enter code →</button>
+        </div>
       </div>
     </div>
   );
@@ -137,7 +148,7 @@ function CreateSessionForm({ onConfirm, onBack }) {
 
         <label className="cc-join-label">Session name</label>
         <input className="cc-join-input" placeholder="e.g. Sprint 4 API work" value={displayName}
-          onChange={e => setDisplayName(e.target.value)} />
+          onChange={e => setDisplayName(e.target.value)} autoFocus />
 
         <label className="cc-join-label">Your name</label>
         <input className="cc-join-input" placeholder="e.g. Adam" value={yourName}
@@ -161,7 +172,7 @@ function CreateSessionForm({ onConfirm, onBack }) {
   );
 }
 
-// ── Enter passcode form ───────────────────────────────────────
+// ── Enter passcode (lobby join) ───────────────────────────────
 function EnterPasscodeForm({ session, onConfirm, onBack }) {
   const [yourName, setYourName] = useState('');
   const [passcode, setPasscode] = useState('');
@@ -205,6 +216,49 @@ function EnterPasscodeForm({ session, onConfirm, onBack }) {
   );
 }
 
+// ── Join by code form ─────────────────────────────────────────
+function JoinByCodeForm({ onConfirm, onBack }) {
+  const [code, setCode]         = useState('');
+  const [yourName, setYourName] = useState('');
+  const [err, setErr]           = useState('');
+
+  const submit = () => {
+    const clean = code.trim().replace(/\s/g, '').toUpperCase();
+    if (clean.length !== 8) return setErr('Enter the full 8-character session code.');
+    if (!yourName.trim()) return setErr('Enter your name.');
+    onConfirm({ code: clean, yourName: yourName.trim() });
+  };
+
+  return (
+    <div className="cc-join-screen">
+      <button className="cc-back-btn" onClick={onBack}>← Sessions</button>
+      <div className="cc-join-card">
+        <div className="cc-logo">◈ Join by Code</div>
+        <p className="cc-join-sub">Ask the session host for their 8-character code</p>
+
+        <label className="cc-join-label">Session code</label>
+        <input
+          className="cc-join-input cc-join-code-input"
+          placeholder="XXXX XXXX"
+          value={code}
+          onChange={e => setCode(e.target.value.toUpperCase())}
+          maxLength={9}
+          autoFocus
+          spellCheck={false}
+        />
+
+        <label className="cc-join-label">Your name</label>
+        <input className="cc-join-input" placeholder="e.g. Alex" value={yourName}
+          onChange={e => setYourName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && submit()} />
+
+        {err && <p className="cc-join-error">{err}</p>}
+        <button className="cc-join-btn" onClick={submit}>Join →</button>
+      </div>
+    </div>
+  );
+}
+
 // ── User Pill ─────────────────────────────────────────────────
 function UserPill({ user, isYou }) {
   return (
@@ -236,11 +290,30 @@ function NewSegmentForm({ onConfirm, onCancel }) {
   );
 }
 
+// ── Session Code Badge ────────────────────────────────────────
+function SessionCodeBadge({ code, onDismiss }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(formatCode(code)).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  };
+  return (
+    <div className="cc-code-badge">
+      <span className="cc-code-badge-label">code</span>
+      <span className="cc-code-badge-value">{formatCode(code)}</span>
+      <button className="cc-code-badge-copy" onClick={copy}>{copied ? '✓' : 'copy'}</button>
+      <button className="cc-code-badge-dismiss" onClick={onDismiss} title="Dismiss">✕</button>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────
 export default function CodeCollab() {
   const navigate = useNavigate();
 
-  // view: 'lobby' | 'create' | 'passcode' | 'session'
+  // view: 'lobby' | 'create' | 'passcode' | 'joinbycode' | 'session'
   const [view, setView]               = useState('lobby');
   const [sessions, setSessions]       = useState([]);
   const [selectedSession, setSelected] = useState(null);
@@ -249,6 +322,8 @@ export default function CodeCollab() {
   const [segments, setSegments]       = useState([]);
   const [activeId, setActiveId]       = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [creatorCode, setCreatorCode] = useState(null);
+  const [showCode, setShowCode]       = useState(true);
 
   const camera = useCamera();
 
@@ -264,14 +339,12 @@ export default function CodeCollab() {
     navigate('/', { state: { scrollTo: 'projects' } });
   }, [navigate]);
 
-  // ── Connect to lobby on mount ──────────────────────────────
-  // Awareness is used (not Y.Map) — it's a lightweight real-time broadcast
-  // protocol that propagates immediately without full CRDT sync overhead.
+  // ── Lobby connection (awareness-based) ────────────────────
   useEffect(() => {
     const doc      = new Y.Doc();
     const provider = new WebrtcProvider(LOBBY_ROOM, doc, {
       signaling: SIGNALING,
-      filterBcConns: false, // allow BroadcastChannel sync across same-browser tabs
+      filterBcConns: false,
     });
 
     lobbyDocRef.current      = doc;
@@ -280,9 +353,7 @@ export default function CodeCollab() {
     const syncSessions = () => {
       const list = [];
       provider.awareness.getStates().forEach((state) => {
-        if (state?.type === 'session') {
-          list.push({ id: state.sessionId, ...state });
-        }
+        if (state?.type === 'session') list.push({ id: state.sessionId, ...state });
       });
       setSessions(list.sort((a, b) => b.createdAt - a.createdAt));
     };
@@ -290,13 +361,10 @@ export default function CodeCollab() {
     provider.awareness.on('change', syncSessions);
     syncSessions();
 
-    return () => {
-      provider.destroy();
-      doc.destroy();
-    };
+    return () => { provider.destroy(); doc.destroy(); };
   }, []);
 
-  // ── Cleanup session provider on unmount ────────────────────
+  // ── Session cleanup on unmount ─────────────────────────────
   useEffect(() => {
     return () => {
       sessionProvRef.current?.destroy();
@@ -305,14 +373,17 @@ export default function CodeCollab() {
   }, []);
 
   // ── Enter a Y.js session room ──────────────────────────────
-  const enterSession = useCallback((sessionId, me) => {
+  const enterSession = useCallback((roomCode, me) => {
     const doc      = new Y.Doc();
-    const provider = new WebrtcProvider(`codecollab-${sessionId}`, doc, { signaling: SIGNALING });
-    const ySegs    = doc.getMap('segments');
+    const provider = new WebrtcProvider(`codecollab-${roomCode}`, doc, {
+      signaling: SIGNALING,
+      filterBcConns: false,
+    });
+    const ySegs = doc.getMap('segments');
 
-    sessionDocRef.current = doc;
+    sessionDocRef.current  = doc;
     sessionProvRef.current = provider;
-    ySegmentsRef.current  = ySegs;
+    ySegmentsRef.current   = ySegs;
 
     provider.awareness.setLocalState(me);
 
@@ -338,31 +409,39 @@ export default function CodeCollab() {
 
   // ── Create new session ─────────────────────────────────────
   const handleCreate = useCallback(({ displayName, yourName, passcodeHash }) => {
-    const sessionId = uid();
-    const id        = uid();
-    const color     = colorFromId(id);
-    const me        = { id, name: yourName, color };
+    const code  = genCode();
+    const id    = uid();
+    const color = colorFromId(id);
+    const me    = { id, name: yourName, color };
 
-    // Advertise via awareness — visible to all lobby peers instantly
     lobbyProviderRef.current?.awareness.setLocalState({
       type: 'session',
-      sessionId,
+      sessionId:    code,
       displayName,
       passcodeHash,
-      creatorName: yourName,
-      creatorId:   id,
-      createdAt:   Date.now(),
+      creatorName:  yourName,
+      creatorId:    id,
+      createdAt:    Date.now(),
     });
-    createdSessionId.current = sessionId;
-    enterSession(sessionId, me);
+    createdSessionId.current = code;
+    setCreatorCode(code);
+    setShowCode(true);
+    enterSession(code, me);
   }, [enterSession]);
 
-  // ── Join existing session ──────────────────────────────────
+  // ── Join from lobby (passcode already verified) ────────────
   const handleJoin = useCallback(({ yourName }) => {
     const id    = uid();
     const color = colorFromId(id);
-    enterSession(selectedSession.id, { id, name: yourName, color });
+    enterSession(selectedSession.sessionId, { id, name: yourName, color });
   }, [selectedSession, enterSession]);
+
+  // ── Join by code ───────────────────────────────────────────
+  const handleJoinByCode = useCallback(({ code, yourName }) => {
+    const id    = uid();
+    const color = colorFromId(id);
+    enterSession(code, { id, name: yourName, color });
+  }, [enterSession]);
 
   // ── Leave session ──────────────────────────────────────────
   const leaveSession = useCallback(() => {
@@ -379,10 +458,11 @@ export default function CodeCollab() {
     setUsers([]);
     setSegments([]);
     setActiveId(null);
+    setCreatorCode(null);
     setView('lobby');
   }, []);
 
-  // ── Segment operations ────────────────────────────────────
+  // ── Segment operations ─────────────────────────────────────
   const createSegment = ({ name, language }) => {
     if (!user) return;
     const id = `seg_${Date.now()}`;
@@ -421,6 +501,7 @@ export default function CodeCollab() {
       sessions={sessions}
       onJoin={s => { setSelected(s); setView('passcode'); }}
       onCreate={() => setView('create')}
+      onJoinByCode={() => setView('joinbycode')}
       onBack={goBack}
     />
   );
@@ -433,14 +514,20 @@ export default function CodeCollab() {
     <EnterPasscodeForm session={selectedSession} onConfirm={handleJoin} onBack={() => setView('lobby')} />
   );
 
+  if (view === 'joinbycode') return (
+    <JoinByCodeForm onConfirm={handleJoinByCode} onBack={() => setView('lobby')} />
+  );
+
   // ── Session view ──────────────────────────────────────────
   return (
     <div className="cc-app">
-      {/* Header */}
       <header className="cc-header">
         <div className="cc-header-left">
           <button className="cc-back-btn cc-back-btn--inline" onClick={leaveSession}>← Sessions</button>
           <span className="cc-logo">◈ CodeCollab</span>
+          {creatorCode && showCode && (
+            <SessionCodeBadge code={creatorCode} onDismiss={() => setShowCode(false)} />
+          )}
         </div>
         <div className="cc-header-users">
           {users.map(u => <UserPill key={u.id} user={u} isYou={u.id === user.id} />)}
@@ -454,7 +541,6 @@ export default function CodeCollab() {
         </button>
       </header>
 
-      {/* Tab Bar */}
       <div className="cc-tab-bar">
         {segments.map(seg => (
           <button key={seg.id}
@@ -475,7 +561,6 @@ export default function CodeCollab() {
         }
       </div>
 
-      {/* Editor */}
       <div className="cc-editor-wrap" style={{ '--owner-color': activeSegment?.ownerColor ?? 'transparent' }}>
         {activeSegment ? (
           <>
@@ -518,7 +603,6 @@ export default function CodeCollab() {
         )}
       </div>
 
-      {/* Camera preview */}
       {camera.on && <CameraPreview videoRef={camera.videoRef} userColor={user?.color} />}
     </div>
   );

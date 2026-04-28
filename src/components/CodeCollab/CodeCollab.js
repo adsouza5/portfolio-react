@@ -281,6 +281,7 @@ export default function CodeCollab() {
       setSessions(list.sort((a, b) => b.createdAt - a.createdAt));
     };
     yLobby.observe(sync);
+    provider.on('synced', sync);  // fires when WebRTC peer sync completes
     sync();
 
     return () => {

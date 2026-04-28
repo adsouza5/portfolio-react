@@ -54,6 +54,21 @@ const ARCH = [
   { title:"Storage & Serving", color:C.green,  desc:"Predictions land in BigQuery partitioned by date. FastAPI serves real-time results via Cloud Run with Redis caching.",    details:["Partitioned tables by date","Sub-second API responses","Grafana monitoring dashboard"] },
 ];
 
+/* live stock quote via Yahoo Finance public chart API */
+async function fetchStockQuote(ticker) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker.toUpperCase()}?interval=1d&range=1d&includePrePost=false`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  const meta = data?.chart?.result?.[0]?.meta;
+  if (!meta?.regularMarketPrice) throw new Error("No data returned");
+  return {
+    price:  parseFloat(meta.regularMarketPrice.toFixed(2)),
+    volume: meta.regularMarketVolume || 0,
+    name:   meta.shortName || ticker,
+  };
+}
+
 /* deterministic pseudo-prediction for custom tickers */
 function simulateStock(ticker) {
   const hash = ticker.toUpperCase().split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffff, 7);
@@ -307,26 +322,39 @@ function ResultsTable({ results }) {
 
 function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, onRemoveCustom, disabled }) {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm]         = useState({ ticker:"", price:"", volume:"" });
+  const [ticker, setTicker]     = useState("");
+  const [fetching, setFetching] = useState(false);
+  const [quote, setQuote]       = useState(null);   // { ticker, price, volume, name }
   const [err, setErr]           = useState("");
 
-  function handleAdd() {
-    const t = form.ticker.trim().toUpperCase();
-    const p = parseFloat(form.price);
-    const v = parseInt(form.volume);
-    if (!/^[A-Z]{1,5}$/.test(t))                                           { setErr("Ticker must be 1–5 letters");    return; }
-    if (DEFAULT_STOCKS.some(s=>s.ticker===t)||customStocks.some(s=>s.ticker===t)) { setErr("Ticker already in list"); return; }
-    if (isNaN(p) || p <= 0)                                                 { setErr("Enter a valid price");           return; }
-    if (isNaN(v) || v <= 0)                                                 { setErr("Enter a valid volume");          return; }
-    onAddCustom({ ticker:t, price:p, volume:v });
-    setForm({ ticker:"", price:"", volume:"" });
-    setErr(""); setShowForm(false);
+  async function handleLookup() {
+    const t = ticker.trim().toUpperCase();
+    if (!/^[A-Z.]{1,6}$/.test(t))                                                   { setErr("Enter a valid ticker symbol");     return; }
+    if (DEFAULT_STOCKS.some(s=>s.ticker===t)||customStocks.some(s=>s.ticker===t))   { setErr("Already in the list");             return; }
+    setErr(""); setFetching(true); setQuote(null);
+    try {
+      const data = await fetchStockQuote(t);
+      setQuote({ ticker:t, ...data });
+    } catch {
+      setErr("Ticker not found — check the symbol and try again");
+    } finally {
+      setFetching(false);
+    }
   }
 
+  function handleAdd() {
+    if (!quote) return;
+    onAddCustom({ ticker:quote.ticker, price:quote.price, volume:quote.volume });
+    setTicker(""); setQuote(null); setErr(""); setShowForm(false);
+  }
+
+  function handleCancel() { setTicker(""); setQuote(null); setErr(""); setShowForm(false); }
+
   const inputStyle = {
-    fontFamily:F.mono, fontSize:13, padding:"7px 10px",
+    fontFamily:F.mono, fontSize:13, padding:"7px 12px",
     background:"rgba(0,0,0,0.3)", border:`1px solid ${C.border}`,
     borderRadius:4, color:C.text, outline:"none",
+    transition:"border-color 0.15s",
   };
 
   return (
@@ -365,8 +393,7 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
               fontFamily:F.mono, fontSize:12, fontWeight:700,
               padding:"7px 10px 7px 14px", borderRadius:6,
               border:`1.5px solid ${C.accentDk}`,
-              background:"rgba(23,126,137,0.12)", color:C.text,
-              lineHeight:1,
+              background:"rgba(23,126,137,0.12)", color:C.text, lineHeight:1,
             }}>
               <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:2 }}>
                 <span>{s.ticker}</span>
@@ -393,35 +420,65 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
           transition:"all 0.15s",
         }}>+ Add Stock</button>
       ) : (
-        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-          <input
-            placeholder="TICKER" maxLength={5}
-            value={form.ticker}
-            onChange={e=>setForm(f=>({...f,ticker:e.target.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,5)}))}
-            style={{ ...inputStyle, width:80 }}
-          />
-          <input
-            placeholder="Price $" type="number" min="0"
-            value={form.price}
-            onChange={e=>setForm(f=>({...f,price:e.target.value}))}
-            style={{ ...inputStyle, width:100 }}
-          />
-          <input
-            placeholder="Volume" type="number" min="0"
-            value={form.volume}
-            onChange={e=>setForm(f=>({...f,volume:e.target.value}))}
-            style={{ ...inputStyle, width:110 }}
-          />
-          <button onClick={handleAdd} style={{
-            fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"1px",
-            padding:"7px 18px", borderRadius:4, border:"none",
-            background:C.accent, color:"#091515", cursor:"pointer",
-          }}>Add</button>
-          <button onClick={()=>{setShowForm(false);setErr("");}} style={{
-            fontFamily:F.mono, fontSize:12, padding:"7px 14px", borderRadius:4,
-            border:`1px solid ${C.border}`, background:"transparent", color:C.dim, cursor:"pointer",
-          }}>Cancel</button>
-          {err && <span style={{ fontFamily:F.mono, fontSize:11, color:C.red }}>{err}</span>}
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {/* Ticker input + lookup */}
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <input
+              placeholder="TICKER (e.g. GOOGL)"
+              maxLength={6}
+              value={ticker}
+              onChange={e=>{ setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g,"")); setQuote(null); setErr(""); }}
+              onKeyDown={e=>{ if(e.key==="Enter") handleLookup(); }}
+              style={{ ...inputStyle, width:180, letterSpacing:"1.5px", fontWeight:700 }}
+            />
+            <button onClick={handleLookup} disabled={fetching||!ticker.trim()} style={{
+              fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"1px",
+              padding:"7px 18px", borderRadius:4, border:"none",
+              background: C.accent, color:"#091515",
+              cursor: fetching||!ticker.trim() ? "not-allowed" : "pointer",
+              opacity: fetching||!ticker.trim() ? 0.5 : 1,
+              transition:"all 0.15s", minWidth:90,
+            }}>
+              {fetching ? "Looking…" : "Lookup"}
+            </button>
+            <button onClick={handleCancel} style={{
+              fontFamily:F.mono, fontSize:12, padding:"7px 14px", borderRadius:4,
+              border:`1px solid ${C.border}`, background:"transparent", color:C.dim, cursor:"pointer",
+            }}>Cancel</button>
+          </div>
+
+          {/* Live quote preview */}
+          {quote && (
+            <div style={{
+              display:"flex", alignItems:"center", gap:16,
+              padding:"12px 16px", borderRadius:6,
+              background:"rgba(26,172,190,0.08)", border:`1px solid ${C.borderBr}`,
+              animation:"fadeUp 0.2s ease",
+            }}>
+              <div>
+                <div style={{ fontFamily:F.mono, fontSize:14, fontWeight:700, color:C.accent, letterSpacing:"1px" }}>{quote.ticker}</div>
+                <div style={{ fontFamily:F.sans, fontSize:12, color:C.dim, marginTop:2 }}>{quote.name}</div>
+              </div>
+              <div style={{ display:"flex", gap:20, flex:1 }}>
+                <div>
+                  <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:3 }}>Price</div>
+                  <div style={{ fontFamily:F.mono, fontSize:16, fontWeight:700, color:C.text }}>${quote.price.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:3 }}>Volume</div>
+                  <div style={{ fontFamily:F.mono, fontSize:16, fontWeight:700, color:C.text }}>{quote.volume.toLocaleString()}</div>
+                </div>
+              </div>
+              <button onClick={handleAdd} style={{
+                fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"1px",
+                padding:"8px 20px", borderRadius:4, border:"none",
+                background:C.green, color:"#091515", cursor:"pointer",
+                boxShadow:`0 0 14px ${C.greenGl}`,
+              }}>+ Add</button>
+            </div>
+          )}
+
+          {err && <span style={{ fontFamily:F.mono, fontSize:12, color:C.red }}>{err}</span>}
         </div>
       )}
     </GlassCard>

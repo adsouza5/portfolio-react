@@ -6,7 +6,7 @@ const timelineEntries = [
     type: 'project',
     title: 'Sentinel — Real-Time Market Prediction Engine',
     org: null,
-    date: '2024',
+    date: '2026',
     location: null,
     description:
       'Serverless GCP pipeline that streams live market data through Pub/Sub, normalises features on Cloud Run, runs a sentiment classifier on Vertex AI, and stores predictions in BigQuery — all provisioned with Terraform and served via FastAPI.',
@@ -29,7 +29,7 @@ const timelineEntries = [
   },
   {
     type: 'project',
-    title: 'Real-Time Collaborative Coding Platform',
+    title: 'Collaborative Coding Platform',
     org: null,
     date: '2023',
     location: null,

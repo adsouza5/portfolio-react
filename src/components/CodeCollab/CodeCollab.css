@@ -78,11 +78,25 @@
 }
 .cc-join-btn:hover { opacity: 0.88; }
 
-.cc-join-note {
-  font-size: 11px;
-  color: var(--cc-dim);
+.cc-join-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cc-join-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cc-join-error {
+  font-size: 12px;
+  color: #f87ba6;
   text-align: center;
   line-height: 1.5;
+  border: 1px solid rgba(248, 123, 166, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: rgba(248, 123, 166, 0.05);
 }
 
 /* ── Back Button ─────────────────────────────────────────── */

@@ -4,18 +4,19 @@ import { Editor } from '@monaco-editor/react';
 import io from 'socket.io-client';
 import './CodeCollab.css';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL   = 'http://localhost:5000';
+const MANAGER_URL  = 'http://localhost:5001';
 const LANGUAGES = [
   'javascript', 'typescript', 'python', 'go', 'rust',
   'java', 'html', 'css', 'json', 'markdown',
 ];
 
 // ── Join Screen ───────────────────────────────────────────────
-function JoinScreen({ onJoin, onBack }) {
+function JoinScreen({ onJoin, onBack, starting, error }) {
   const [name, setName] = useState('');
 
   const submit = () => {
-    if (name.trim()) onJoin(name.trim());
+    if (name.trim() && !starting) onJoin(name.trim());
   };
 
   return (
@@ -30,14 +31,13 @@ function JoinScreen({ onJoin, onBack }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
+          disabled={starting}
           autoFocus
         />
-        <button className="cc-join-btn" onClick={submit}>
-          Join Session →
+        <button className="cc-join-btn" onClick={submit} disabled={starting}>
+          {starting ? 'Starting server…' : 'Join Session →'}
         </button>
-        <p className="cc-join-note">
-          Requires the CodeCollab server running on port 5000.
-        </p>
+        {error && <p className="cc-join-error">{error}</p>}
       </div>
     </div>
   );
@@ -96,25 +96,36 @@ function NewSegmentForm({ onConfirm, onCancel }) {
 // ── Main ──────────────────────────────────────────────────────
 export default function CodeCollab() {
   const navigate = useNavigate();
-  const [user, setUser]       = useState(null);
-  const [users, setUsers]     = useState([]);
+  const [user, setUser]         = useState(null);
+  const [users, setUsers]       = useState([]);
   const [segments, setSegments] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
-  const [error, setError]     = useState(null);
+  const [starting, setStarting] = useState(false);
+  const [error, setError]       = useState(null);
   const socketRef = useRef(null);
 
   const goBack = useCallback(() => {
     navigate('/', { state: { scrollTo: 'projects' } });
   }, [navigate]);
 
-  const join = useCallback((name) => {
+  const join = useCallback(async (name) => {
     setError(null);
-    const socket = io(SOCKET_URL, { timeout: 4000 });
+    setStarting(true);
+
+    try {
+      await fetch(`${MANAGER_URL}/start`, { method: 'POST' });
+    } catch {
+      // Manager unreachable — try connecting directly (server may already be up)
+    }
+
+    setStarting(false);
+
+    const socket = io(SOCKET_URL, { timeout: 5000 });
     socketRef.current = socket;
 
     socket.on('connect_error', () => {
-      setError('Could not connect to the CodeCollab server. Make sure it is running on port 5000.');
+      setError('Could not reach the CodeCollab server. Run npm start in the portfolio to launch everything automatically.');
       socket.disconnect();
     });
 
@@ -126,9 +137,7 @@ export default function CodeCollab() {
     });
 
     socket.on('users:update', setUsers);
-
-    socket.on('segments:update', (segs) => setSegments(segs));
-
+    socket.on('segments:update', setSegments);
     socket.on('segment:content', ({ segmentId, content }) => {
       setSegments((prev) =>
         prev.map((s) => (s.id === segmentId ? { ...s, content } : s))
@@ -176,7 +185,7 @@ export default function CodeCollab() {
   const isOwner = activeSegment?.ownerId === user?.id;
 
   if (!user) {
-    return <JoinScreen onJoin={join} onBack={goBack} error={error} />;
+    return <JoinScreen onJoin={join} onBack={goBack} starting={starting} error={error} />;
   }
 
   return (

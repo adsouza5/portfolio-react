@@ -100,6 +100,12 @@ body {
   transform: translateY(0);
 }
 
+@media (max-width: 480px) {
+  .section {
+    padding: 60px 16px;
+  }
+}
+
 .portfolio-img {
   transition: box-shadow 0.4s ease, transform 0.4s ease;
 }

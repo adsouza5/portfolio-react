@@ -14,3 +14,9 @@
   transition: left 0.08s linear, top 0.08s linear;
   will-change: left, top;
 }
+
+@media (hover: none) {
+  .cursor-spotlight {
+    display: none;
+  }
+}

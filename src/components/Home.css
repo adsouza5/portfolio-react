@@ -225,3 +225,22 @@
     max-width: 100%;
   }
 }
+
+@media (max-width: 375px) {
+  #home {
+    padding: 72px 14px 60px;
+  }
+  .hero-name {
+    font-size: clamp(38px, 12vw, 52px);
+  }
+  .cta-primary,
+  .cta-secondary {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+  .hero-ctas {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

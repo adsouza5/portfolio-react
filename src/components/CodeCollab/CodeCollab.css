@@ -974,3 +974,165 @@
 @keyframes cc-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Mobile — 768px (tablet) ─────────────────────────────── */
+@media (max-width: 768px) {
+  .cc-join-card,
+  .cc-lobby-card {
+    width: calc(100vw - 40px);
+    max-width: 400px;
+    padding: 22px 18px;
+  }
+
+  .cc-header {
+    height: 42px;
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .cc-code-badge-label {
+    display: none;
+  }
+
+  .cc-tab-bar {
+    height: 38px;
+    padding: 0 6px;
+  }
+
+  .cc-tab {
+    height: 26px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .cc-tab-add {
+    height: 26px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
+
+  .cc-editor-header {
+    height: 32px;
+    padding: 0 12px;
+  }
+
+  .cc-camera-wrap {
+    width: 120px;
+    height: 90px;
+    bottom: 12px;
+    right: 12px;
+  }
+}
+
+/* ── Mobile — 480px (phone) ──────────────────────────────── */
+@media (max-width: 480px) {
+  .cc-join-card,
+  .cc-lobby-card {
+    width: calc(100vw - 24px);
+    padding: 20px 16px;
+    gap: 12px;
+  }
+
+  .cc-logo {
+    font-size: 15px;
+  }
+
+  .cc-join-sub {
+    font-size: 12px;
+  }
+
+  .cc-back-btn {
+    top: 12px;
+    left: 12px;
+    font-size: 10px;
+    padding: 7px 12px;
+    letter-spacing: 1.5px;
+  }
+
+  .cc-header {
+    height: 40px;
+    padding: 0 8px;
+  }
+
+  .cc-user-pill {
+    padding: 2px 7px 2px 5px;
+  }
+
+  .cc-user-name {
+    font-size: 11px;
+  }
+
+  /* Stack the new-segment form on small screens */
+  .cc-tab-new-form {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .cc-tab-new-input {
+    width: 120px;
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .cc-tab-new-lang {
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .cc-editor-header {
+    padding: 0 8px;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  .cc-editor-owner,
+  .cc-editor-seg-name {
+    font-size: 10px;
+  }
+
+  .cc-editor-lang {
+    display: none;
+  }
+
+  /* Pin terminal to a fixed height — no drag resize on touch */
+  .cc-terminal-resize-handle {
+    display: none;
+  }
+
+  .cc-terminal {
+    height: 180px !important;
+  }
+
+  .cc-terminal-body {
+    font-size: 11.5px;
+    padding: 8px 10px;
+  }
+
+  /* Hide camera on very small screens — overlaps editor */
+  .cc-camera-wrap {
+    display: none;
+  }
+
+  .cc-session-list {
+    max-height: 220px;
+  }
+}
+
+/* ── Mobile — 375px (small phone) ───────────────────────── */
+@media (max-width: 375px) {
+  .cc-join-card,
+  .cc-lobby-card {
+    width: 100vw;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .cc-tab-name {
+    max-width: 72px;
+  }
+
+  .cc-terminal {
+    height: 160px !important;
+  }
+}

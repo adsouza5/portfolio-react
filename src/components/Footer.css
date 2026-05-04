@@ -146,3 +146,17 @@
     margin-top: 44px;
   }
 }
+
+@media (max-width: 375px) {
+  .footer {
+    padding: 44px 16px 28px;
+  }
+  .footer-cta {
+    width: 100%;
+    text-align: center;
+    display: block;
+  }
+  .footer-socials {
+    gap: 14px;
+  }
+}

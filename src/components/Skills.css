@@ -40,3 +40,14 @@
   background: rgba(23, 126, 137, 0.14);
   box-shadow: 0 0 10px rgba(23, 126, 137, 0.2);
 }
+
+@media (max-width: 480px) {
+  .skills-strip {
+    margin-bottom: 32px;
+  }
+  .skill-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    letter-spacing: 0.8px;
+  }
+}

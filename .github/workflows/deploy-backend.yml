@@ -38,17 +38,15 @@ jobs:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SA }}
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Build and push image
         run: |
-          docker build \
-            -t ${{ env.IMAGE }}:${{ github.sha }} \
-            -t ${{ env.IMAGE }}:latest \
-            backend/
-          docker push ${{ env.IMAGE }}:${{ github.sha }}
-          docker push ${{ env.IMAGE }}:latest
+          gcloud builds submit backend/ \
+            --tag ${{ env.IMAGE }}:${{ github.sha }} \
+            --tag ${{ env.IMAGE }}:latest \
+            --project portfolio-ml-pipeline
 
       - name: Deploy to Cloud Run
         run: |

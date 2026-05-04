@@ -14,7 +14,34 @@ const USER_COLORS = [
   '#f87ba6','#fbbf24','#93c5fd','#86efac','#d8b4fe',
 ];
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const EXECUTABLE = new Set(['javascript','typescript','python','go','rust','java','c','cpp']);
+
+// Piston API config: maps Monaco language id → { pistonLang, filename }
+const PISTON_CONFIG = {
+  javascript: { lang: 'javascript', file: 'index.js'  },
+  typescript: { lang: 'typescript', file: 'index.ts'  },
+  python:     { lang: 'python',     file: 'main.py'   },
+  go:         { lang: 'go',         file: 'main.go'   },
+  rust:       { lang: 'rust',       file: 'main.rs'   },
+  java:       { lang: 'java',       file: 'Main.java' },
+  c:          { lang: 'c',          file: 'main.c'    },
+  cpp:        { lang: 'c++',        file: 'main.cpp'  },
+};
+
+// Language-specific starter templates
+const TEMPLATES = {
+  javascript: (n, a) => `// ${n} — ${a}'s segment\n\nconsole.log("Hello from ${n}!");\n`,
+  typescript: (n, a) => `// ${n} — ${a}'s segment\n\nconst msg: string = "Hello from ${n}!";\nconsole.log(msg);\n`,
+  python:     (n, a) => `# ${n} — ${a}'s segment\n\nprint("Hello from ${n}!")\n`,
+  go:         (n, a) => `// ${n} — ${a}'s segment\n\npackage main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hello from ${n}!")\n}\n`,
+  rust:       (n, a) => `// ${n} — ${a}'s segment\n\nfn main() {\n    println!("Hello from ${n}!");\n}\n`,
+  java:       (n, a) => `// ${n} — ${a}'s segment\n\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello from ${n}!");\n    }\n}\n`,
+  c:          (n, a) => `// ${n} — ${a}'s segment\n\n#include <stdio.h>\n\nint main() {\n    printf("Hello from ${n}!\\n");\n    return 0;\n}\n`,
+  cpp:        (n, a) => `// ${n} — ${a}'s segment\n\n#include <iostream>\n\nint main() {\n    std::cout << "Hello from ${n}!" << std::endl;\n    return 0;\n}\n`,
+  html:       (n, a) => `<!-- ${n} — ${a}'s segment -->\n\n`,
+  css:        (n, a) => `/* ${n} — ${a}'s segment */\n\n`,
+  json:       (n, a) => `{\n  "segment": "${n}"\n}\n`,
+  markdown:   (n, a) => `# ${n}\n\n*${a}'s segment*\n\n`,
+};
 
 // ── Helpers ───────────────────────────────────────────────────
 function colorFromId(id) {
@@ -36,14 +63,29 @@ async function hashPasscode(raw) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-async function runOnPiston(language, content) {
+async function runOnPiston(monacoLang, content) {
+  const config = PISTON_CONFIG[monacoLang];
+  if (!config) return { stdout: '', stderr: `"${monacoLang}" cannot be executed.` };
+
   const res = await fetch('https://emkc.org/api/v2/piston/execute', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ language, version: '*', files: [{ content }] }),
+    body: JSON.stringify({
+      language: config.lang,
+      version: '*',
+      files: [{ name: config.file, content }],
+    }),
   });
+
+  if (!res.ok) return { stdout: '', stderr: `Piston API error: ${res.status}` };
+
   const data = await res.json();
-  return { stdout: data.run?.stdout ?? '', stderr: data.run?.stderr ?? '' };
+  // For compiled languages (java/c/c++/go/rust), compile errors live in data.compile.stderr
+  const compileStderr = data.compile?.stderr ?? '';
+  const runStdout     = data.run?.stdout     ?? '';
+  const runStderr     = data.run?.stderr     ?? '';
+  const stderr        = [compileStderr, runStderr].filter(Boolean).join('\n');
+  return { stdout: runStdout, stderr };
 }
 
 // ── Camera hook ───────────────────────────────────────────────
@@ -514,10 +556,11 @@ export default function CodeCollab() {
   const createSegment = ({ name, language }) => {
     if (!user) return;
     const id = `seg_${Date.now()}`;
+    const template = TEMPLATES[language] ?? ((n, a) => `// ${n} — ${a}'s segment\n\n`);
     ySegmentsRef.current?.set(id, {
       name, language,
       ownerId: user.id, ownerName: user.name, ownerColor: user.color,
-      content: `// ${name}\n// ${user.name}'s workspace\n\n`,
+      content: template(name, user.name),
     });
     setShowNewForm(false);
     setActiveId(id);
@@ -552,16 +595,12 @@ export default function CodeCollab() {
 
     const entry = { runBy: user.name, runByColor: user.color, timestamp: Date.now(), stdout: '', stderr: '' };
 
-    if (!EXECUTABLE.has(seg.language)) {
-      entry.stderr = `"${seg.language}" is a markup/config language and cannot be executed.`;
-    } else {
-      try {
-        const result = await runOnPiston(seg.language, seg.content);
-        entry.stdout = result.stdout;
-        entry.stderr = result.stderr;
-      } catch (err) {
-        entry.stderr = `Execution error: ${err.message}`;
-      }
+    try {
+      const result = await runOnPiston(seg.language, seg.content);
+      entry.stdout = result.stdout;
+      entry.stderr = result.stderr;
+    } catch (err) {
+      entry.stderr = `Execution error: ${err.message}`;
     }
 
     if (yOutputsRef.current) {

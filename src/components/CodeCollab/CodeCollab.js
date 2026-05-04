@@ -15,16 +15,16 @@ const USER_COLORS = [
 ];
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-// Piston API config: maps Monaco language id → { pistonLang, filename }
-const PISTON_CONFIG = {
-  javascript: { lang: 'javascript', file: 'index.js'  },
-  typescript: { lang: 'typescript', file: 'index.ts'  },
-  python:     { lang: 'python',     file: 'main.py'   },
-  go:         { lang: 'go',         file: 'main.go'   },
-  rust:       { lang: 'rust',       file: 'main.rs'   },
-  java:       { lang: 'java',       file: 'Main.java' },
-  c:          { lang: 'c',          file: 'main.c'    },
-  cpp:        { lang: 'c++',        file: 'main.cpp'  },
+// Wandbox compiler map — free, no auth, CORS-enabled
+const WANDBOX_CONFIG = {
+  javascript: { compiler: 'nodejs-20.17.0'   },
+  typescript: { compiler: 'typescript-5.6.2' },
+  python:     { compiler: 'cpython-3.12.7'   },
+  go:         { compiler: 'go-1.23.2'        },
+  rust:       { compiler: 'rust-1.82.0'      },
+  java:       { compiler: 'openjdk-jdk-22+36'},
+  c:          { compiler: 'gcc-13.2.0-c'     },
+  cpp:        { compiler: 'gcc-13.2.0'       },
 };
 
 // Language-specific starter templates
@@ -34,7 +34,7 @@ const TEMPLATES = {
   python:     (n, a) => `# ${n} — ${a}'s segment\n\nprint("Hello from ${n}!")\n`,
   go:         (n, a) => `// ${n} — ${a}'s segment\n\npackage main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hello from ${n}!")\n}\n`,
   rust:       (n, a) => `// ${n} — ${a}'s segment\n\nfn main() {\n    println!("Hello from ${n}!");\n}\n`,
-  java:       (n, a) => `// ${n} — ${a}'s segment\n\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello from ${n}!");\n    }\n}\n`,
+  java:       (n, a) => `// ${n} — ${a}'s segment\n\nclass Main {\n    public static void main(String[] args) {\n        System.out.println("Hello from ${n}!");\n    }\n}\n`,
   c:          (n, a) => `// ${n} — ${a}'s segment\n\n#include <stdio.h>\n\nint main() {\n    printf("Hello from ${n}!\\n");\n    return 0;\n}\n`,
   cpp:        (n, a) => `// ${n} — ${a}'s segment\n\n#include <iostream>\n\nint main() {\n    std::cout << "Hello from ${n}!" << std::endl;\n    return 0;\n}\n`,
   html:       (n, a) => `<!-- ${n} — ${a}'s segment -->\n\n`,
@@ -63,29 +63,22 @@ async function hashPasscode(raw) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-async function runOnPiston(monacoLang, content) {
-  const config = PISTON_CONFIG[monacoLang];
-  if (!config) return { stdout: '', stderr: `"${monacoLang}" cannot be executed.` };
+async function runOnWandbox(monacoLang, content) {
+  const config = WANDBOX_CONFIG[monacoLang];
+  if (!config) return { stdout: '', stderr: `"${monacoLang}" is not executable (markup/config language).` };
 
-  const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+  const res = await fetch('https://wandbox.org/api/compile.json', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      language: config.lang,
-      version: '*',
-      files: [{ name: config.file, content }],
-    }),
+    body: JSON.stringify({ compiler: config.compiler, code: content }),
   });
 
-  if (!res.ok) return { stdout: '', stderr: `Piston API error: ${res.status}` };
+  if (!res.ok) return { stdout: '', stderr: `Compiler API error ${res.status} — please try again.` };
 
   const data = await res.json();
-  // For compiled languages (java/c/c++/go/rust), compile errors live in data.compile.stderr
-  const compileStderr = data.compile?.stderr ?? '';
-  const runStdout     = data.run?.stdout     ?? '';
-  const runStderr     = data.run?.stderr     ?? '';
-  const stderr        = [compileStderr, runStderr].filter(Boolean).join('\n');
-  return { stdout: runStdout, stderr };
+  const stdout = data.program_output ?? '';
+  const stderr = [data.compiler_error, data.program_error].filter(Boolean).join('\n');
+  return { stdout, stderr };
 }
 
 // ── Camera hook ───────────────────────────────────────────────
@@ -596,7 +589,7 @@ export default function CodeCollab() {
     const entry = { runBy: user.name, runByColor: user.color, timestamp: Date.now(), stdout: '', stderr: '' };
 
     try {
-      const result = await runOnPiston(seg.language, seg.content);
+      const result = await runOnWandbox(seg.language, seg.content);
       entry.stdout = result.stdout;
       entry.stderr = result.stderr;
     } catch (err) {

@@ -27,6 +27,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check Wandbox API
+        run: |
+          HTTP=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -X POST https://wandbox.org/api/compile.json \
+            -H "Content-Type: application/json" \
+            -d '{"compiler":"cpython-3.12.7","code":"print(1+1)"}')
+          if [ "$HTTP" != "200" ]; then
+            echo "Wandbox API is unavailable (status: $HTTP) — code execution will not work"
+            exit 1
+          fi
+          echo "Wandbox API healthy (status: $HTTP)"
+
       - name: Build
         run: npm run build
         env:

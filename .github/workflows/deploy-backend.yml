@@ -1,0 +1,52 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main, master]
+    paths: [backend/**]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # required for Workload Identity Federation
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP (keyless)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push image
+        run: |
+          gcloud builds submit backend/ \
+            --tag us-central1-docker.pkg.dev/portfolio-ml-pipeline/backend/api:${{ github.sha }} \
+            --tag us-central1-docker.pkg.dev/portfolio-ml-pipeline/backend/api:latest
+
+      - name: Run tests
+        run: |
+          pip install pytest google-cloud-bigquery google-cloud-secret-manager \
+            google-cloud-pubsub google-cloud-firestore httpx fastapi pydantic uvicorn
+          pytest backend/test_indicators.py -v
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ml-pipeline-api \
+            --image us-central1-docker.pkg.dev/portfolio-ml-pipeline/backend/api:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ml-pipeline-sa@portfolio-ml-pipeline.iam.gserviceaccount.com \
+            --set-env-vars GCP_PROJECT=portfolio-ml-pipeline \
+            --max-instances 3 \
+            --min-instances 0 \
+            --memory 512Mi \
+            --cpu 1 \
+            --quiet

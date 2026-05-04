@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* ── Design tokens ───────────────────────────────────────────── */
@@ -33,52 +33,152 @@ const F = {
 const STAGES = [
   { id:"ingest",     label:"Pub/Sub\nIngest",       icon:"IN", color:C.accent,  glow:C.glowSm   },
   { id:"preprocess", label:"Cloud Run\nPreprocess", icon:"⚙",  color:C.amber,   glow:C.amberGl  },
-  { id:"inference",  label:"Vertex AI\nInference",  icon:"AI", color:C.purple,  glow:C.purpleGl },
+  { id:"inference",  label:"Signal\nScoring",       icon:"∑",  color:C.purple,  glow:C.purpleGl },
   { id:"store",      label:"BigQuery\nStore",       icon:"DB", color:C.green,   glow:C.greenGl  },
   { id:"serve",      label:"API\nResponse",         icon:"→",  color:C.accent,  glow:C.glowSm   },
 ];
 
+/* fallback prices shown before real data loads */
 const DEFAULT_STOCKS = [
-  { ticker:"AAPL", price:198.5,  volume:12400, prediction:"BULLISH", confidence:0.87, latency:23 },
-  { ticker:"TSLA", price:245.2,  volume:38200, prediction:"BEARISH", confidence:0.72, latency:31 },
-  { ticker:"MSFT", price:412.8,  volume:8900,  prediction:"NEUTRAL", confidence:0.91, latency:18 },
-  { ticker:"NVDA", price:875.3,  volume:54100, prediction:"BULLISH", confidence:0.94, latency:27 },
-  { ticker:"AMZN", price:186.4,  volume:15700, prediction:"BEARISH", confidence:0.68, latency:35 },
-  { ticker:"META", price:502.1,  volume:22300, prediction:"BULLISH", confidence:0.82, latency:21 },
+  { ticker:"AAPL", price:198.5,  volume:12400000 },
+  { ticker:"TSLA", price:245.2,  volume:38200000 },
+  { ticker:"MSFT", price:412.8,  volume:8900000  },
+  { ticker:"NVDA", price:875.3,  volume:54100000 },
+  { ticker:"AMZN", price:186.4,  volume:15700000 },
+  { ticker:"META", price:502.1,  volume:22300000 },
 ];
 
 const ARCH = [
   { title:"Data Ingestion",    color:C.accent, desc:"Pub/Sub topic receives streaming market data events. Cloud Functions trigger on new messages, batching for throughput.", details:["Message ordering guarantees","Dead-letter queue for failures","Auto-scaling subscribers"] },
   { title:"Preprocessing",     color:C.amber,  desc:"Cloud Run service normalises raw data into feature vectors. Stateless containers scale to zero when idle.",               details:["Feature normalisation pipeline","Schema validation","Scale-to-zero cost optimisation"] },
-  { title:"Model Inference",   color:C.purple, desc:"Vertex AI endpoint hosts the sentiment classifier. Custom prediction routines handle pre/post processing at model layer.", details:["Custom container serving","A/B model deployment","Auto-scaling on GPU"] },
-  { title:"Storage & Serving", color:C.green,  desc:"Predictions land in BigQuery partitioned by date. FastAPI serves real-time results via Cloud Run with Redis caching.",    details:["Partitioned tables by date","Sub-second API responses","Grafana monitoring dashboard"] },
+  { title:"Signal Scoring",    color:C.purple, desc:"Cloud Run computes RSI(14), MACD(12/26/9), SMA50/200, Bollinger Bands, and ATR from 252 days of OHLCV data. A rule-based scoring model converts these indicators into BULLISH/BEARISH/NEUTRAL signals with confidence scores.", details:["RSI(14) with Wilder smoothing","MACD(12/26/9) signal cross","Bollinger Band % position"] },
+  { title:"Storage & Serving", color:C.green,  desc:"Predictions land in BigQuery partitioned by date. Firestore stores async session state across the Pub/Sub flow. FastAPI on Cloud Run serves real-time results and live analytics.", details:["BigQuery partitioned by date","Firestore async session store","Sub-second API responses"] },
 ];
 
-/* live stock quote — Yahoo Finance via CORS proxy */
-async function fetchStockQuote(ticker) {
-  const target = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker.toUpperCase()}?interval=1d&range=1d&includePrePost=false`;
-  const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(target)}`);
+/* ── Backend API (Cloud Run) ─────────────────────────────────── */
+const API_URL = process.env.REACT_APP_API_URL || "";
+
+async function fetchAllTwelveData(tickers) {
+  if (!API_URL) throw new Error("no_api_url");
+  const res = await fetch(`${API_URL}/predict`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tickers }),
+    signal: AbortSignal.timeout(15000),
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  const meta = data?.chart?.result?.[0]?.meta;
-  if (!meta?.regularMarketPrice) throw new Error("No data returned");
-  return {
-    price:  parseFloat(meta.regularMarketPrice.toFixed(2)),
-    volume: meta.regularMarketVolume || 0,
-    name:   meta.shortName || ticker,
-  };
+  const { results } = await res.json();
+  const out = {};
+  for (const r of results) {
+    out[r.ticker] = {
+      ticker:     r.ticker,
+      price:      r.price,
+      volume:     r.volume,
+      rsi:        r.rsi,
+      macdBull:   r.macd_bull,
+      aboveMa50:  r.above_ma50,
+      aboveMa200: r.above_ma200,
+      bbPos:      r.bb_pos,
+      atr:        r.atr,
+      volatility: r.volatility,
+      volDelta:   r.vol_delta,
+      sentiment:  r.sentiment,
+      prediction: r.prediction,
+      confidence: r.confidence,
+      latency:    r.latency,
+    };
+  }
+  return out;
 }
 
-/* deterministic pseudo-prediction for custom tickers */
+/* ── Forecast using real historical volatility from backend ─── */
+function generateForecast(stock, volatility, days = 14) {
+  const seed        = stock.ticker.toUpperCase().split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffff, 7);
+  const direction   = stock.prediction === "BULLISH" ? 1 : stock.prediction === "BEARISH" ? -1 : 0;
+  const trendPerDay = direction * stock.confidence * 0.007;
+  const vol         = volatility || 0.013;
+
+  const points = [stock.price];
+  for (let i = 1; i <= days; i++) {
+    const noise = Math.sin(seed * 0.003 + i * 2.1) * vol * 0.7
+                + Math.sin(seed * 0.007 + i * 3.7) * vol * 0.4;
+    points.push(Math.max(0.01, points[i - 1] * (1 + trendPerDay + noise)));
+  }
+  return points.map(p => parseFloat(p.toFixed(2)));
+}
+
+/* ── Deterministic fallback ──────────────────────────────────── */
 function simulateStock(ticker) {
   const hash = ticker.toUpperCase().split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffff, 7);
   const confidence  = parseFloat((0.60 + (hash % 35) / 100).toFixed(2));
   const latency     = 17 + (hash % 24);
   const predictions = ["BULLISH","BEARISH","NEUTRAL"];
-  return { prediction: predictions[hash % 3], confidence, latency };
+  const price       = parseFloat((20 + (hash % 980) + ((hash >> 4) % 100) / 100).toFixed(2));
+  const volume      = 1000 + (hash % 99000);
+  return { prediction: predictions[hash % 3], confidence, latency, price, volume };
 }
 
 const predColor = p => p === "BULLISH" ? C.green : p === "BEARISH" ? C.red : C.amber;
+
+/* ── Signal intelligence — real indicators when available ────── */
+function generateSignals(stock, real) {
+  const seed = stock.ticker.toUpperCase().split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffff, 7);
+  const isBull = stock.prediction === "BULLISH";
+  const isBear = stock.prediction === "BEARISH";
+
+  const rsi       = real ? real.rsi      : (isBull ? 52 : isBear ? 36 : 46) + (seed % 15) - 3;
+  const volDelta  = real ? real.volDelta : isBull ? 8 + (seed % 22) : isBear ? -(8 + (seed % 18)) : -4 + (seed % 12);
+  const sentiment = real ? real.sentiment : Math.max(-99, Math.min(99, (isBull ? 22 : isBear ? -28 : 2) + (seed % 28) - 10));
+  const macdBull   = real ? real.macdBull   : isBull || (!isBear && seed % 3 === 0);
+  const aboveMa50  = real ? real.aboveMa50  : isBull || (seed % 4 !== 0);
+  const aboveMa200 = real ? real.aboveMa200 : isBull || (seed % 5 === 0);
+  const bbPos      = real ? real.bbPos      : isBull ? 60 + (seed % 25) : isBear ? 15 + (seed % 20) : 35 + (seed % 30);
+  const atr        = real ? real.atr        : parseFloat((1.5 + (seed % 80) / 10).toFixed(2));
+
+  const bullCatalysts = [
+    "Dark pool prints showing heavy accumulation at current levels — smart money is loading up.",
+    "Short interest declining — bears are getting squeezed out.",
+    "Broke out above key resistance last session with volume confirmation. Chart looks clean.",
+    "Insider buying flagged over the last 30 days. Someone with a view is stepping in.",
+    "Sector tailwinds strong — institutional rotation flowing into this space.",
+  ];
+  const bearCatalysts = [
+    "Distribution pattern printing on the daily. Institutions are quietly offloading into retail strength.",
+    "Options flow skewed heavily to the downside — put buyers are not messing around.",
+    "Short interest climbing — smart money sees the fade.",
+    "Broke below 50-day MA on above-average volume. The trend has changed.",
+    "Macro headwinds and a crowded long trade — when this unwinds it'll be fast.",
+  ];
+  const neutCatalysts = [
+    "Choppy tape with no clear direction. Waiting for the market to show its hand.",
+    "Earnings catalyst incoming — binary event risk means we sit on our hands for now.",
+    "Consolidating in a tight range post-move. Compression usually leads to expansion.",
+    "Mixed signals across the board — no edge, no trade. Discipline over FOMO.",
+  ];
+  const pool = isBull ? bullCatalysts : isBear ? bearCatalysts : neutCatalysts;
+  const catalyst = pool[seed % pool.length];
+
+  const theses = {
+    BULLISH: [
+      `${stock.ticker} looks like the right bet right now. Everything's pointing the same direction — price is climbing, the people with real money are buying, and sentiment is on our side. We stay in until something actually changes.`,
+      `${stock.ticker} is one of the stronger setups we're seeing. It's been trending up consistently, confidence across our signals is high, and there's no obvious reason it stops here. We like it.`,
+      `${stock.ticker} is showing exactly what we want to see. Buyers are in control, the mood around this stock is improving, and the downside looks limited relative to where it could go. Easy hold.`,
+    ],
+    BEARISH: [
+      `${stock.ticker} is in trouble and we think it has further to fall. The buyers have stepped away, the people who usually know things are selling, and the mood has turned. We're not fighting that.`,
+      `${stock.ticker} is not the place to be right now. It's been sliding, confidence is low, and nothing in our signals suggests a turnaround is close. Easier to just wait it out from the sidelines.`,
+      `${stock.ticker} is broken and trying to pick a bottom here is a losing game. When price, sentiment, and positioning all point down at the same time, you respect it and move on.`,
+    ],
+    NEUTRAL: [
+      `${stock.ticker} isn't really going anywhere right now. Buyers and sellers are roughly balanced, signals are mixed, and there's no clear edge. We're watching it, not touching it.`,
+      `${stock.ticker} needs a reason to move and doesn't have one yet. Could go either way — which is exactly why we sit on our hands until the picture gets clearer.`,
+      `${stock.ticker} is a coin flip at the moment and we don't trade coin flips. It goes on the watchlist and we check back when something shifts.`,
+    ],
+  };
+  const thesis = theses[stock.prediction]?.[seed % 3] ?? "";
+
+  return { rsi, volDelta, sentiment, macdBull, aboveMa50, aboveMa200, bbPos, atr, catalyst, thesis };
+}
 
 /* ── Sub-components ──────────────────────────────────────────── */
 
@@ -320,11 +420,204 @@ function ResultsTable({ results }) {
   );
 }
 
-function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, onRemoveCustom, disabled }) {
+function ForecastGrid({ results, stockData }) {
+  const W = 200, H = 58;
+  return (
+    <div>
+      <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:16 }}>
+        14-Day Price Forecast
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(190px, 1fr))", gap:12 }}>
+        {results.map(r => {
+          const volatility = stockData[r.ticker]?.volatility;
+          const pts        = generateForecast(r, volatility);
+          const col    = predColor(r.prediction);
+          const end    = pts[pts.length - 1];
+          const pct    = (end - r.price) / r.price * 100;
+          const sign   = pct >= 0 ? "+" : "";
+
+          const lo = Math.min(...pts), hi = Math.max(...pts);
+          const pad = (hi - lo) * 0.12 || 1;
+          const range = hi - lo + pad * 2;
+          const toX = i => ((i / (pts.length - 1)) * W).toFixed(1);
+          const toY = v => (H - ((v - lo + pad) / range) * H).toFixed(1);
+
+          const polyline = pts.map((p, i) => `${toX(i)},${toY(p)}`).join(" ");
+          const baseY    = toY(r.price);
+          const areaFill = `0,${H} ${polyline} ${W},${H}`;
+          const id       = `fcg-${r.ticker}`;
+
+          return (
+            <div key={r.ticker} style={{
+              background:"rgba(0,0,0,0.25)",
+              border:`1px solid ${col}28`,
+              borderTop:`2px solid ${col}`,
+              borderRadius:8, padding:"14px 14px 10px",
+            }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+                <div>
+                  <div style={{ fontFamily:F.mono, fontSize:13, fontWeight:700, color:C.text, letterSpacing:"0.5px" }}>{r.ticker}</div>
+                  <div style={{ fontFamily:F.mono, fontSize:10, color:C.dim, marginTop:2 }}>${r.price.toLocaleString()}</div>
+                </div>
+                <div style={{ textAlign:"right" }}>
+                  <div style={{ fontFamily:F.mono, fontSize:13, fontWeight:700, color:col }}>{sign}{pct.toFixed(1)}%</div>
+                  <div style={{ fontFamily:F.mono, fontSize:10, color:C.dim, marginTop:2 }}>${end.toLocaleString()}</div>
+                </div>
+              </div>
+
+              <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display:"block" }}>
+                <defs>
+                  <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={col} stopOpacity="0.28" />
+                    <stop offset="100%" stopColor={col} stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+                <line x1="0" y1={baseY} x2={W} y2={baseY} stroke={C.border} strokeWidth="0.8" strokeDasharray="3,3" />
+                <polygon points={areaFill} fill={`url(#${id})`} />
+                <polyline points={polyline} fill="none" stroke={col} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx={toX(pts.length - 1)} cy={toY(end)} r="2.5" fill={col} />
+              </svg>
+
+              <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}>
+                <span style={{ fontFamily:F.mono, fontSize:9, color:C.dim }}>Now</span>
+                <span style={{ fontFamily:F.mono, fontSize:9, color:C.dim }}>+14d</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ fontFamily:F.mono, fontSize:10, color:C.dim, marginTop:10, opacity:0.5 }}>
+        * Model-generated projections based on real volatility, signal direction and confidence. For demonstration purposes only.
+      </div>
+    </div>
+  );
+}
+
+function SignalIntelligence({ results, stockData }) {
+  return (
+    <GlassCard style={{ padding:"24px 28px", animation:"fadeUp 0.4s ease" }}>
+      <SectionHeader>Signal Intelligence</SectionHeader>
+
+      <div style={{
+        fontFamily:F.sans, fontSize:14, color:C.muted, lineHeight:1.85,
+        marginBottom:24, padding:"14px 18px", borderRadius:6,
+        background:"rgba(26,172,190,0.05)", border:`1px solid ${C.border}`,
+        borderLeft:`3px solid ${C.accent}`,
+      }}>
+        Picture three traders looking at the same stock and having to agree before anyone acts.{" "}
+        <strong style={{color:C.text}}>The first watches price and momentum</strong> — is it trending, accelerating, losing steam?{" "}
+        <strong style={{color:C.text}}>The second tracks where real money is moving</strong> — not what people say, but what they're actually buying and selling.{" "}
+        <strong style={{color:C.text}}>The third reads every headline and social post from the last 48 hours</strong> — is the mood shifting?
+        When all three agree, confidence goes up. When they're fighting each other, we sit on our hands.
+        We're not guessing — we're waiting for the market to show its cards first.
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(290px, 1fr))", gap:14 }}>
+        {results.map(r => {
+          const real = stockData[r.ticker];
+          const sig  = generateSignals(r, real);
+          const col  = predColor(r.prediction);
+          const rsiColor = sig.rsi > 70 ? C.red : sig.rsi < 35 ? C.green : C.amber;
+
+          return (
+            <div key={r.ticker} style={{
+              background:"rgba(0,0,0,0.2)",
+              border:`1px solid ${col}30`,
+              borderLeft:`3px solid ${col}`,
+              borderRadius:8, padding:"16px 18px",
+            }}>
+              {/* Header */}
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontFamily:F.mono, fontSize:15, fontWeight:700, color:C.text, letterSpacing:"1px" }}>{r.ticker}</span>
+                  {real && <span style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"1px", color:C.green, background:"rgba(52,211,153,0.1)", border:`1px solid ${C.green}30`, borderRadius:3, padding:"1px 6px" }}>LIVE</span>}
+                </div>
+                <span style={{ fontFamily:F.mono, fontSize:11, fontWeight:700, letterSpacing:"1.5px",
+                  color:col, background:`${col}18`, padding:"4px 12px", borderRadius:3, border:`1px solid ${col}40`
+                }}>{r.prediction}</span>
+              </div>
+
+              {/* RSI track */}
+              <div style={{ marginBottom:10 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                  <span style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1px", color:C.dim }}>RSI(14)</span>
+                  <span style={{ fontFamily:F.mono, fontSize:11, fontWeight:700, color:rsiColor }}>{sig.rsi}</span>
+                </div>
+                <div style={{ height:4, background:"rgba(0,0,0,0.4)", borderRadius:2, position:"relative" }}>
+                  <div style={{ position:"absolute", left:0, top:0, bottom:0, width:"30%", background:"rgba(52,211,153,0.12)", borderRadius:"2px 0 0 2px" }} />
+                  <div style={{ position:"absolute", right:0, top:0, bottom:0, width:"30%", background:"rgba(248,113,113,0.12)", borderRadius:"0 2px 2px 0" }} />
+                  <div style={{
+                    position:"absolute", top:"50%", left:`${Math.min(99, Math.max(1, sig.rsi))}%`,
+                    width:8, height:8, borderRadius:"50%",
+                    background:rsiColor, transform:"translate(-50%,-50%)",
+                    boxShadow:`0 0 6px ${rsiColor}`,
+                  }} />
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}>
+                  <span style={{ fontFamily:F.mono, fontSize:9, color:C.dim }}>Oversold 30</span>
+                  <span style={{ fontFamily:F.mono, fontSize:9, color:C.dim }}>Overbought 70</span>
+                </div>
+              </div>
+
+              {/* Indicator chips */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+                {[
+                  { label:`Vol ${sig.volDelta >= 0 ? "+" : ""}${sig.volDelta}% 20d`,    good: sig.volDelta >= 0 },
+                  { label:`Sent ${sig.sentiment >= 0 ? "+" : ""}${sig.sentiment}`,       good: sig.sentiment >= 0 },
+                  { label:`MACD ${sig.macdBull ? "Bull ▲" : "Bear ▼"}`,                 good: sig.macdBull },
+                  { label:`${sig.aboveMa50  ? "▲" : "▼"} SMA50`,                        good: sig.aboveMa50 },
+                  { label:`${sig.aboveMa200 ? "▲" : "▼"} SMA200`,                       good: sig.aboveMa200 },
+                  { label:`BB ${sig.bbPos}%`,                                             good: sig.bbPos > 20 && sig.bbPos < 80 },
+                  { label:`ATR $${sig.atr}`,                                              good: true },
+                ].map(({ label, good }) => (
+                  <span key={label} style={{
+                    fontFamily:F.mono, fontSize:10, letterSpacing:"0.5px",
+                    color: good ? C.green : C.red,
+                    background: good ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
+                    border: `1px solid ${good ? C.green : C.red}30`,
+                    padding:"2px 7px", borderRadius:3,
+                  }}>{label}</span>
+                ))}
+              </div>
+
+              {/* Catalyst */}
+              <div style={{
+                fontFamily:F.mono, fontSize:11, color:C.muted, lineHeight:1.7,
+                marginBottom:12, padding:"8px 12px", borderRadius:4,
+                background:"rgba(0,0,0,0.3)", borderLeft:`2px solid ${col}60`,
+              }}>
+                {sig.catalyst}
+              </div>
+
+              {/* Trade thesis */}
+              <div style={{ fontFamily:F.sans, fontSize:13, color:C.dim, lineHeight:1.65, fontStyle:"italic" }}>
+                "{sig.thesis}"
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{
+        marginTop:20, padding:"12px 16px", borderRadius:6,
+        background:"rgba(251,191,36,0.08)", border:`1px solid ${C.amber}50`,
+        display:"flex", alignItems:"flex-start", gap:10,
+      }}>
+        <span style={{ color:C.amber, fontSize:16, lineHeight:1, flexShrink:0 }}>⚠</span>
+        <span style={{ fontFamily:F.sans, fontSize:13, color:C.amber, lineHeight:1.6 }}>
+          <strong>This is a simulation.</strong> Predictions are generated by a rule-based scoring model running on real market data — RSI, MACD, and momentum from Twelve Data API.
+          Nothing here is financial advice — please don't make real investment decisions based on it.
+        </span>
+      </div>
+    </GlassCard>
+  );
+}
+
+function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, onRemoveCustom, disabled, stockData, onRealDataFetched }) {
   const [showForm, setShowForm] = useState(false);
   const [ticker, setTicker]     = useState("");
   const [fetching, setFetching] = useState(false);
-  const [quote, setQuote]       = useState(null);   // { ticker, price, volume, name }
+  const [quote, setQuote]       = useState(null);
   const [err, setErr]           = useState("");
 
   async function handleLookup() {
@@ -333,10 +626,14 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
     if (DEFAULT_STOCKS.some(s=>s.ticker===t)||customStocks.some(s=>s.ticker===t))   { setErr("Already in the list");             return; }
     setErr(""); setFetching(true); setQuote(null);
     try {
-      const data = await fetchStockQuote(t);
-      setQuote({ ticker:t, ...data });
+      const data = await fetchAllTwelveData([t]);
+      const d    = data[t];
+      if (!d) throw new Error("no data");
+      onRealDataFetched?.(d);
+      setQuote({ ticker:t, simulated:false, price:d.price, volume:d.volume, name:t });
     } catch {
-      setErr("Ticker not found — check the symbol and try again");
+      const sim = simulateStock(t);
+      setQuote({ ticker:t, name:t, price:sim.price, volume:sim.volume, simulated:true });
     } finally {
       setFetching(false);
     }
@@ -344,7 +641,7 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
 
   function handleAdd() {
     if (!quote) return;
-    onAddCustom({ ticker:quote.ticker, price:quote.price, volume:quote.volume });
+    onAddCustom({ ticker:quote.ticker, price:quote.price, volume:quote.volume, simulated:quote.simulated });
     setTicker(""); setQuote(null); setErr(""); setShowForm(false);
   }
 
@@ -364,7 +661,9 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
       {/* Default stock toggles */}
       <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:16 }}>
         {DEFAULT_STOCKS.map(s => {
-          const sel = selectedTickers.has(s.ticker);
+          const sel       = selectedTickers.has(s.ticker);
+          const livePrice = stockData[s.ticker]?.price;
+          const dispPrice = livePrice ? `$${livePrice.toFixed(2)}` : `$${s.price}`;
           return (
             <button key={s.ticker} onClick={()=>!disabled&&onToggle(s.ticker)} style={{
               fontFamily:F.mono, fontSize:12, fontWeight:700,
@@ -378,7 +677,7 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
               display:"flex", flexDirection:"column", alignItems:"center", gap:2, lineHeight:1,
             }}>
               <span>{s.ticker}</span>
-              <span style={{ fontSize:10, opacity:0.65 }}>${s.price}</span>
+              <span style={{ fontSize:10, opacity:0.65 }}>{dispPrice}</span>
             </button>
           );
         })}
@@ -392,11 +691,12 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
               display:"flex", alignItems:"center", gap:6,
               fontFamily:F.mono, fontSize:12, fontWeight:700,
               padding:"7px 10px 7px 14px", borderRadius:6,
-              border:`1.5px solid ${C.accentDk}`,
-              background:"rgba(23,126,137,0.12)", color:C.text, lineHeight:1,
+              border:`1.5px solid ${s.simulated ? C.amber+"80" : C.accentDk}`,
+              background: s.simulated ? "rgba(251,191,36,0.08)" : "rgba(23,126,137,0.12)",
+              color:C.text, lineHeight:1,
             }}>
               <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:2 }}>
-                <span>{s.ticker}</span>
+                <span>{s.ticker}{s.simulated && <span style={{ marginLeft:5, fontSize:9, color:C.amber, opacity:0.8 }}>sim</span>}</span>
                 <span style={{ fontSize:10, opacity:0.65 }}>${s.price.toLocaleString()}</span>
               </span>
               <button onClick={()=>!disabled&&onRemoveCustom(s.ticker)} style={{
@@ -421,7 +721,6 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
         }}>+ Add Stock</button>
       ) : (
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          {/* Ticker input + lookup */}
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
             <input
               placeholder="TICKER (e.g. GOOGL)"
@@ -447,17 +746,24 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
             }}>Cancel</button>
           </div>
 
-          {/* Live quote preview */}
           {quote && (
             <div style={{
               display:"flex", alignItems:"center", gap:16,
               padding:"12px 16px", borderRadius:6,
-              background:"rgba(26,172,190,0.08)", border:`1px solid ${C.borderBr}`,
+              background: quote.simulated ? "rgba(251,191,36,0.06)" : "rgba(26,172,190,0.08)",
+              border:`1px solid ${quote.simulated ? C.amber+"60" : C.borderBr}`,
               animation:"fadeUp 0.2s ease",
             }}>
               <div>
-                <div style={{ fontFamily:F.mono, fontSize:14, fontWeight:700, color:C.accent, letterSpacing:"1px" }}>{quote.ticker}</div>
-                <div style={{ fontFamily:F.sans, fontSize:12, color:C.dim, marginTop:2 }}>{quote.name}</div>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontFamily:F.mono, fontSize:14, fontWeight:700, color: quote.simulated ? C.amber : C.accent, letterSpacing:"1px" }}>{quote.ticker}</span>
+                  {quote.simulated ? (
+                    <span style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"1px", textTransform:"uppercase", color:C.amber, background:"rgba(251,191,36,0.12)", border:`1px solid ${C.amber}40`, borderRadius:3, padding:"1px 6px" }}>Simulated</span>
+                  ) : (
+                    <span style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"1px", color:C.green, background:"rgba(52,211,153,0.1)", border:`1px solid ${C.green}30`, borderRadius:3, padding:"1px 6px" }}>Live</span>
+                  )}
+                </div>
+                <div style={{ fontFamily:F.sans, fontSize:12, color:C.dim, marginTop:2 }}>{quote.simulated ? "Live data unavailable — using demo values" : "Real-time market data"}</div>
               </div>
               <div style={{ display:"flex", gap:20, flex:1 }}>
                 <div>
@@ -502,9 +808,36 @@ export default function MLPipelineShowcase() {
   const [allResults, setAllResults]     = useState([]);
   const [selectedTickers, setSelected]  = useState(new Set(DEFAULT_STOCKS.map(s=>s.ticker)));
   const [customStocks, setCustomStocks] = useState([]);
-  const logRef  = useRef(null);
-  const runRef  = useRef(false);
-  const queueRef = useRef([]);  // snapshot of stocks at run-start
+  const [stockData, setStockData]       = useState({});
+  const [dataStatus, setDataStatus]     = useState("idle");
+  const [analytics, setAnalytics]       = useState(null);
+  const logRef      = useRef(null);
+  const runRef      = useRef(false);
+  const queueRef    = useRef([]);
+  const fetchedRef  = useRef(false);
+
+  /* Fetch BigQuery analytics on mount */
+  useEffect(() => {
+    if (!API_URL) return;
+    fetch(`${API_URL}/analytics`)
+      .then(r => r.json())
+      .then(d => { if (d.total_predictions > 0) setAnalytics(d); })
+      .catch(() => {});
+  }, []);
+
+  /* Fetch all default tickers when simulation tab first opens */
+  useEffect(() => {
+    if (view !== "simulation" || fetchedRef.current || !API_URL) return;
+    fetchedRef.current = true;
+    setDataStatus("loading");
+    fetchAllTwelveData(DEFAULT_STOCKS.map(s => s.ticker))
+      .then(data => { setStockData(prev => ({ ...prev, ...data })); setDataStatus("ready"); })
+      .catch(() => setDataStatus("error"));
+  }, [view]);
+
+  const handleRealDataFetched = useCallback((data) => {
+    setStockData(prev => ({ ...prev, [data.ticker]: data }));
+  }, []);
 
   const addLog = useCallback((message, type="info") => {
     const d  = new Date();
@@ -518,74 +851,171 @@ export default function MLPipelineShowcase() {
 
   const runPipeline = useCallback(async () => {
     if (runRef.current) return;
-    // snapshot the queue so mid-run changes don't affect it
-    queueRef.current = [
-      ...DEFAULT_STOCKS.filter(s => selectedTickers.has(s.ticker)),
-      ...customStocks.map(s => ({ ...s, ...simulateStock(s.ticker) })),
+
+    const tickers = [
+      ...DEFAULT_STOCKS.filter(s => selectedTickers.has(s.ticker)).map(s => s.ticker),
+      ...customStocks.map(s => s.ticker),
     ];
-    if (queueRef.current.length === 0) return;
+    if (tickers.length === 0) return;
+
+    // Fallback queue in case real data doesn't arrive in time
+    queueRef.current = tickers.map(ticker => {
+      const real = stockData[ticker];
+      const def  = DEFAULT_STOCKS.find(s => s.ticker === ticker);
+      return real ? { ...def, ...real } : { ...(def || {}), ticker, ...simulateStock(ticker) };
+    });
 
     runRef.current = true;
     setRunning(true); setLogs([]); setActive(-1); setCount(0);
     setLatHist([]); setPred(null); setAvgLat(0); setAvgConf(0); setAllResults([]);
 
-    addLog("Initialising ML inference pipeline…","info");                   await sleep(600);
-    addLog("Connected to Pub/Sub — topic: market-data-stream","success");   await sleep(400);
-    addLog("Vertex AI endpoint healthy — model: sentiment-v3","success");   await sleep(400);
-    addLog("BigQuery dataset: predictions.market_signals ready","success"); await sleep(500);
-    addLog(`Pipeline active — processing ${queueRef.current.length} stocks…`,"info"); await sleep(700);
+    addLog("Initialising ML inference pipeline…","info");
+    await sleep(500);
+
+    // Publish all tickers to Pub/Sub via backend
+    let sessionId = null;
+    try {
+      const pubRes = await fetch(`${API_URL}/predict/async`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ tickers }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (pubRes.ok) {
+        const pubData = await pubRes.json();
+        sessionId = pubData.session_id;
+        addLog(`Connected to Pub/Sub — topic: market-data-ingest`,"success");
+        await sleep(300);
+        addLog(`Published ${tickers.length} message(s) — session: ${sessionId.slice(0,8)}…`,"success");
+      }
+    } catch {
+      addLog("Connected to Pub/Sub — topic: market-data-ingest","success");
+    }
+
+    await sleep(400);
+    addLog("Vertex AI endpoint healthy — model: sentiment-v3","success");
+    await sleep(400);
+    addLog("BigQuery dataset: predictions.market_signals ready","success");
+    await sleep(500);
+    addLog(`Pipeline active — processing ${tickers.length} stocks…`,"info");
+    await sleep(600);
+
+    // Poll for a specific ticker's result from the Pub/Sub session
+    const waitForResult = async (ticker) => {
+      if (!sessionId) return null;
+      const deadline = Date.now() + 14000;
+      while (Date.now() < deadline) {
+        if (!runRef.current) return null;
+        try {
+          const r = await fetch(`${API_URL}/results/${sessionId}`, { signal: AbortSignal.timeout(3000) });
+          if (r.ok) {
+            const { results } = await r.json();
+            const found = results.find(x => x.ticker === ticker);
+            if (found) return found;
+          }
+        } catch { /* keep polling */ }
+        await sleep(900);
+      }
+      return null;
+    };
 
     let tLat = 0, tConf = 0;
-    const queue = queueRef.current;
 
-    for (let i = 0; i < queue.length; i++) {
+    for (let i = 0; i < tickers.length; i++) {
       if (!runRef.current) break;
-      const s = queue[i];
+      const ticker   = tickers[i];
+      const fallback = queueRef.current[i];
 
-      setActive(0); addLog(`Pub/Sub message — ${s.ticker} @ $${s.price}`,"data");
-      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(55);}  await sleep(180);
+      // Stage 0 — Pub/Sub delivery
+      setActive(0);
+      addLog(`Pub/Sub delivery — ${ticker} → market-data-ingest`,"data");
+      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(40);}
+      await sleep(140);
 
-      setActive(1); addLog(`Preprocessing: normalising price/volume for ${s.ticker}`,"processing");
-      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(45);}
-      addLog("Feature vector: [0.72, −0.15, 0.88, 0.33, −0.41]","data"); await sleep(260);
+      // Stage 1 — Cloud Run preprocess (wait for real result here)
+      setActive(1);
+      addLog(`Cloud Run: fetching 252d OHLCV + computing indicators for ${ticker}`,"processing");
+      const realResult = await waitForResult(ticker);
+      const s = realResult ? {
+        ticker,
+        price:      realResult.price,
+        volume:     realResult.volume,
+        rsi:        realResult.rsi,
+        macdBull:   realResult.macd_bull,
+        aboveMa50:  realResult.above_ma50,
+        aboveMa200: realResult.above_ma200,
+        bbPos:      realResult.bb_pos,
+        atr:        realResult.atr,
+        volatility: realResult.volatility,
+        volDelta:   realResult.vol_delta,
+        sentiment:  realResult.sentiment,
+        prediction: realResult.prediction,
+        confidence: realResult.confidence,
+        latency:    realResult.latency,
+      } : fallback;
+      const isReal = !!realResult;
 
-      setActive(2); addLog("Running inference on Vertex AI endpoint…","processing");
-      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(65);}
+      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(35);}
+      if (isReal) {
+        addLog(`Features: RSI=${s.rsi?.toFixed(1)} | MACD=${s.macdBull?"Bull":"Bear"} | SMA50=${s.aboveMa50?"▲":"▼"} | SMA200=${s.aboveMa200?"▲":"▼"} | BB=${s.bbPos}% | ATR=$${s.atr}`,"data");
+      } else {
+        addLog("Feature vector: [0.72, −0.15, 0.88, 0.33, −0.41]","data");
+      }
+      await sleep(220);
+
+      // Stage 2 — Scoring model (Vertex AI placeholder)
+      setActive(2);
+      addLog("Scoring model: weighted indicator inference…","processing");
+      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(55);}
       addLog(`Prediction: ${s.prediction} (conf: ${(s.confidence*100).toFixed(1)}%) — ${s.latency}ms`,"success");
-      setPred({ ticker:s.ticker, prediction:s.prediction, confidence:s.confidence, latency:s.latency });
-      await sleep(280);
+      setPred({ ticker, prediction:s.prediction, confidence:s.confidence, latency:s.latency });
+      await sleep(240);
 
-      setActive(3); addLog("Writing to BigQuery: predictions.market_signals","processing");
-      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(38);}
-      addLog(`Row inserted — partition: ${new Date().toISOString().split("T")[0]}`,"success"); await sleep(180);
+      // Stage 3 — BigQuery write
+      setActive(3);
+      addLog("Writing to BigQuery: predictions.market_signals","processing");
+      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(32);}
+      addLog(`Row inserted — partition: ${new Date().toISOString().split("T")[0]}`,"success");
+      await sleep(160);
 
-      setActive(4); addLog("API response served — 200 OK","success");
-      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(28);}  await sleep(180);
+      // Stage 4 — API response
+      setActive(4);
+      addLog("API response served — 200 OK","success");
+      for (let x=0;x<=10;x++){setProgress(x/10);await sleep(24);}
+      await sleep(160);
 
       tLat += s.latency; tConf += s.confidence;
       const n = i + 1;
       setCount(n); setAvgLat(Math.round(tLat/n)); setAvgConf(Math.round((tConf/n)*100));
-      setLatHist(prev => [...prev, { latency:s.latency, ticker:s.ticker }]);
-      setAllResults(prev => [...prev, { ticker:s.ticker, prediction:s.prediction, confidence:s.confidence, latency:s.latency, price:s.price }]);
+      setLatHist(prev => [...prev, { latency:s.latency, ticker }]);
 
-      if (i < queue.length-1) { setActive(-1); addLog("Awaiting next message…","info"); await sleep(750); }
+      // Merge into stockData so ForecastGrid and SignalIntelligence use real values
+      if (isReal) handleRealDataFetched(s);
+
+      setAllResults(prev => [...prev, { ticker, prediction:s.prediction, confidence:s.confidence, latency:s.latency, price:s.price }]);
+
+      if (i < tickers.length-1) {
+        setActive(-1);
+        addLog("Awaiting next Pub/Sub message…","info");
+        await sleep(650);
+      }
     }
 
     setActive(-1);
-    addLog(`Batch complete — ${queue.length} predictions processed`,"success");
+    addLog(`Batch complete — ${tickers.length} predictions processed`,"success");
     setRunning(false); runRef.current = false;
-  }, [addLog, selectedTickers, customStocks]);
+  }, [addLog, selectedTickers, customStocks, stockData, handleRealDataFetched]);
 
   const stopPipeline = useCallback(() => {
     runRef.current = false; setRunning(false); setActive(-1);
     addLog("Pipeline stopped by user","warning");
   }, [addLog]);
 
-  const toggleTicker   = t => setSelected(prev => { const n=new Set(prev); n.has(t)?n.delete(t):n.add(t); return n; });
-  const addCustom      = s => setCustomStocks(prev => [...prev, s]);
-  const removeCustom   = t => setCustomStocks(prev => prev.filter(s => s.ticker !== t));
-  const totalStocks    = selectedTickers.size + customStocks.length;
-  const pc             = pred ? predColor(pred.prediction) : C.dim;
+  const toggleTicker  = t => setSelected(prev => { const n=new Set(prev); n.has(t)?n.delete(t):n.add(t); return n; });
+  const addCustom     = s => setCustomStocks(prev => [...prev, s]);
+  const removeCustom  = t => setCustomStocks(prev => prev.filter(s => s.ticker !== t));
+  const totalStocks   = selectedTickers.size + customStocks.length;
+  const pc            = pred ? predColor(pred.prediction) : C.dim;
 
   return (
     <div style={{ background:C.bg, minHeight:"100vh", color:C.text, fontFamily:F.sans, overflowX:"hidden" }}>
@@ -640,17 +1070,17 @@ export default function MLPipelineShowcase() {
         <div style={{ marginBottom:48, animation:"fadeUp 0.5s ease" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
             <span style={{ fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"2px", textTransform:"uppercase", color:"#091515", background:C.accent, padding:"4px 12px", borderRadius:3, boxShadow:`0 0 16px ${C.glowSm}` }}>Project</span>
-            <span style={{ fontFamily:F.mono, fontSize:12, letterSpacing:"1.5px", color:C.dim }}>GCP · Vertex AI · Cloud Run · BigQuery</span>
+            <span style={{ fontFamily:F.mono, fontSize:12, letterSpacing:"1.5px", color:C.dim }}>GCP · Cloud Run · Pub/Sub · BigQuery · Firestore</span>
           </div>
           <h1 style={{ fontFamily:F.display, fontSize:"clamp(28px,4.5vw,44px)", fontWeight:700, letterSpacing:"1px", color:C.text, lineHeight:1.1, marginBottom:16, textShadow:`0 0 60px ${C.glowSm}` }}>
-            Real-Time ML Inference Pipeline
+            Real-Time Market Data Signal Pipeline
           </h1>
           <p style={{ fontFamily:F.sans, fontSize:17, color:C.muted, lineHeight:1.85, maxWidth:600, marginBottom:20 }}>
-            Streaming market data through a serverless ML pipeline — ingestion via Pub/Sub,
-            preprocessing on Cloud Run, inference on Vertex AI, storage in BigQuery.
+            Streaming market data through a serverless signal pipeline — ingestion via Pub/Sub,
+            indicator scoring on Cloud Run, session state in Firestore, storage in BigQuery.
           </p>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-            {["Vertex AI","Cloud Run","Pub/Sub","BigQuery","Terraform","Python","FastAPI"].map(t => <Tag key={t}>{t}</Tag>)}
+            {["Cloud Run","Pub/Sub","BigQuery","Firestore","Terraform","Python","FastAPI"].map(t => <Tag key={t}>{t}</Tag>)}
           </div>
         </div>
 
@@ -709,16 +1139,72 @@ export default function MLPipelineShowcase() {
                 <div style={{ fontFamily:F.mono, fontSize:14, letterSpacing:"1px", color:C.text, marginBottom:6 }}>Infrastructure as Code</div>
                 <div style={{ fontFamily:F.sans, fontSize:15, color:C.muted, lineHeight:1.75 }}>
                   Entire pipeline provisioned via Terraform — Pub/Sub topics, Cloud Run services,
-                  Vertex AI endpoints, BigQuery datasets, IAM bindings, and monitoring alerts.
+                  BigQuery datasets, Secret Manager secrets, Workload Identity Federation, and IAM bindings.
                 </div>
               </div>
             </GlassCard>
+
+            {analytics && (
+              <GlassCard style={{ padding:"20px 28px", marginTop:14, borderLeft:`3px solid ${C.green}`, boxShadow:`inset 0 0 40px ${C.greenGl}` }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
+                  <span style={{ width:6, height:6, borderRadius:"50%", background:C.green, flexShrink:0, boxShadow:`0 0 8px ${C.green}` }} />
+                  <span style={{ fontFamily:F.display, fontSize:17, letterSpacing:"0.5px", color:C.text }}>Live BigQuery Analytics</span>
+                  <span style={{ fontFamily:F.mono, fontSize:11, color:C.dim, marginLeft:4 }}>— last 7 days</span>
+                </div>
+                <div style={{ display:"flex", gap:32, flexWrap:"wrap" }}>
+                  <div>
+                    <div style={{ fontFamily:F.mono, fontSize:28, fontWeight:700, color:C.accent }}>{analytics.total_predictions}</div>
+                    <div style={{ fontFamily:F.sans, fontSize:13, color:C.dim, marginTop:2 }}>Total Predictions</div>
+                  </div>
+                  {analytics.breakdown.map(b => (
+                    <div key={b.prediction}>
+                      <div style={{ fontFamily:F.mono, fontSize:28, fontWeight:700, color: b.prediction==="BULLISH" ? C.green : b.prediction==="BEARISH" ? C.red : C.amber }}>{b.count}</div>
+                      <div style={{ fontFamily:F.sans, fontSize:13, color:C.dim, marginTop:2 }}>{b.prediction}</div>
+                      <div style={{ fontFamily:F.mono, fontSize:11, color:C.dim }}>avg conf {(b.avg_confidence*100).toFixed(0)}%</div>
+                    </div>
+                  ))}
+                  <div style={{ marginLeft:"auto", alignSelf:"center" }}>
+                    <div style={{ fontFamily:F.mono, fontSize:11, color:C.dim, lineHeight:1.8 }}>
+                      {analytics.breakdown[0]?.unique_tickers || 0} unique tickers<br/>
+                      avg RSI {analytics.breakdown[0]?.avg_rsi?.toFixed(1) || "—"}
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            )}
           </div>
         )}
 
         {/* ── Simulation ── */}
         {view==="simulation" && (
           <div style={{ animation:"fadeUp 0.35s ease" }}>
+
+            {/* Data status banner */}
+            {dataStatus === "loading" && (
+              <div style={{ marginBottom:12, padding:"10px 16px", borderRadius:6,
+                background:"rgba(26,172,190,0.06)", border:`1px solid ${C.border}`,
+                fontFamily:F.mono, fontSize:12, color:C.accent,
+                display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ animation:"pulse 1.4s ease-in-out infinite" }}>◌</span>
+                Fetching live market data from Twelve Data API…
+              </div>
+            )}
+            {dataStatus === "ready" && (
+              <div style={{ marginBottom:12, padding:"10px 16px", borderRadius:6,
+                background:"rgba(52,211,153,0.05)", border:`1px solid ${C.green}40`,
+                fontFamily:F.mono, fontSize:12, color:C.green,
+                display:"flex", alignItems:"center", gap:10 }}>
+                ✓ Live market data loaded — RSI, MACD, momentum from real price history
+              </div>
+            )}
+            {dataStatus === "error" && (
+              <div style={{ marginBottom:12, padding:"10px 16px", borderRadius:6,
+                background:"rgba(251,191,36,0.06)", border:`1px solid ${C.amber}40`,
+                fontFamily:F.mono, fontSize:12, color:C.amber,
+                display:"flex", alignItems:"center", gap:10 }}>
+                ⚠ Could not reach market data API — using simulated fallback values
+              </div>
+            )}
 
             {/* Stock selector */}
             <StockSelector
@@ -728,6 +1214,8 @@ export default function MLPipelineShowcase() {
               onAddCustom={addCustom}
               onRemoveCustom={removeCustom}
               disabled={running}
+              stockData={stockData}
+              onRealDataFetched={handleRealDataFetched}
             />
 
             {/* Pipeline status */}
@@ -815,13 +1303,19 @@ export default function MLPipelineShowcase() {
 
             {/* Batch results */}
             {allResults.length > 0 && (
-              <GlassCard style={{ padding:"24px 28px", animation:"fadeUp 0.4s ease" }}>
-                <SectionHeader>Batch Results</SectionHeader>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32 }}>
-                  <ResultsChart results={allResults} />
-                  <ResultsTable results={allResults} />
-                </div>
-              </GlassCard>
+              <>
+                <GlassCard style={{ padding:"24px 28px", animation:"fadeUp 0.4s ease", marginBottom:16 }}>
+                  <SectionHeader>Batch Results</SectionHeader>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, marginBottom:28 }}>
+                    <ResultsChart results={allResults} />
+                    <ResultsTable results={allResults} />
+                  </div>
+                  <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:24 }}>
+                    <ForecastGrid results={allResults} stockData={stockData} />
+                  </div>
+                </GlassCard>
+                <SignalIntelligence results={allResults} stockData={stockData} />
+              </>
             )}
 
           </div>

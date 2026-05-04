@@ -5,6 +5,9 @@ on:
     branches: [main, master]
     paths: [backend/**]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -14,6 +17,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Run tests
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          pytest test_indicators.py -v
 
       - name: Authenticate to GCP (keyless)
         uses: google-github-actions/auth@v2
@@ -29,12 +45,6 @@ jobs:
           gcloud builds submit backend/ \
             --tag us-central1-docker.pkg.dev/portfolio-ml-pipeline/backend/api:${{ github.sha }} \
             --tag us-central1-docker.pkg.dev/portfolio-ml-pipeline/backend/api:latest
-
-      - name: Run tests
-        run: |
-          pip install pytest google-cloud-bigquery google-cloud-secret-manager \
-            google-cloud-pubsub google-cloud-firestore httpx fastapi pydantic uvicorn
-          pytest backend/test_indicators.py -v
 
       - name: Deploy to Cloud Run
         run: |

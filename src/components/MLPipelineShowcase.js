@@ -1,4 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+
+function useIsMobile(breakpoint = 768) {
+  const [mobile, setMobile] = useState(() => window.innerWidth <= breakpoint);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth <= breakpoint);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, [breakpoint]);
+  return mobile;
+}
 import { useNavigate } from "react-router-dom";
 
 /* ── Design tokens ───────────────────────────────────────────── */
@@ -286,8 +296,8 @@ function Connector({ active, complete, color }) {
 function MetricCard({ label, value, unit, color, note }) {
   return (
     <div style={{
-      flex:1, minWidth:110, background:C.card, border:`1px solid ${C.border}`,
-      borderRadius:8, padding:"16px 18px", position:"relative", overflow:"hidden",
+      flex:1, minWidth:0, background:C.card, border:`1px solid ${C.border}`,
+      borderRadius:8, padding:"14px 16px", position:"relative", overflow:"hidden",
     }}>
       <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg, ${color||C.accent}, transparent)`, boxShadow:`0 0 8px ${color||C.accent}` }} />
       <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:10 }}>{label}</div>
@@ -415,6 +425,33 @@ function ResultsTable({ results }) {
             })}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function ResultsCards({ results }) {
+  const sorted = [...results].sort((a, b) => b.confidence - a.confidence);
+  return (
+    <div>
+      <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:12 }}>All Results</div>
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        {sorted.map(r => {
+          const col = predColor(r.prediction);
+          return (
+            <div key={r.ticker} style={{
+              background:"rgba(0,0,0,0.25)", border:`1px solid ${col}28`,
+              borderLeft:`3px solid ${col}`, borderRadius:6, padding:"12px 14px",
+              display:"flex", alignItems:"center", flexWrap:"wrap", gap:8,
+            }}>
+              <span style={{ fontFamily:F.mono, fontSize:14, fontWeight:700, color:C.text, width:46 }}>{r.ticker}</span>
+              <span style={{ fontFamily:F.mono, fontSize:11, fontWeight:700, color:col, background:`${col}18`, padding:"2px 8px", borderRadius:3, border:`1px solid ${col}40` }}>{r.prediction}</span>
+              <span style={{ fontFamily:F.mono, fontSize:13, color:col, marginLeft:"auto" }}>{(r.confidence*100).toFixed(1)}%</span>
+              <span style={{ fontFamily:F.mono, fontSize:12, color:r.latency<25?C.green:r.latency<35?C.amber:C.red }}>{r.latency}ms</span>
+              <span style={{ fontFamily:F.mono, fontSize:12, color:C.muted }}>${r.price.toLocaleString()}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -794,7 +831,8 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
 /* ── Main component ──────────────────────────────────────────── */
 
 export default function MLPipelineShowcase() {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const isMobile  = useIsMobile();
   const [view, setView]                 = useState("architecture");
   const [running, setRunning]           = useState(false);
   const [activeStage, setActive]        = useState(-1);
@@ -1064,7 +1102,7 @@ export default function MLPipelineShowcase() {
         onMouseLeave={e=>{e.currentTarget.style.color=C.dim;e.currentTarget.style.borderColor=C.border;e.currentTarget.style.boxShadow="none";}}
       >← Timeline</button>
 
-      <div style={{ maxWidth:1060, margin:"0 auto", padding:"68px 28px 60px", position:"relative", zIndex:1 }}>
+      <div style={{ maxWidth:1060, margin:"0 auto", padding:isMobile?"80px 16px 60px":"68px 28px 60px", position:"relative", zIndex:1 }}>
 
         {/* ── Hero ── */}
         <div style={{ marginBottom:48, animation:"fadeUp 0.5s ease" }}>
@@ -1114,7 +1152,7 @@ export default function MLPipelineShowcase() {
               </div>
             </GlassCard>
 
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
+            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:14, marginBottom:14 }}>
               {ARCH.map(s => (
                 <GlassCard key={s.title} style={{ padding:22, borderLeft:`3px solid ${s.color}`, boxShadow:`inset 0 0 40px ${s.color}08` }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
@@ -1252,7 +1290,7 @@ export default function MLPipelineShowcase() {
             </GlassCard>
 
             {/* Metrics */}
-            <div style={{ display:"flex", gap:12, marginBottom:16, flexWrap:"wrap" }}>
+            <div style={{ display:isMobile?"grid":"flex", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16, flexWrap:"wrap" }}>
               <MetricCard label="Processed"      value={count}               unit={`/ ${totalStocks}`}    color={C.accent}                               note="messages" />
               <MetricCard label="Avg Latency"    value={avgLat||"—"}         unit={avgLat?"ms":""}        color={avgLat<25?C.green:avgLat?C.amber:C.dim} note={avgLat?"inference time":""} />
               <MetricCard label="Avg Confidence" value={avgConf?`${avgConf}`:"—"} unit={avgConf?"%":""}  color={C.purple}                               note={avgConf?"model certainty":""} />
@@ -1260,7 +1298,7 @@ export default function MLPipelineShowcase() {
             </div>
 
             {/* Latest prediction + logs */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:16, marginBottom:16 }}>
               <GlassCard style={{ padding:22 }}>
                 <SectionHeader>Latest Prediction</SectionHeader>
                 {pred ? (
@@ -1306,9 +1344,12 @@ export default function MLPipelineShowcase() {
               <>
                 <GlassCard style={{ padding:"24px 28px", animation:"fadeUp 0.4s ease", marginBottom:16 }}>
                   <SectionHeader>Batch Results</SectionHeader>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, marginBottom:28 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:isMobile?20:32, marginBottom:28 }}>
                     <ResultsChart results={allResults} />
-                    <ResultsTable results={allResults} />
+                    {isMobile
+                      ? <ResultsCards results={allResults} />
+                      : <ResultsTable results={allResults} />
+                    }
                   </div>
                   <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:24 }}>
                     <ForecastGrid results={allResults} stockData={stockData} />

@@ -30,9 +30,12 @@ def test_rsi_mixed_returns_in_range():
 
 
 def test_rsi_overbought_range():
-    # Mostly gains → RSI should be well above 50
-    closes = [100 + i * 0.5 if i % 5 != 0 else 100 + i * 0.5 - 0.1
-              for i in range(16)]
+    # Explicit series: 12 up-days of +1.0, 3 down-days of -0.2 → avg_gain >> avg_loss
+    closes = [100.0]
+    pattern = [1.0, 1.0, 1.0, 1.0, -0.2, 1.0, 1.0, 1.0, 1.0, -0.2,
+               1.0, 1.0, 1.0, 1.0, -0.2]
+    for d in pattern:
+        closes.append(closes[-1] + d)
     result = calc_rsi(closes)
     assert result > 55.0
 
@@ -187,7 +190,9 @@ def test_score_predict_strong_bear():
 
 
 def test_score_predict_neutral():
-    pred, conf = score_predict(rsi=50.0, macd_bull=True, above50=True, above200=False, ret5=0.0)
+    # rsi=50(0) + macd=False(-1.5) + above50(+1) + above200=False(-0.5) + ret5=0(0) = -1.0
+    # norm = -1.0/5.5 = -0.18 → within (-0.2, 0.2) → NEUTRAL
+    pred, conf = score_predict(rsi=50.0, macd_bull=False, above50=True, above200=False, ret5=0.0)
     assert pred == "NEUTRAL"
     assert conf <= 0.78
 

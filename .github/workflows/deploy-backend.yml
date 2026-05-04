@@ -43,10 +43,26 @@ jobs:
 
       - name: Build and push image
         run: |
-          gcloud builds submit backend/ \
+          BUILD_ID=$(gcloud builds submit backend/ \
             --tag ${{ env.IMAGE }}:${{ github.sha }} \
             --tag ${{ env.IMAGE }}:latest \
-            --project portfolio-ml-pipeline
+            --project portfolio-ml-pipeline \
+            --async \
+            --format='value(id)')
+          echo "Cloud Build ID: $BUILD_ID"
+          echo "Logs: https://console.cloud.google.com/cloud-build/builds/${BUILD_ID}?project=portfolio-ml-pipeline"
+          while true; do
+            STATUS=$(gcloud builds describe $BUILD_ID \
+              --project portfolio-ml-pipeline \
+              --format='value(status)')
+            echo "Status: $STATUS"
+            case $STATUS in
+              SUCCESS)  echo "Build succeeded"; break ;;
+              FAILURE|TIMEOUT|CANCELLED|EXPIRED)
+                echo "Build failed with status: $STATUS"; exit 1 ;;
+              *) sleep 15 ;;
+            esac
+          done
 
       - name: Deploy to Cloud Run
         run: |

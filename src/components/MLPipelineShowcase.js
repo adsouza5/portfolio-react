@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function useIsMobile(breakpoint = 768) {
   const [mobile, setMobile] = useState(() => window.innerWidth <= breakpoint);
@@ -9,7 +10,6 @@ function useIsMobile(breakpoint = 768) {
   }, [breakpoint]);
   return mobile;
 }
-import { useNavigate } from "react-router-dom";
 
 /* ── Design tokens ───────────────────────────────────────────── */
 const C = {

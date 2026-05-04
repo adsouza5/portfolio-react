@@ -78,3 +78,20 @@ jobs:
             --memory 512Mi \
             --cpu 1 \
             --quiet
+
+      - name: Verify deployment
+        run: |
+          URL=$(gcloud run services describe ml-pipeline-api \
+            --region us-central1 \
+            --format='value(status.url)')
+          echo "Service URL: $URL"
+          for i in 1 2 3; do
+            HTTP=$(curl -sf -o /dev/null -w "%{http_code}" "$URL/health") && break
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          if [ "$HTTP" != "200" ]; then
+            echo "Health check failed with status: $HTTP"
+            exit 1
+          fi
+          echo "Deployment verified — /health returned 200"

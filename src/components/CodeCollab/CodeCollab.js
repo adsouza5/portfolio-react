@@ -13,7 +13,8 @@ const USER_COLORS = [
   '#5b9cf6','#6bcb8b','#c084fc','#f9a96b','#5dd8d8',
   '#f87ba6','#fbbf24','#93c5fd','#86efac','#d8b4fe',
 ];
-const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I O 0 1
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const EXECUTABLE = new Set(['javascript','typescript','python','go','rust','java','c','cpp']);
 
 // ── Helpers ───────────────────────────────────────────────────
 function colorFromId(id) {
@@ -23,7 +24,6 @@ function colorFromId(id) {
 }
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
-// Human-readable 8-char session code: "ABCD 1234"
 function genCode() {
   return Array.from({ length: 8 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
 }
@@ -34,6 +34,16 @@ function formatCode(code) {
 async function hashPasscode(raw) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw.trim()));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function runOnPiston(language, content) {
+  const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ language, version: '*', files: [{ content }] }),
+  });
+  const data = await res.json();
+  return { stdout: data.run?.stdout ?? '', stderr: data.run?.stderr ?? '' };
 }
 
 // ── Camera hook ───────────────────────────────────────────────
@@ -98,7 +108,6 @@ function SessionLobby({ sessions, onJoin, onCreate, onJoinByCode, onBack }) {
       <div className="cc-lobby-card">
         <div className="cc-logo">◈ CodeCollab</div>
         <p className="cc-join-sub">Join a live session or start a new one</p>
-
         <div className="cc-session-list">
           {sessions.length === 0 ? (
             <p className="cc-session-empty">No sessions visible on this network.</p>
@@ -113,7 +122,6 @@ function SessionLobby({ sessions, onJoin, onCreate, onJoinByCode, onBack }) {
             ))
           )}
         </div>
-
         <div className="cc-lobby-actions">
           <button className="cc-create-btn" onClick={onCreate}>+ New Session</button>
           <button className="cc-code-join-btn" onClick={onJoinByCode}>Enter code →</button>
@@ -145,24 +153,19 @@ function CreateSessionForm({ onConfirm, onBack }) {
       <button className="cc-back-btn" onClick={onBack}>← Sessions</button>
       <div className="cc-join-card">
         <div className="cc-logo">◈ New Session</div>
-
         <label className="cc-join-label">Session name</label>
         <input className="cc-join-input" placeholder="e.g. Sprint 4 API work" value={displayName}
           onChange={e => setDisplayName(e.target.value)} autoFocus />
-
         <label className="cc-join-label">Your name</label>
         <input className="cc-join-input" placeholder="e.g. Adam" value={yourName}
           onChange={e => setYourName(e.target.value)} />
-
         <label className="cc-join-label">Passcode</label>
         <input className="cc-join-input" type="password" placeholder="Share this with collaborators"
           value={passcode} onChange={e => setPasscode(e.target.value)} />
-
         <label className="cc-join-label">Confirm passcode</label>
         <input className="cc-join-input" type="password" placeholder="Re-enter passcode"
           value={confirm} onChange={e => setConfirm(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()} />
-
         {err && <p className="cc-join-error">{err}</p>}
         <button className="cc-join-btn" onClick={submit} disabled={loading}>
           {loading ? 'Creating…' : 'Create & Join →'}
@@ -172,7 +175,7 @@ function CreateSessionForm({ onConfirm, onBack }) {
   );
 }
 
-// ── Enter passcode (lobby join) ───────────────────────────────
+// ── Enter passcode ────────────────────────────────────────────
 function EnterPasscodeForm({ session, onConfirm, onBack }) {
   const [yourName, setYourName] = useState('');
   const [passcode, setPasscode] = useState('');
@@ -183,10 +186,7 @@ function EnterPasscodeForm({ session, onConfirm, onBack }) {
     if (!yourName.trim() || !passcode.trim()) return setErr('All fields are required.');
     setLoading(true);
     const hash = await hashPasscode(passcode);
-    if (hash !== session.passcodeHash) {
-      setLoading(false);
-      return setErr('Incorrect passcode.');
-    }
+    if (hash !== session.passcodeHash) { setLoading(false); return setErr('Incorrect passcode.'); }
     onConfirm({ yourName: yourName.trim() });
   };
 
@@ -197,16 +197,13 @@ function EnterPasscodeForm({ session, onConfirm, onBack }) {
         <div className="cc-logo">◈ Join Session</div>
         <p className="cc-join-sub" style={{ fontWeight: 500 }}>{session.displayName}</p>
         <p className="cc-join-sub">Created by {session.creatorName}</p>
-
         <label className="cc-join-label">Your name</label>
         <input className="cc-join-input" placeholder="e.g. Adam" value={yourName}
           onChange={e => setYourName(e.target.value)} autoFocus />
-
         <label className="cc-join-label">Passcode</label>
         <input className="cc-join-input" type="password" placeholder="Enter session passcode"
           value={passcode} onChange={e => setPasscode(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()} />
-
         {err && <p className="cc-join-error">{err}</p>}
         <button className="cc-join-btn" onClick={submit} disabled={loading}>
           {loading ? 'Joining…' : 'Join Session →'}
@@ -235,23 +232,14 @@ function JoinByCodeForm({ onConfirm, onBack }) {
       <div className="cc-join-card">
         <div className="cc-logo">◈ Join by Code</div>
         <p className="cc-join-sub">Ask the session host for their 8-character code</p>
-
         <label className="cc-join-label">Session code</label>
-        <input
-          className="cc-join-input cc-join-code-input"
-          placeholder="XXXX XXXX"
-          value={code}
-          onChange={e => setCode(e.target.value.toUpperCase())}
-          maxLength={9}
-          autoFocus
-          spellCheck={false}
-        />
-
+        <input className="cc-join-input cc-join-code-input" placeholder="XXXX XXXX"
+          value={code} onChange={e => setCode(e.target.value.toUpperCase())}
+          maxLength={9} autoFocus spellCheck={false} />
         <label className="cc-join-label">Your name</label>
         <input className="cc-join-input" placeholder="e.g. Alex" value={yourName}
           onChange={e => setYourName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()} />
-
         {err && <p className="cc-join-error">{err}</p>}
         <button className="cc-join-btn" onClick={submit}>Join →</button>
       </div>
@@ -309,41 +297,101 @@ function SessionCodeBadge({ code, onDismiss }) {
   );
 }
 
+// ── Terminal Panel ────────────────────────────────────────────
+function TerminalPanel({ outputs, running, isOwner, onClear, height }) {
+  const bodyRef = useRef(null);
+
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+  }, [outputs, running]);
+
+  return (
+    <div className="cc-terminal" style={{ height }}>
+      <div className="cc-terminal-header">
+        <span className="cc-terminal-title">▸ Output</span>
+        <div className="cc-terminal-actions">
+          {isOwner && outputs.length > 0 && (
+            <button className="cc-terminal-clear-btn" onClick={onClear}>Clear</button>
+          )}
+        </div>
+      </div>
+      <div className="cc-terminal-body" ref={bodyRef}>
+        {outputs.length === 0 && !running && (
+          <div className="cc-terminal-empty-msg">
+            {isOwner
+              ? 'Click ▶ Run to execute — all collaborators will see the output in real time.'
+              : 'Waiting for the segment owner to run the code…'}
+          </div>
+        )}
+        {outputs.map((entry, i) => (
+          <div key={i} className="cc-terminal-entry">
+            <div className="cc-terminal-entry-meta">
+              <span className="cc-terminal-entry-dot" style={{ background: entry.runByColor }} />
+              <span className="cc-terminal-entry-name" style={{ color: entry.runByColor }}>
+                {entry.runBy}
+              </span>
+              <span className="cc-terminal-entry-time">
+                {new Date(entry.timestamp).toLocaleTimeString([], {
+                  hour: '2-digit', minute: '2-digit', second: '2-digit',
+                })}
+              </span>
+            </div>
+            {entry.stdout && <pre className="cc-terminal-stdout">{entry.stdout}</pre>}
+            {entry.stderr && <pre className="cc-terminal-stderr">{entry.stderr}</pre>}
+            {!entry.stdout && !entry.stderr && (
+              <pre className="cc-terminal-stdout cc-terminal-no-output">(no output)</pre>
+            )}
+          </div>
+        ))}
+        {running && (
+          <div className="cc-terminal-running">
+            <span className="cc-terminal-spinner" />
+            <span style={{ color: running.runByColor }}>{running.runBy}</span>
+            <span className="cc-terminal-running-label"> is running…</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────
 export default function CodeCollab() {
   const navigate = useNavigate();
 
-  // view: 'lobby' | 'create' | 'passcode' | 'joinbycode' | 'session'
-  const [view, setView]               = useState('lobby');
-  const [sessions, setSessions]       = useState([]);
-  const [selectedSession, setSelected] = useState(null);
-  const [user, setUser]               = useState(null);
-  const [users, setUsers]             = useState([]);
-  const [segments, setSegments]       = useState([]);
-  const [activeId, setActiveId]       = useState(null);
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [creatorCode, setCreatorCode] = useState(null);
-  const [showCode, setShowCode]       = useState(true);
+  const [view, setView]                    = useState('lobby');
+  const [sessions, setSessions]            = useState([]);
+  const [selectedSession, setSelected]     = useState(null);
+  const [user, setUser]                    = useState(null);
+  const [users, setUsers]                  = useState([]);
+  const [segments, setSegments]            = useState([]);
+  const [activeId, setActiveId]            = useState(null);
+  const [showNewForm, setShowNewForm]      = useState(false);
+  const [creatorCode, setCreatorCode]      = useState(null);
+  const [showCode, setShowCode]            = useState(true);
+  const [outputs, setOutputs]              = useState({});
+  const [running, setRunning]              = useState({});
+  const [terminalHeight, setTerminalHeight] = useState(220);
 
   const camera = useCamera();
 
-  // Y.js refs
   const lobbyDocRef      = useRef(null);
   const lobbyProviderRef = useRef(null);
   const sessionDocRef    = useRef(null);
   const sessionProvRef   = useRef(null);
   const ySegmentsRef     = useRef(null);
+  const yOutputsRef      = useRef(null);
+  const yRunningRef      = useRef(null);
   const createdSessionId = useRef(null);
 
   const goBack = useCallback(() => {
     navigate('/', { state: { scrollTo: 'projects' } });
   }, [navigate]);
 
-  // ── Lobby connection (awareness-based) ────────────────────
+  // ── Lobby connection ──────────────────────────────────────
   useEffect(() => {
     const doc      = new Y.Doc();
     const provider = new WebsocketProvider(RELAY_URL, LOBBY_ROOM, doc);
-
     lobbyDocRef.current      = doc;
     lobbyProviderRef.current = provider;
 
@@ -354,14 +402,11 @@ export default function CodeCollab() {
       });
       setSessions(list.sort((a, b) => b.createdAt - a.createdAt));
     };
-
     provider.awareness.on('change', syncSessions);
     syncSessions();
-
     return () => { provider.destroy(); doc.destroy(); };
   }, []);
 
-  // ── Session cleanup on unmount ─────────────────────────────
   useEffect(() => {
     return () => {
       sessionProvRef.current?.destroy();
@@ -369,15 +414,19 @@ export default function CodeCollab() {
     };
   }, []);
 
-  // ── Enter a Y.js session room ──────────────────────────────
+  // ── Enter a Y.js session room ─────────────────────────────
   const enterSession = useCallback((roomCode, me) => {
     const doc      = new Y.Doc();
     const provider = new WebsocketProvider(RELAY_URL, `codecollab-${roomCode}`, doc);
-    const ySegs = doc.getMap('segments');
+    const ySegs    = doc.getMap('segments');
+    const yOuts    = doc.getMap('outputs');
+    const yRun     = doc.getMap('running');
 
     sessionDocRef.current  = doc;
     sessionProvRef.current = provider;
     ySegmentsRef.current   = ySegs;
+    yOutputsRef.current    = yOuts;
+    yRunningRef.current    = yRun;
 
     provider.awareness.setLocalState(me);
 
@@ -397,25 +446,35 @@ export default function CodeCollab() {
     ySegs.observe(syncSegs);
     syncSegs();
 
+    const syncOutputs = () => {
+      const map = {};
+      yOuts.forEach((val, key) => { map[key] = val ?? []; });
+      setOutputs(map);
+    };
+    yOuts.observe(syncOutputs);
+    syncOutputs();
+
+    const syncRunning = () => {
+      const map = {};
+      yRun.forEach((val, key) => { map[key] = val; });
+      setRunning(map);
+    };
+    yRun.observe(syncRunning);
+    syncRunning();
+
     setUser(me);
     setView('session');
   }, []);
 
-  // ── Create new session ─────────────────────────────────────
+  // ── Create / join ─────────────────────────────────────────
   const handleCreate = useCallback(({ displayName, yourName, passcodeHash }) => {
     const code  = genCode();
     const id    = uid();
     const color = colorFromId(id);
     const me    = { id, name: yourName, color };
-
     lobbyProviderRef.current?.awareness.setLocalState({
-      type: 'session',
-      sessionId:    code,
-      displayName,
-      passcodeHash,
-      creatorName:  yourName,
-      creatorId:    id,
-      createdAt:    Date.now(),
+      type: 'session', sessionId: code, displayName, passcodeHash,
+      creatorName: yourName, creatorId: id, createdAt: Date.now(),
     });
     createdSessionId.current = code;
     setCreatorCode(code);
@@ -423,21 +482,17 @@ export default function CodeCollab() {
     enterSession(code, me);
   }, [enterSession]);
 
-  // ── Join from lobby (passcode already verified) ────────────
   const handleJoin = useCallback(({ yourName }) => {
-    const id    = uid();
-    const color = colorFromId(id);
+    const id = uid(); const color = colorFromId(id);
     enterSession(selectedSession.sessionId, { id, name: yourName, color });
   }, [selectedSession, enterSession]);
 
-  // ── Join by code ───────────────────────────────────────────
   const handleJoinByCode = useCallback(({ code, yourName }) => {
-    const id    = uid();
-    const color = colorFromId(id);
+    const id = uid(); const color = colorFromId(id);
     enterSession(code, { id, name: yourName, color });
   }, [enterSession]);
 
-  // ── Leave session ──────────────────────────────────────────
+  // ── Leave session ─────────────────────────────────────────
   const leaveSession = useCallback(() => {
     if (createdSessionId.current) {
       lobbyProviderRef.current?.awareness.setLocalState(null);
@@ -448,15 +503,14 @@ export default function CodeCollab() {
     sessionProvRef.current = null;
     sessionDocRef.current  = null;
     ySegmentsRef.current   = null;
-    setUser(null);
-    setUsers([]);
-    setSegments([]);
-    setActiveId(null);
-    setCreatorCode(null);
+    yOutputsRef.current    = null;
+    yRunningRef.current    = null;
+    setUser(null); setUsers([]); setSegments([]); setActiveId(null);
+    setOutputs({}); setRunning({}); setCreatorCode(null);
     setView('lobby');
   }, []);
 
-  // ── Segment operations ─────────────────────────────────────
+  // ── Segment operations ────────────────────────────────────
   const createSegment = ({ name, language }) => {
     if (!user) return;
     const id = `seg_${Date.now()}`;
@@ -473,6 +527,8 @@ export default function CodeCollab() {
     e.stopPropagation();
     if (ySegmentsRef.current?.get(segId)?.ownerId !== user?.id) return;
     ySegmentsRef.current.delete(segId);
+    yOutputsRef.current?.delete(segId);
+    yRunningRef.current?.delete(segId);
     if (activeId === segId) {
       const rest = segments.filter(s => s.id !== segId);
       setActiveId(rest.length > 0 ? rest[0].id : null);
@@ -486,10 +542,62 @@ export default function CodeCollab() {
     ySegmentsRef.current.set(activeId, { ...cur, content });
   };
 
+  // ── Run & clear ───────────────────────────────────────────
+  const handleRun = async () => {
+    if (!activeId || !user) return;
+    const seg = ySegmentsRef.current?.get(activeId);
+    if (!seg || seg.ownerId !== user.id) return;
+
+    yRunningRef.current?.set(activeId, { runBy: user.name, runByColor: user.color });
+
+    const entry = { runBy: user.name, runByColor: user.color, timestamp: Date.now(), stdout: '', stderr: '' };
+
+    if (!EXECUTABLE.has(seg.language)) {
+      entry.stderr = `"${seg.language}" is a markup/config language and cannot be executed.`;
+    } else {
+      try {
+        const result = await runOnPiston(seg.language, seg.content);
+        entry.stdout = result.stdout;
+        entry.stderr = result.stderr;
+      } catch (err) {
+        entry.stderr = `Execution error: ${err.message}`;
+      }
+    }
+
+    if (yOutputsRef.current) {
+      const existing = yOutputsRef.current.get(activeId) ?? [];
+      yOutputsRef.current.set(activeId, [...existing, entry]);
+    }
+    yRunningRef.current?.set(activeId, null);
+  };
+
+  const handleClear = () => {
+    if (!activeId) return;
+    yOutputsRef.current?.set(activeId, []);
+  };
+
+  // ── Resize handle ─────────────────────────────────────────
+  const startResize = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = terminalHeight;
+    const onMove = (e) => {
+      const delta = startY - e.clientY;
+      setTerminalHeight(Math.max(80, Math.min(window.innerHeight * 0.7, startH + delta)));
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
   const activeSegment = segments.find(s => s.id === activeId) ?? null;
   const isOwner       = activeSegment?.ownerId === user?.id;
+  const activeOutputs = outputs[activeId] ?? [];
+  const activeRunning = running[activeId] ?? null;
 
-  // Apply per-owner color decorations to Monaco on mount
   const handleEditorMount = useCallback((editor, monaco) => {
     if (!activeSegment) return;
     const { ownerColor, ownerId } = activeSegment;
@@ -515,28 +623,16 @@ export default function CodeCollab() {
 
   // ── Render ────────────────────────────────────────────────
   if (view === 'lobby') return (
-    <SessionLobby
-      sessions={sessions}
+    <SessionLobby sessions={sessions}
       onJoin={s => { setSelected(s); setView('passcode'); }}
       onCreate={() => setView('create')}
       onJoinByCode={() => setView('joinbycode')}
-      onBack={goBack}
-    />
+      onBack={goBack} />
   );
+  if (view === 'create') return <CreateSessionForm onConfirm={handleCreate} onBack={() => setView('lobby')} />;
+  if (view === 'passcode') return <EnterPasscodeForm session={selectedSession} onConfirm={handleJoin} onBack={() => setView('lobby')} />;
+  if (view === 'joinbycode') return <JoinByCodeForm onConfirm={handleJoinByCode} onBack={() => setView('lobby')} />;
 
-  if (view === 'create') return (
-    <CreateSessionForm onConfirm={handleCreate} onBack={() => setView('lobby')} />
-  );
-
-  if (view === 'passcode') return (
-    <EnterPasscodeForm session={selectedSession} onConfirm={handleJoin} onBack={() => setView('lobby')} />
-  );
-
-  if (view === 'joinbycode') return (
-    <JoinByCodeForm onConfirm={handleJoinByCode} onBack={() => setView('lobby')} />
-  );
-
-  // ── Session view ──────────────────────────────────────────
   return (
     <div className="cc-app">
       <header className="cc-header">
@@ -550,11 +646,8 @@ export default function CodeCollab() {
         <div className="cc-header-users">
           {users.map(u => <UserPill key={u.id} user={u} isYou={u.id === user.id} />)}
         </div>
-        <button
-          className={`cc-camera-btn${camera.on ? ' cc-camera-btn--on' : ''}`}
-          onClick={camera.toggle}
-          title={camera.on ? 'Turn camera off' : 'Turn camera on'}
-        >
+        <button className={`cc-camera-btn${camera.on ? ' cc-camera-btn--on' : ''}`}
+          onClick={camera.toggle} title={camera.on ? 'Turn camera off' : 'Turn camera on'}>
           {camera.on ? <IconCameraOff /> : <IconCamera />}
         </button>
       </header>
@@ -564,8 +657,7 @@ export default function CodeCollab() {
           <button key={seg.id}
             className={`cc-tab${activeId === seg.id ? ' cc-tab--active' : ''}`}
             style={{ '--tab-color': seg.ownerColor }}
-            onClick={() => setActiveId(seg.id)}
-          >
+            onClick={() => setActiveId(seg.id)}>
             <span className="cc-tab-dot" style={{ background: seg.ownerColor }} />
             <span className="cc-tab-name">{seg.name}</span>
             {seg.ownerId === user.id && (
@@ -590,26 +682,48 @@ export default function CodeCollab() {
               <div className="cc-editor-header-right">
                 <span className="cc-editor-lang">{activeSegment.language}</span>
                 {!isOwner && <span className="cc-editor-readonly-badge">read-only</span>}
+                {isOwner && (
+                  <button
+                    className={`cc-run-btn${activeRunning ? ' cc-run-btn--running' : ''}`}
+                    onClick={handleRun}
+                    disabled={!!activeRunning}
+                  >
+                    {activeRunning ? '⏳ Running…' : '▶ Run'}
+                  </button>
+                )}
               </div>
             </div>
-            <Editor
-              key={activeId}
-              onMount={handleEditorMount}
-              height="calc(100vh - 128px)"
-              language={activeSegment.language}
-              theme="vs-dark"
-              value={activeSegment.content}
-              onChange={handleEditorChange}
-              options={{
-                automaticLayout: true, readOnly: !isOwner, fontSize: 14, lineHeight: 22,
-                fontFamily: "'JetBrains Mono','Fira Code','SF Mono',monospace",
-                minimap: { enabled: false }, scrollBeyondLastLine: false,
-                renderLineHighlight: isOwner ? 'line' : 'none',
-                cursorStyle: isOwner ? 'line' : 'underline',
-                padding: { top: 20, bottom: 20 }, lineNumbers: 'on',
-                glyphMargin: false, folding: true,
-                bracketPairColorization: { enabled: true }, smoothScrolling: true,
-              }}
+
+            <div className="cc-editor-main">
+              <Editor
+                key={activeId}
+                onMount={handleEditorMount}
+                height="100%"
+                language={activeSegment.language}
+                theme="vs-dark"
+                value={activeSegment.content}
+                onChange={handleEditorChange}
+                options={{
+                  automaticLayout: true, readOnly: !isOwner, fontSize: 14, lineHeight: 22,
+                  fontFamily: "'JetBrains Mono','Fira Code','SF Mono',monospace",
+                  minimap: { enabled: false }, scrollBeyondLastLine: false,
+                  renderLineHighlight: isOwner ? 'line' : 'none',
+                  cursorStyle: isOwner ? 'line' : 'underline',
+                  padding: { top: 20, bottom: 20 }, lineNumbers: 'on',
+                  glyphMargin: false, folding: true,
+                  bracketPairColorization: { enabled: true }, smoothScrolling: true,
+                }}
+              />
+            </div>
+
+            <div className="cc-terminal-resize-handle" onMouseDown={startResize} />
+
+            <TerminalPanel
+              outputs={activeOutputs}
+              running={activeRunning}
+              isOwner={isOwner}
+              onClear={handleClear}
+              height={terminalHeight}
             />
           </>
         ) : (

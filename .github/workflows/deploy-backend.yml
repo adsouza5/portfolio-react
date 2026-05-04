@@ -67,7 +67,7 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ml-pipeline-api \
-            --image ${{ env.IMAGE }}:${{ github.sha }} \
+            --image ${{ env.IMAGE }}:latest \
             --region us-central1 \
             --platform managed \
             --allow-unauthenticated \

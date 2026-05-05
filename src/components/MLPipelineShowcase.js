@@ -11,6 +11,18 @@ function useIsMobile(breakpoint = 768) {
   return mobile;
 }
 
+// True on phones in both portrait (width ≤ 768) and landscape (height ≤ 500)
+function useIsPhoneViewport() {
+  const check = () => window.innerWidth <= 768 || window.innerHeight <= 500;
+  const [v, setV] = useState(check);
+  useEffect(() => {
+    const fn = () => setV(check());
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return v;
+}
+
 /* ── Design tokens ───────────────────────────────────────────── */
 const C = {
   bg:       "#091515",
@@ -531,7 +543,7 @@ function ForecastGrid({ results, stockData }) {
 }
 
 function SignalIntelligence({ results, stockData }) {
-  const isMobile = useIsMobile();
+  const isMobile = useIsPhoneViewport();
   return (
     <GlassCard style={{ padding: isMobile ? "14px 14px" : "24px 28px", animation:"fadeUp 0.4s ease" }}>
       <SectionHeader>Signal Intelligence</SectionHeader>

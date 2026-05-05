@@ -651,6 +651,7 @@ function SignalIntelligence({ results, stockData }) {
 }
 
 function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, onRemoveCustom, disabled, stockData, onRealDataFetched }) {
+  const isMobile    = useIsMobile();
   const [showForm, setShowForm] = useState(false);
   const [ticker, setTicker]     = useState("");
   const [fetching, setFetching] = useState(false);
@@ -758,66 +759,79 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
         }}>+ Add Stock</button>
       ) : (
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          {/* Input row — stacks on mobile */}
+          <div style={{ display:"flex", flexDirection:isMobile?"column":"row", alignItems:isMobile?"stretch":"center", gap:8 }}>
             <input
               placeholder="TICKER (e.g. GOOGL)"
               maxLength={6}
               value={ticker}
               onChange={e=>{ setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g,"")); setQuote(null); setErr(""); }}
               onKeyDown={e=>{ if(e.key==="Enter") handleLookup(); }}
-              style={{ ...inputStyle, width:180, letterSpacing:"1.5px", fontWeight:700 }}
+              style={{ ...inputStyle, flex:isMobile?undefined:1, width:isMobile?"100%":180, letterSpacing:"1.5px", fontWeight:700, height:isMobile?42:undefined }}
             />
-            <button onClick={handleLookup} disabled={fetching||!ticker.trim()} style={{
-              fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"1px",
-              padding:"7px 18px", borderRadius:4, border:"none",
-              background: C.accent, color:"#091515",
-              cursor: fetching||!ticker.trim() ? "not-allowed" : "pointer",
-              opacity: fetching||!ticker.trim() ? 0.5 : 1,
-              transition:"all 0.15s", minWidth:90,
-            }}>
-              {fetching ? "Looking…" : "Lookup"}
-            </button>
-            <button onClick={handleCancel} style={{
-              fontFamily:F.mono, fontSize:12, padding:"7px 14px", borderRadius:4,
-              border:`1px solid ${C.border}`, background:"transparent", color:C.dim, cursor:"pointer",
-            }}>Cancel</button>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={handleLookup} disabled={fetching||!ticker.trim()} style={{
+                fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"1px",
+                padding:"7px 18px", borderRadius:4, border:"none",
+                background: C.accent, color:"#091515",
+                cursor: fetching||!ticker.trim() ? "not-allowed" : "pointer",
+                opacity: fetching||!ticker.trim() ? 0.5 : 1,
+                transition:"all 0.15s", flex:isMobile?1:undefined, minWidth:90,
+                height:isMobile?42:undefined,
+              }}>
+                {fetching ? "Looking…" : "Lookup"}
+              </button>
+              <button onClick={handleCancel} style={{
+                fontFamily:F.mono, fontSize:12, padding:"7px 14px", borderRadius:4,
+                border:`1px solid ${C.border}`, background:"transparent", color:C.dim, cursor:"pointer",
+                height:isMobile?42:undefined,
+              }}>Cancel</button>
+            </div>
           </div>
 
           {quote && (
             <div style={{
-              display:"flex", alignItems:"center", gap:16,
-              padding:"12px 16px", borderRadius:6,
+              display:"flex", flexDirection:isMobile?"column":"row",
+              alignItems:isMobile?"flex-start":"center",
+              gap:isMobile?12:16,
+              padding:"14px 16px", borderRadius:6,
               background: quote.simulated ? "rgba(251,191,36,0.06)" : "rgba(26,172,190,0.08)",
               border:`1px solid ${quote.simulated ? C.amber+"60" : C.borderBr}`,
               animation:"fadeUp 0.2s ease",
             }}>
-              <div>
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ fontFamily:F.mono, fontSize:14, fontWeight:700, color: quote.simulated ? C.amber : C.accent, letterSpacing:"1px" }}>{quote.ticker}</span>
-                  {quote.simulated ? (
-                    <span style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"1px", textTransform:"uppercase", color:C.amber, background:"rgba(251,191,36,0.12)", border:`1px solid ${C.amber}40`, borderRadius:3, padding:"1px 6px" }}>Simulated</span>
-                  ) : (
-                    <span style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"1px", color:C.green, background:"rgba(52,211,153,0.1)", border:`1px solid ${C.green}30`, borderRadius:3, padding:"1px 6px" }}>Live</span>
-                  )}
-                </div>
-                <div style={{ fontFamily:F.sans, fontSize:12, color:C.dim, marginTop:2 }}>{quote.simulated ? "Live data unavailable — using demo values" : "Real-time market data"}</div>
-              </div>
-              <div style={{ display:"flex", gap:20, flex:1 }}>
+              {/* Ticker + status */}
+              <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", flex:1 }}>
                 <div>
-                  <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:3 }}>Price</div>
-                  <div style={{ fontFamily:F.mono, fontSize:16, fontWeight:700, color:C.text }}>${quote.price.toLocaleString()}</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
+                    <span style={{ fontFamily:F.mono, fontSize:14, fontWeight:700, color: quote.simulated ? C.amber : C.accent, letterSpacing:"1px" }}>{quote.ticker}</span>
+                    {quote.simulated ? (
+                      <span style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"1px", textTransform:"uppercase", color:C.amber, background:"rgba(251,191,36,0.12)", border:`1px solid ${C.amber}40`, borderRadius:3, padding:"1px 6px" }}>Simulated</span>
+                    ) : (
+                      <span style={{ fontFamily:F.mono, fontSize:9, letterSpacing:"1px", color:C.green, background:"rgba(52,211,153,0.1)", border:`1px solid ${C.green}30`, borderRadius:3, padding:"1px 6px" }}>Live</span>
+                    )}
+                  </div>
+                  <div style={{ fontFamily:F.sans, fontSize:12, color:C.dim }}>{quote.simulated ? "Demo values — API unavailable" : "Real-time market data"}</div>
                 </div>
-                <div>
-                  <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:3 }}>Volume</div>
-                  <div style={{ fontFamily:F.mono, fontSize:16, fontWeight:700, color:C.text }}>{quote.volume.toLocaleString()}</div>
+                {/* Price + Volume inline */}
+                <div style={{ display:"flex", gap:16, marginLeft:isMobile?0:4 }}>
+                  <div>
+                    <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:2 }}>Price</div>
+                    <div style={{ fontFamily:F.mono, fontSize:isMobile?14:16, fontWeight:700, color:C.text }}>${quote.price.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:2 }}>Vol</div>
+                    <div style={{ fontFamily:F.mono, fontSize:isMobile?14:16, fontWeight:700, color:C.text }}>{(quote.volume/1e6).toFixed(1)}M</div>
+                  </div>
                 </div>
               </div>
               <button onClick={handleAdd} style={{
                 fontFamily:F.mono, fontSize:12, fontWeight:700, letterSpacing:"1px",
-                padding:"8px 20px", borderRadius:4, border:"none",
+                padding:"9px 22px", borderRadius:4, border:"none",
                 background:C.green, color:"#091515", cursor:"pointer",
                 boxShadow:`0 0 14px ${C.greenGl}`,
-              }}>+ Add</button>
+                width:isMobile?"100%":undefined,
+                height:isMobile?44:undefined,
+              }}>+ Add to List</button>
             </div>
           )}
 

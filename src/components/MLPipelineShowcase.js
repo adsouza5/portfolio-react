@@ -310,12 +310,12 @@ function MetricCard({ label, value, unit, color, note }) {
   );
 }
 
-function LogEntry({ message, type, timestamp }) {
+function LogEntry({ message, type, timestamp, compact }) {
   const typeColor = { info:C.accent, success:C.green, warning:C.amber, processing:C.purple, data:C.muted };
   const typeIcon  = { success:"✓", warning:"!", processing:"◌", data:"›", info:"·" };
   return (
-    <div style={{ fontFamily:F.mono, fontSize:13, lineHeight:1.85, display:"flex", gap:12 }}>
-      <span style={{ color:C.dim, flexShrink:0, opacity:0.7 }}>{timestamp}</span>
+    <div style={{ fontFamily:F.mono, fontSize:compact?11:13, lineHeight:compact?1.6:1.85, display:"flex", gap:compact?6:12 }}>
+      {!compact && <span style={{ color:C.dim, flexShrink:0, opacity:0.7 }}>{timestamp}</span>}
       <span style={{ color:typeColor[type]||C.dim, flexShrink:0 }}>{typeIcon[type]||"·"}</span>
       <span style={{ color:C.muted }}>{message}</span>
     </div>
@@ -1257,7 +1257,7 @@ export default function MLPipelineShowcase() {
             />
 
             {/* Pipeline status */}
-            <GlassCard style={{ padding:"24px 28px", marginBottom:16 }}>
+            <GlassCard style={{ padding:isMobile?"14px 14px":"24px 28px", marginBottom:16 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:24 }}>
                 <div>
                   <SectionHeader>Pipeline Status</SectionHeader>
@@ -1298,42 +1298,42 @@ export default function MLPipelineShowcase() {
             </div>
 
             {/* Latest prediction + logs */}
-            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:16, marginBottom:16 }}>
-              <GlassCard style={{ padding:22 }}>
+            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:12, marginBottom:16 }}>
+              <GlassCard style={{ padding:isMobile?12:22 }}>
                 <SectionHeader>Latest Prediction</SectionHeader>
                 {pred ? (
                   <>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
-                      <span style={{ fontFamily:F.display, fontSize:32, fontWeight:700, color:C.text, letterSpacing:"2px" }}>{pred.ticker}</span>
-                      <span style={{ fontFamily:F.mono, fontSize:13, fontWeight:700, letterSpacing:"2px", color:pc, background:`${pc}18`, padding:"5px 14px", borderRadius:4, border:`1px solid ${pc}50`, boxShadow:`0 0 16px ${pc}30` }}>{pred.prediction}</span>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:isMobile?10:18 }}>
+                      <span style={{ fontFamily:F.display, fontSize:isMobile?20:32, fontWeight:700, color:C.text, letterSpacing:"2px" }}>{pred.ticker}</span>
+                      <span style={{ fontFamily:F.mono, fontSize:isMobile?11:13, fontWeight:700, letterSpacing:"1.5px", color:pc, background:`${pc}18`, padding:isMobile?"3px 8px":"5px 14px", borderRadius:4, border:`1px solid ${pc}50`, boxShadow:`0 0 16px ${pc}30` }}>{pred.prediction}</span>
                     </div>
-                    <div style={{ display:"flex", gap:28, marginBottom:22 }}>
+                    <div style={{ display:"flex", gap:isMobile?16:28, marginBottom:isMobile?12:22 }}>
                       <div>
-                        <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:6 }}>Confidence</div>
-                        <div style={{ fontFamily:F.mono, fontSize:26, fontWeight:700, color:C.purple, textShadow:`0 0 16px ${C.purple}` }}>{(pred.confidence*100).toFixed(1)}%</div>
+                        <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:4 }}>Confidence</div>
+                        <div style={{ fontFamily:F.mono, fontSize:isMobile?18:26, fontWeight:700, color:C.purple, textShadow:`0 0 16px ${C.purple}` }}>{(pred.confidence*100).toFixed(1)}%</div>
                       </div>
                       <div>
-                        <div style={{ fontFamily:F.mono, fontSize:11, letterSpacing:"2px", textTransform:"uppercase", color:C.dim, marginBottom:6 }}>Latency</div>
-                        <div style={{ fontFamily:F.mono, fontSize:26, fontWeight:700, color:pred.latency<25?C.green:C.amber, textShadow:`0 0 16px ${pred.latency<25?C.green:C.amber}` }}>{pred.latency}ms</div>
+                        <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:4 }}>Latency</div>
+                        <div style={{ fontFamily:F.mono, fontSize:isMobile?18:26, fontWeight:700, color:pred.latency<25?C.green:C.amber, textShadow:`0 0 16px ${pred.latency<25?C.green:C.amber}` }}>{pred.latency}ms</div>
                       </div>
                     </div>
                     <LatencyChart history={latHist} />
                   </>
                 ) : (
-                  <div style={{ fontFamily:F.mono, fontSize:14, letterSpacing:"0.5px", color:C.dim, padding:"40px 0", textAlign:"center" }}>
+                  <div style={{ fontFamily:F.mono, fontSize:13, letterSpacing:"0.5px", color:C.dim, padding:isMobile?"16px 0":"40px 0", textAlign:"center" }}>
                     Run the pipeline to see live predictions
                   </div>
                 )}
               </GlassCard>
 
-              <GlassCard style={{ padding:22, display:"flex", flexDirection:"column" }}>
+              <GlassCard style={{ padding:isMobile?12:22, display:"flex", flexDirection:"column" }}>
                 <SectionHeader>Pipeline Logs</SectionHeader>
-                <div ref={logRef} style={{ flex:1, minHeight:240, maxHeight:320, overflowY:"auto", background:"rgba(0,0,0,0.45)", borderRadius:6, padding:14, border:`1px solid ${C.border}`, position:"relative" }}>
+                <div ref={logRef} style={{ flex:1, minHeight:isMobile?140:240, maxHeight:isMobile?200:320, overflowY:"auto", background:"rgba(0,0,0,0.45)", borderRadius:6, padding:isMobile?10:14, border:`1px solid ${C.border}`, position:"relative" }}>
                   <div style={{ position:"absolute", inset:0, pointerEvents:"none", zIndex:1, backgroundImage:"repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)", borderRadius:6 }} />
                   <div style={{ position:"relative", zIndex:2 }}>
                     {logs.length===0 ? (
-                      <div style={{ fontFamily:F.mono, fontSize:13, color:C.dim, padding:"40px 0", textAlign:"center" }}>Waiting for pipeline execution…</div>
-                    ) : logs.map((l,i) => <LogEntry key={i} {...l} />)}
+                      <div style={{ fontFamily:F.mono, fontSize:12, color:C.dim, padding:isMobile?"16px 0":"40px 0", textAlign:"center" }}>Waiting for pipeline execution…</div>
+                    ) : logs.map((l,i) => <LogEntry key={i} {...l} compact={isMobile} />)}
                   </div>
                 </div>
               </GlassCard>

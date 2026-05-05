@@ -106,6 +106,13 @@ body {
   }
 }
 
+/* Prevent iOS Safari from zooming on input focus */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 .portfolio-img {
   transition: box-shadow 0.4s ease, transform 0.4s ease;
 }

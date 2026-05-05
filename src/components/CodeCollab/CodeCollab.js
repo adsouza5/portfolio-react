@@ -81,6 +81,17 @@ async function runOnWandbox(monacoLang, content) {
   return { stdout, stderr };
 }
 
+// ── Mobile breakpoint hook ────────────────────────────────
+function useIsMobile(bp = 480) {
+  const [m, setM] = useState(() => window.innerWidth <= bp);
+  useEffect(() => {
+    const fn = () => setM(window.innerWidth <= bp);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, [bp]);
+  return m;
+}
+
 // ── Camera hook ───────────────────────────────────────────────
 function useCamera() {
   const [on, setOn]       = useState(false);
@@ -341,7 +352,7 @@ function TerminalPanel({ outputs, running, isOwner, onClear, height }) {
   }, [outputs, running]);
 
   return (
-    <div className="cc-terminal" style={{ height }}>
+    <div className="cc-terminal" style={height != null ? { height } : undefined}>
       <div className="cc-terminal-header">
         <span className="cc-terminal-title">▸ Output</span>
         <div className="cc-terminal-actions">
@@ -392,7 +403,8 @@ function TerminalPanel({ outputs, running, isOwner, onClear, height }) {
 
 // ── Main ──────────────────────────────────────────────────────
 export default function CodeCollab() {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const isMobile  = useIsMobile();
 
   const [view, setView]                    = useState('lobby');
   const [sessions, setSessions]            = useState([]);
@@ -736,26 +748,32 @@ export default function CodeCollab() {
                 value={activeSegment.content}
                 onChange={handleEditorChange}
                 options={{
-                  automaticLayout: true, readOnly: !isOwner, fontSize: 14, lineHeight: 22,
+                  automaticLayout: true, readOnly: !isOwner,
+                  fontSize: isMobile ? 13 : 14,
+                  lineHeight: isMobile ? 20 : 22,
                   fontFamily: "'JetBrains Mono','Fira Code','SF Mono',monospace",
                   minimap: { enabled: false }, scrollBeyondLastLine: false,
                   renderLineHighlight: isOwner ? 'line' : 'none',
                   cursorStyle: isOwner ? 'line' : 'underline',
-                  padding: { top: 20, bottom: 20 }, lineNumbers: 'on',
-                  glyphMargin: false, folding: true,
+                  padding: { top: isMobile ? 12 : 20, bottom: isMobile ? 12 : 20 },
+                  lineNumbers: isMobile ? 'off' : 'on',
+                  glyphMargin: false, folding: !isMobile,
                   bracketPairColorization: { enabled: true }, smoothScrolling: true,
+                  wordWrap: isMobile ? 'on' : 'off',
                 }}
               />
             </div>
 
-            <div className="cc-terminal-resize-handle" onMouseDown={startResize} />
+            {!isMobile && (
+              <div className="cc-terminal-resize-handle" onMouseDown={startResize} />
+            )}
 
             <TerminalPanel
               outputs={activeOutputs}
               running={activeRunning}
               isOwner={isOwner}
               onClear={handleClear}
-              height={terminalHeight}
+              height={isMobile ? undefined : terminalHeight}
             />
           </>
         ) : (

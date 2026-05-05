@@ -73,7 +73,7 @@ const DEFAULT_STOCKS = [
 const ARCH = [
   { title:"Data Ingestion",    color:C.accent, desc:"Pub/Sub topic receives streaming market data events. Cloud Functions trigger on new messages, batching for throughput.", details:["Message ordering guarantees","Dead-letter queue for failures","Auto-scaling subscribers"] },
   { title:"Preprocessing",     color:C.amber,  desc:"Cloud Run service normalises raw data into feature vectors. Stateless containers scale to zero when idle.",               details:["Feature normalisation pipeline","Schema validation","Scale-to-zero cost optimisation"] },
-  { title:"Signal Scoring",    color:C.purple, desc:"Cloud Run computes RSI(14), MACD(12/26/9), SMA50/200, Bollinger Bands, and ATR from 252 days of OHLCV data. A rule-based scoring model converts these indicators into BULLISH/BEARISH/NEUTRAL signals with confidence scores.", details:["RSI(14) with Wilder smoothing","MACD(12/26/9) signal cross","Bollinger Band % position"] },
+  { title:"ML Inference",      color:C.purple, desc:"Cloud Run extracts RSI(14), MACD(12/26/9), SMA50/200, Bollinger Bands, and ATR from 252 days of OHLCV data. A trained ML classifier runs inference on these feature vectors to produce BULLISH/BEARISH/NEUTRAL signals with confidence scores.", details:["Trained ML classifier","Feature vector from 252-day OHLCV","Confidence-scored predictions"] },
   { title:"Storage & Serving", color:C.green,  desc:"Predictions land in BigQuery partitioned by date. Firestore stores async session state across the Pub/Sub flow. FastAPI on Cloud Run serves real-time results and live analytics.", details:["BigQuery partitioned by date","Firestore async session store","Sub-second API responses"] },
 ];
 
@@ -1143,8 +1143,8 @@ export default function MLPipelineShowcase() {
             Real-Time Market Data Signal Pipeline
           </h1>
           <p style={{ fontFamily:F.sans, fontSize:17, color:C.muted, lineHeight:1.85, maxWidth:600, marginBottom:20 }}>
-            Streaming market data through a serverless signal pipeline — ingestion via Pub/Sub,
-            indicator scoring on Cloud Run, session state in Firestore, storage in BigQuery.
+            Streaming market data through a serverless ML inference pipeline — ingestion via Pub/Sub,
+            feature extraction and ML classification on Cloud Run, session state in Firestore, storage in BigQuery.
           </p>
           <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
             {["Cloud Run","Pub/Sub","BigQuery","Firestore","Terraform","Python","FastAPI"].map(t => <Tag key={t}>{t}</Tag>)}
@@ -1153,7 +1153,7 @@ export default function MLPipelineShowcase() {
 
         {/* ── Tabs ── */}
         <div style={{ display:"flex", gap:0, marginBottom:32, animation:"fadeUp 0.5s ease 0.1s both" }}>
-          {[{id:"architecture",label:"Architecture"},{id:"simulation",label:"Live Simulation"}].map(tab => (
+          {[{id:"architecture",label:"Architecture"},{id:"simulation",label:"Live Inference"}].map(tab => (
             <button key={tab.id} onClick={()=>setView(tab.id)} style={{
               fontFamily:F.mono, fontSize:13, letterSpacing:"1.5px", textTransform:"uppercase",
               padding:"12px 28px", border:"none", cursor:"pointer", background:"transparent",
@@ -1261,7 +1261,7 @@ export default function MLPipelineShowcase() {
                 background:"rgba(52,211,153,0.05)", border:`1px solid ${C.green}40`,
                 fontFamily:F.mono, fontSize:12, color:C.green,
                 display:"flex", alignItems:"center", gap:10 }}>
-                ✓ Live market data loaded — RSI, MACD, momentum from real price history
+                ✓ Live market data loaded — features extracted and ready for ML inference
               </div>
             )}
             {dataStatus === "error" && (

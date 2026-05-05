@@ -34,8 +34,8 @@ const timelineEntries = [
     date: '2023',
     location: null,
     description:
-      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique colour, editable only by them and read-only for others. Eliminates merge conflicts by design. Built on Y.js (CRDT) for conflict-free shared state, Monaco Editor for the coding experience, Wandbox for sandboxed multi-language code execution, and Firebase for session persistence.',
-    tags: ['React', 'Node.js', 'Y.js', 'CRDT', 'Monaco Editor', 'Firebase', 'Wandbox'],
+      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique colour, editable only by them and read-only for others. Eliminates merge conflicts by design. Shared state is synced via Y.js (CRDT) over a y-websocket relay deployed on Render. Monaco Editor powers the coding experience with per-owner colour decorations and read-only enforcement. Wandbox handles sandboxed multi-language execution (JS, TS, Python, Go, Rust, Java). Sessions are passcode-protected using client-side SHA-256 hashing.',
+    tags: ['React', 'Y.js', 'CRDT', 'Monaco Editor', 'Wandbox', 'WebSockets', 'Node.js'],
     link: 'https://github.com/adsouza5/RealTimeCoding',
     status: null,
     showcase: 'CodeCollab',

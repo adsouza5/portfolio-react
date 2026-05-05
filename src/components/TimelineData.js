@@ -4,13 +4,13 @@
 const timelineEntries = [
   {
     type: 'project',
-    title: 'Sentinel — Real-Time Market Prediction Engine',
+    title: 'Sentinel — Real-Time ML Inference Pipeline',
     org: null,
     date: '2026',
     location: null,
     description:
-      'Serverless GCP pipeline that streams live market data through Pub/Sub, normalises features on Cloud Run, runs a sentiment classifier on Vertex AI, and stores predictions in BigQuery — all provisioned with Terraform and served via FastAPI.',
-    tags: ['Vertex AI', 'Cloud Run', 'Pub/Sub', 'BigQuery', 'Terraform', 'Python', 'FastAPI'],
+      'Serverless GCP pipeline that streams live market data through Pub/Sub, extracts technical indicators (RSI, MACD, Bollinger Bands, ATR) on Cloud Run, and runs a trained ML classifier to produce BULLISH/BEARISH/NEUTRAL signals with confidence scores. Predictions land in BigQuery, session state is managed in Firestore, and results are served via FastAPI — all provisioned with Terraform.',
+    tags: ['Cloud Run', 'Pub/Sub', 'BigQuery', 'Firestore', 'Terraform', 'Python', 'FastAPI', 'scikit-learn'],
     link: 'https://github.com/adsouza5/sentinel-ml-pipeline',
     status: null,
     showcase: 'MLPipelineShowcase',
@@ -34,8 +34,8 @@ const timelineEntries = [
     date: '2023',
     location: null,
     description:
-      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique color, editable only by them and read-only for others. Eliminates merge conflicts by design. Built on Socket.io, Monaco Editor, and Node.js.',
-    tags: ['React', 'Node.js', 'Socket.io', 'Monaco Editor', 'WebSockets'],
+      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique colour, editable only by them and read-only for others. Eliminates merge conflicts by design. Built on Y.js (CRDT) for conflict-free shared state, Monaco Editor for the coding experience, Wandbox for sandboxed multi-language code execution, and Firebase for session persistence.',
+    tags: ['React', 'Node.js', 'Y.js', 'CRDT', 'Monaco Editor', 'Firebase', 'Wandbox'],
     link: 'https://github.com/adsouza5/RealTimeCoding',
     status: null,
     showcase: 'CodeCollab',

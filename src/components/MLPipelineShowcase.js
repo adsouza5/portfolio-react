@@ -531,13 +531,16 @@ function ForecastGrid({ results, stockData }) {
 }
 
 function SignalIntelligence({ results, stockData }) {
+  const isMobile = useIsMobile();
   return (
-    <GlassCard style={{ padding:"24px 28px", animation:"fadeUp 0.4s ease" }}>
+    <GlassCard style={{ padding: isMobile ? "14px 14px" : "24px 28px", animation:"fadeUp 0.4s ease" }}>
       <SectionHeader>Signal Intelligence</SectionHeader>
 
       <div style={{
-        fontFamily:F.sans, fontSize:14, color:C.muted, lineHeight:1.85,
-        marginBottom:24, padding:"14px 18px", borderRadius:6,
+        fontFamily:F.sans, fontSize: isMobile ? 11 : 14, color:C.muted,
+        lineHeight: isMobile ? 1.6 : 1.85,
+        marginBottom: isMobile ? 14 : 24,
+        padding: isMobile ? "10px 12px" : "14px 18px", borderRadius:6,
         background:"rgba(26,172,190,0.05)", border:`1px solid ${C.border}`,
         borderLeft:`3px solid ${C.accent}`,
       }}>

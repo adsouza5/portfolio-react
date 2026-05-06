@@ -362,6 +362,11 @@
   gap: 8px;
   margin-top: 4px;
 }
+.lens-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 .lens-collection-chip {
   font-family: 'Courier New', monospace;
   font-size: 10px;
@@ -380,6 +385,80 @@
   color: #1aacbe;
   background: rgba(26,172,190,0.12);
 }
+.lens-delete-btn {
+  font-size: 9px;
+  background: none;
+  border: none;
+  color: rgba(200,230,230,0.25);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.15s;
+}
+.lens-delete-btn:hover { color: #f87171; }
+
+/* ── Info / muted ───────────────────────────────────────────── */
+.lens-info-banner {
+  padding: 10px 14px;
+  background: rgba(251,191,36,0.06);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 6px;
+  font-size: 12px;
+  color: rgba(251,191,36,0.8);
+  line-height: 1.6;
+}
+.lens-muted {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: rgba(200,230,230,0.35);
+}
+
+/* ── Card context label ──────────────────────────────────────── */
+.lens-card-context {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: rgba(200,230,230,0.4);
+  letter-spacing: 0;
+  text-transform: none;
+  margin-left: 4px;
+}
+
+/* ── Results header ─────────────────────────────────────────── */
+.lens-results-header {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: rgba(200,230,230,0.4);
+  margin-bottom: 12px;
+}
+.lens-repo-link {
+  color: rgba(26,172,190,0.7);
+  text-decoration: none;
+}
+.lens-repo-link:hover { color: #1aacbe; text-decoration: underline; }
+
+/* ── Copy button ────────────────────────────────────────────── */
+.lens-copy-btn {
+  background: none;
+  border: 1px solid rgba(23,126,137,0.25);
+  border-radius: 3px;
+  color: rgba(200,230,230,0.4);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 1px 6px;
+  margin-left: auto;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.lens-copy-btn:hover {
+  border-color: #1aacbe;
+  color: #1aacbe;
+}
+
+/* ── GitHub link on filepath ────────────────────────────────── */
+a.lens-result-filepath {
+  text-decoration: none;
+}
+a.lens-result-filepath:hover { text-decoration: underline; }
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 640px) {

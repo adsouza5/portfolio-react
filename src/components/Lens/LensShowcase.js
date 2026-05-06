@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LensShowcase.css';
 
@@ -11,7 +11,6 @@ const MODELS = [
     detail: 'Runs in the backend container — no setup needed',
     badge: 'free',
     badgeLabel: 'Free',
-    dims: 768,
   },
   {
     id: 'openai',
@@ -19,22 +18,37 @@ const MODELS = [
     detail: 'OpenAI API — best retrieval quality, requires API key',
     badge: 'api',
     badgeLabel: 'API Key',
-    dims: 1536,
   },
   {
     id: 'ollama',
     name: 'nomic-embed-text',
-    detail: 'Ollama running locally — fully private, no cloud',
+    detail: 'Self-hosted Ollama — requires local backend deployment',
     badge: 'local',
-    badgeLabel: 'Local Only',
-    dims: 768,
+    badgeLabel: 'Self-hosted',
   },
 ];
 
 const DEMO_REPOS = [
   { label: 'This portfolio', url: 'https://github.com/adsouza5/portfolio-react' },
   { label: 'ML Pipeline API', url: 'https://github.com/adsouza5/sentinel-ml-pipeline' },
+  { label: 'Lens API', url: 'https://github.com/adsouza5/lens-api' },
 ];
+
+const REPO_STORAGE_KEY = 'lens_collection_repos';
+
+function loadRepoMap() {
+  try { return JSON.parse(localStorage.getItem(REPO_STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveRepoMap(map) {
+  try { localStorage.setItem(REPO_STORAGE_KEY, JSON.stringify(map)); } catch {}
+}
+
+function githubFileUrl(repoUrl, filePath, startLine, endLine) {
+  if (!repoUrl) return null;
+  const base = repoUrl.replace(/\.git$/, '').replace(/\/$/, '');
+  return `${base}/blob/main/${filePath}#L${startLine}-L${endLine}`;
+}
 
 function ModelSelector({ selected, onChange }) {
   return (
@@ -103,14 +117,37 @@ function ProgressView({ events }) {
   );
 }
 
-function ResultCard({ result, index }) {
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <button className="lens-copy-btn" onClick={copy} title="Copy code">
+      {copied ? '✓' : '⎘'}
+    </button>
+  );
+}
+
+function ResultCard({ result, index, repoUrl }) {
+  const ghUrl = githubFileUrl(repoUrl, result.file_path, result.start_line, result.end_line);
   return (
     <div className="lens-result-card" style={{ animationDelay: `${index * 0.05}s` }}>
       <div className="lens-result-meta">
-        <span className="lens-result-filepath">{result.file_path}</span>
+        {ghUrl ? (
+          <a className="lens-result-filepath" href={ghUrl} target="_blank" rel="noopener noreferrer">
+            {result.file_path}
+          </a>
+        ) : (
+          <span className="lens-result-filepath">{result.file_path}</span>
+        )}
         {result.symbol && <span className="lens-result-symbol">{result.symbol}</span>}
         <span className="lens-result-lines">L{result.start_line}–{result.end_line}</span>
         <span className="lens-result-score">{(result.score * 100).toFixed(1)}%</span>
+        <CopyButton text={result.content} />
       </div>
       <pre className="lens-result-code">{result.content}</pre>
     </div>
@@ -128,14 +165,13 @@ export default function LensShowcase() {
   const [indexing, setIndexing]       = useState(false);
   const [collection, setCollection]   = useState('');
   const [collections, setCollections] = useState([]);
+  const [repoMap, setRepoMap]         = useState(loadRepoMap);
 
-  const [query, setQuery]         = useState('');
+  const [query, setQuery]           = useState('');
   const [langFilter, setLangFilter] = useState('');
-  const [searching, setSearching] = useState(false);
-  const [results, setResults]     = useState([]);
-  const [searchErr, setSearchErr] = useState('');
-
-  const esRef = useRef(null);
+  const [searching, setSearching]   = useState(false);
+  const [results, setResults]       = useState([]);
+  const [searchErr, setSearchErr]   = useState('');
 
   const loadCollections = useCallback(async () => {
     if (!API) return;
@@ -145,57 +181,18 @@ export default function LensShowcase() {
       const cols = d.collections ?? [];
       setCollections(cols);
       setCollection(prev => prev || cols[0] || '');
-    } catch { /* ignore */ }
+    } catch { }
   }, []);
 
   useEffect(() => { loadCollections(); }, [loadCollections]);
 
   const lastEvent = indexEvents[indexEvents.length - 1];
   const indexDone = lastEvent?.type === 'done';
-  const indexError = lastEvent?.type === 'error';
 
-  function startIndex() {
-    if (!repoUrl.trim() || indexing) return;
-    setIndexing(true);
-    setIndexEvents([]);
-    setResults([]);
-
-    const params = new URLSearchParams({
-      repo_url: repoUrl.trim(),
-      provider,
-      ...(provider === 'openai' && apiKey ? { api_key: apiKey } : {}),
-      ...(provider === 'ollama' ? { ollama_url: ollamaUrl } : {}),
-    });
-
-    const es = new EventSource(`${API}/index?${params}`);
-    esRef.current = es;
-
-    es.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      setIndexEvents(prev => [...prev, data]);
-      if (data.type === 'done') {
-        setCollection(data.collection);
-        setIndexing(false);
-        loadCollections();
-        es.close();
-      }
-      if (data.type === 'error') {
-        setIndexing(false);
-        es.close();
-      }
-    };
-    es.onerror = () => {
-      setIndexEvents(prev => [...prev, { type: 'error', message: 'Connection lost' }]);
-      setIndexing(false);
-      es.close();
-    };
-  }
-
-  // EventSource doesn't support POST — use fetch + ReadableStream for POST
-  function startIndexPost() {
+  function startIndexPost(forceReindex = false) {
     if (!repoUrl.trim() || indexing) return;
     if (!API) {
-      setIndexEvents([{ type: 'error', message: 'Lens API URL is not configured. Check deployment secrets.' }]);
+      setIndexEvents([{ type: 'error', message: 'Lens API URL is not configured.' }]);
       return;
     }
     setIndexing(true);
@@ -236,14 +233,30 @@ export default function LensShowcase() {
             setIndexEvents(prev => [...prev, data]);
             if (data.type === 'done') {
               setCollection(data.collection);
+              const updated = { ...loadRepoMap(), [data.collection]: repoUrl.trim() };
+              saveRepoMap(updated);
+              setRepoMap(updated);
               loadCollections();
             }
-          } catch { /* malformed chunk */ }
+          } catch { }
         }
       }
     }).catch((err) => {
       setIndexEvents(prev => [...prev, { type: 'error', message: err.message }]);
     }).finally(() => setIndexing(false));
+  }
+
+  async function deleteCollection(name) {
+    try {
+      await fetch(`${API}/collections/${name}`, { method: 'DELETE' });
+      const updated = { ...repoMap };
+      delete updated[name];
+      saveRepoMap(updated);
+      setRepoMap(updated);
+      setCollection('');
+      setResults([]);
+      loadCollections();
+    } catch { }
   }
 
   async function runSearch() {
@@ -276,6 +289,8 @@ export default function LensShowcase() {
     }
   }
 
+  const activeRepoUrl = repoMap[collection] || '';
+
   return (
     <div className="lens-root">
       <div className="lens-inner">
@@ -287,7 +302,7 @@ export default function LensShowcase() {
         <h1 className="lens-title">Lens</h1>
         <p className="lens-subtitle">
           Semantic code search — index any GitHub repository and query it in plain English.
-          Powered by code embeddings and vector similarity search over Qdrant.
+          Powered by code-aware embeddings and vector similarity search over Qdrant.
         </p>
 
         {/* ── Model ── */}
@@ -307,13 +322,10 @@ export default function LensShowcase() {
             </div>
           )}
           {provider === 'ollama' && (
-            <div className="lens-api-key-row">
-              <input
-                className="lens-input"
-                placeholder="Ollama base URL (default: http://localhost:11434)"
-                value={ollamaUrl}
-                onChange={e => setOllamaUrl(e.target.value)}
-              />
+            <div className="lens-info-banner" style={{ marginTop: 14 }}>
+              ⚠ Ollama connects from the backend container, not your browser.
+              It only works when running the backend locally alongside Ollama.
+              For this hosted demo, use <strong>jina-code-v2</strong> or <strong>OpenAI</strong>.
             </div>
           )}
         </div>
@@ -342,7 +354,7 @@ export default function LensShowcase() {
             />
             <button
               className="lens-btn lens-btn-primary"
-              onClick={startIndexPost}
+              onClick={() => startIndexPost()}
               disabled={indexing || !repoUrl.trim()}
             >
               {indexing ? 'Indexing…' : 'Index'}
@@ -352,19 +364,29 @@ export default function LensShowcase() {
           <ProgressView events={indexEvents} />
         </div>
 
-        {/* ── Previous collections ── */}
+        {/* ── Indexed repos ── */}
         {collections.length > 0 && (
           <div className="lens-card">
             <div className="lens-card-title">Indexed Repositories</div>
             <div className="lens-collections">
               {collections.map(c => (
-                <button
-                  key={c}
-                  className={`lens-collection-chip${collection === c ? ' active' : ''}`}
-                  onClick={() => setCollection(c)}
-                >
-                  {c.replace(/^lens-/, '')}
-                </button>
+                <div key={c} className={`lens-chip-row${collection === c ? ' active' : ''}`}>
+                  <button
+                    className={`lens-collection-chip${collection === c ? ' active' : ''}`}
+                    onClick={() => { setCollection(c); setResults([]); }}
+                  >
+                    {repoMap[c]
+                      ? repoMap[c].replace('https://github.com/', '')
+                      : c.replace(/^lens-/, '')}
+                  </button>
+                  <button
+                    className="lens-delete-btn"
+                    title="Delete collection"
+                    onClick={() => deleteCollection(c)}
+                  >
+                    ✕
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -372,9 +394,18 @@ export default function LensShowcase() {
 
         {/* ── Search ── */}
         <div className="lens-card">
-          <div className="lens-card-title">Search</div>
+          <div className="lens-card-title">
+            Search
+            {collection && (
+              <span className="lens-card-context">
+                {repoMap[collection]
+                  ? repoMap[collection].replace('https://github.com/', '')
+                  : collection.replace(/^lens-/, '')}
+              </span>
+            )}
+          </div>
           {!collection && !indexDone ? (
-            <div style={{ fontFamily: 'Courier New, monospace', fontSize: 12, color: 'rgba(200,230,230,0.35)' }}>
+            <div className="lens-muted">
               Index a repository above, or select one from Indexed Repositories to search.
             </div>
           ) : (
@@ -407,17 +438,28 @@ export default function LensShowcase() {
                 </button>
               </div>
 
-              {searchErr && <div className="lens-error-banner" style={{ marginTop: 12 }}>✕ {searchErr}</div>}
+              {searchErr && (
+                <div className="lens-error-banner" style={{ marginTop: 12 }}>✕ {searchErr}</div>
+              )}
 
               {results.length > 0 && (
                 <div className="lens-results">
-                  {results.map((r, i) => <ResultCard key={i} result={r} index={i} />)}
+                  <div className="lens-results-header">
+                    {results.length} results · {activeRepoUrl ? (
+                      <a href={activeRepoUrl} target="_blank" rel="noopener noreferrer" className="lens-repo-link">
+                        {activeRepoUrl.replace('https://github.com/', '')}
+                      </a>
+                    ) : collection.replace(/^lens-/, '')}
+                  </div>
+                  {results.map((r, i) => (
+                    <ResultCard key={i} result={r} index={i} repoUrl={activeRepoUrl} />
+                  ))}
                 </div>
               )}
 
               {!searching && results.length === 0 && query && !searchErr && (
-                <div style={{ fontFamily: 'Courier New, monospace', fontSize: 12, color: 'rgba(200,230,230,0.35)', marginTop: 20, textAlign: 'center' }}>
-                  No results — try a different query or index the repository first.
+                <div className="lens-muted" style={{ marginTop: 20, textAlign: 'center' }}>
+                  No results — try rephrasing the query or index the repository first.
                 </div>
               )}
             </>

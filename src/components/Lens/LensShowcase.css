@@ -548,6 +548,111 @@ a.lens-result-filepath:hover { color: #4dcfdf; text-decoration: underline; }
 }
 .lens-copy-btn:hover { border-color: #177E89; color: #177E89; }
 
+/* ── Expand button ──────────────────────────────────────────── */
+.lens-expand-btn {
+  background: none;
+  border: 1px solid rgba(23,126,137,0.35);
+  border-radius: 3px;
+  color: rgba(232,232,232,0.50);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 1px 6px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.lens-expand-btn:hover { border-color: #177E89; color: #177E89; }
+
+/* ── Result modal ───────────────────────────────────────────── */
+.lens-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 12, 12, 0.82);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: lens-fadein 0.15s ease;
+}
+@keyframes lens-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.lens-modal {
+  background: #0c1e1e;
+  border: 1px solid rgba(23,126,137,0.45);
+  border-left: 3px solid #177E89;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 860px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 60px rgba(23,126,137,0.18), 0 24px 80px rgba(0,0,0,0.6);
+  animation: lens-slideup 0.18s ease;
+}
+@keyframes lens-slideup {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lens-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(23,126,137,0.10);
+  border-bottom: 1px solid rgba(23,126,137,0.22);
+  border-radius: 6px 6px 0 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.lens-modal-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.lens-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.lens-modal-close {
+  background: none;
+  border: 1px solid rgba(232,232,232,0.18);
+  border-radius: 3px;
+  color: rgba(232,232,232,0.55);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 8px;
+  transition: all 0.15s;
+}
+.lens-modal-close:hover { border-color: #DB3A34; color: #f87171; }
+
+.lens-modal-code {
+  margin: 0;
+  padding: 20px 22px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  color: rgba(232,232,232,0.92);
+  overflow: auto;
+  flex: 1;
+  white-space: pre;
+  background: transparent;
+}
+
 /* ── Scrollbars ─────────────────────────────────────────────── */
 .lens-root ::-webkit-scrollbar        { width: 4px; height: 4px; }
 .lens-root ::-webkit-scrollbar-track  { background: rgba(0,0,0,0.3); border-radius: 2px; }

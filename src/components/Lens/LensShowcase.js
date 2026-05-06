@@ -146,7 +146,43 @@ function CopyButton({ text }) {
   );
 }
 
-function ResultCard({ result, index, repoUrl }) {
+function ResultModal({ result, repoUrl, onClose }) {
+  const ghUrl = githubFileUrl(repoUrl, result.file_path, result.start_line, result.end_line);
+
+  useEffect(() => {
+    const onKey = e => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div className="lens-modal-backdrop" onClick={onClose}>
+      <div className="lens-modal" onClick={e => e.stopPropagation()}>
+        <div className="lens-modal-header">
+          <div className="lens-modal-meta">
+            {ghUrl ? (
+              <a className="lens-result-filepath" href={ghUrl} target="_blank" rel="noopener noreferrer">
+                {result.file_path}
+              </a>
+            ) : (
+              <span className="lens-result-filepath">{result.file_path}</span>
+            )}
+            {result.symbol && <span className="lens-result-symbol">{result.symbol}</span>}
+            <span className="lens-result-lines">L{result.start_line}–{result.end_line}</span>
+            <span className="lens-result-score">{(result.score * 100).toFixed(1)}%</span>
+          </div>
+          <div className="lens-modal-actions">
+            <CopyButton text={result.content} />
+            <button className="lens-modal-close" onClick={onClose} title="Close">✕</button>
+          </div>
+        </div>
+        <pre className="lens-modal-code">{result.content}</pre>
+      </div>
+    </div>
+  );
+}
+
+function ResultCard({ result, index, repoUrl, onExpand }) {
   const ghUrl = githubFileUrl(repoUrl, result.file_path, result.start_line, result.end_line);
   return (
     <div className="lens-result-card" style={{ animationDelay: `${index * 0.05}s` }}>
@@ -162,6 +198,7 @@ function ResultCard({ result, index, repoUrl }) {
         <span className="lens-result-lines">L{result.start_line}–{result.end_line}</span>
         <span className="lens-result-score">{(result.score * 100).toFixed(1)}%</span>
         <CopyButton text={result.content} />
+        <button className="lens-expand-btn" onClick={() => onExpand(result)} title="Expand">⤢</button>
       </div>
       <pre className="lens-result-code">{result.content}</pre>
     </div>
@@ -186,6 +223,7 @@ export default function LensShowcase() {
   const [searching, setSearching]   = useState(false);
   const [results, setResults]       = useState([]);
   const [searchErr, setSearchErr]   = useState('');
+  const [expanded, setExpanded]     = useState(null);
   const [placeholder, setPlaceholder] = useState('');
 
   const PLACEHOLDERS = [
@@ -339,6 +377,9 @@ export default function LensShowcase() {
 
   return (
     <div className="lens-root">
+      {expanded && (
+        <ResultModal result={expanded} repoUrl={activeRepoUrl} onClose={() => setExpanded(null)} />
+      )}
       {/* Embedding-space graph — scattered nodes + similarity edges, unique to Lens */}
       <svg className="lens-graph-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <g opacity="0.55">
@@ -520,7 +561,7 @@ export default function LensShowcase() {
                     ) : collection.replace(/^lens-/, '')}
                   </div>
                   {results.map((r, i) => (
-                    <ResultCard key={i} result={r} index={i} repoUrl={activeRepoUrl} />
+                    <ResultCard key={i} result={r} index={i} repoUrl={activeRepoUrl} onExpand={setExpanded} />
                   ))}
                 </div>
               )}

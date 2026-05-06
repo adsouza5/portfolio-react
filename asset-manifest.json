@@ -1,27 +1,27 @@
 {
   "files": {
     "main.css": "/static/css/main.c79247a2.css",
-    "main.js": "/static/js/main.955e8fa7.js",
-    "static/js/355.73e6d98b.chunk.js": "/static/js/355.73e6d98b.chunk.js",
-    "static/css/293.397b60a1.chunk.css": "/static/css/293.397b60a1.chunk.css",
+    "main.js": "/static/js/main.19df573e.js",
+    "static/js/355.fa3f8815.chunk.js": "/static/js/355.fa3f8815.chunk.js",
+    "static/css/293.f2d54b12.chunk.css": "/static/css/293.f2d54b12.chunk.css",
     "static/js/293.ab46aad6.chunk.js": "/static/js/293.ab46aad6.chunk.js",
-    "static/css/964.cb26cfb0.chunk.css": "/static/css/964.cb26cfb0.chunk.css",
+    "static/css/964.32e18150.chunk.css": "/static/css/964.32e18150.chunk.css",
     "static/js/964.03cf38f9.chunk.js": "/static/js/964.03cf38f9.chunk.js",
     "static/js/774.ac8b9265.chunk.js": "/static/js/774.ac8b9265.chunk.js",
     "static/media/notes.ttf": "/static/media/notes.da91a9e8ac2bc9dbaf08.ttf",
     "static/media/header.ttf": "/static/media/header.bc9db3903019ef13a140.ttf",
     "index.html": "/index.html",
     "main.c79247a2.css.map": "/static/css/main.c79247a2.css.map",
-    "main.955e8fa7.js.map": "/static/js/main.955e8fa7.js.map",
-    "355.73e6d98b.chunk.js.map": "/static/js/355.73e6d98b.chunk.js.map",
-    "293.397b60a1.chunk.css.map": "/static/css/293.397b60a1.chunk.css.map",
+    "main.19df573e.js.map": "/static/js/main.19df573e.js.map",
+    "355.fa3f8815.chunk.js.map": "/static/js/355.fa3f8815.chunk.js.map",
+    "293.f2d54b12.chunk.css.map": "/static/css/293.f2d54b12.chunk.css.map",
     "293.ab46aad6.chunk.js.map": "/static/js/293.ab46aad6.chunk.js.map",
-    "964.cb26cfb0.chunk.css.map": "/static/css/964.cb26cfb0.chunk.css.map",
+    "964.32e18150.chunk.css.map": "/static/css/964.32e18150.chunk.css.map",
     "964.03cf38f9.chunk.js.map": "/static/js/964.03cf38f9.chunk.js.map",
     "774.ac8b9265.chunk.js.map": "/static/js/774.ac8b9265.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c79247a2.css",
-    "static/js/main.955e8fa7.js"
+    "static/js/main.19df573e.js"
   ]
 }

@@ -194,6 +194,10 @@ export default function LensShowcase() {
   // EventSource doesn't support POST — use fetch + ReadableStream for POST
   function startIndexPost() {
     if (!repoUrl.trim() || indexing) return;
+    if (!API) {
+      setIndexEvents([{ type: 'error', message: 'Lens API URL is not configured. Check deployment secrets.' }]);
+      return;
+    }
     setIndexing(true);
     setIndexEvents([]);
     setResults([]);
@@ -210,6 +214,11 @@ export default function LensShowcase() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     }).then(async (resp) => {
+      if (!resp.ok) {
+        const text = await resp.text();
+        setIndexEvents([{ type: 'error', message: `Server error ${resp.status}: ${text.slice(0, 200)}` }]);
+        return;
+      }
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let buf = '';

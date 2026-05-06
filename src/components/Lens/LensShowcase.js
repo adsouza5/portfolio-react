@@ -470,7 +470,6 @@ export default function LensShowcase() {
       </button>
 
       <div className="lens-inner">
-        <div className="lens-eyebrow">◈ Project · 2026</div>
         <h1 className="lens-title">Lens</h1>
         <p className="lens-subtitle">
           Semantic code search — index any GitHub repository and query it in plain English.

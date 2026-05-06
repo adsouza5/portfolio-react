@@ -125,10 +125,11 @@
 
 .lens-card-title {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 10px;
-  letter-spacing: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: rgba(23,126,137,0.90);
+  color: #E8E8E8;
   margin-bottom: 18px;
   display: flex;
   align-items: center;

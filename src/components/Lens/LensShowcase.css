@@ -11,8 +11,8 @@
   overflow: hidden;
 }
 
-/* Hex grid SVG — fixed, full viewport */
-.lens-hex-bg {
+/* Embedding-space graph — fixed, full viewport */
+.lens-graph-bg {
   position: fixed;
   inset: 0;
   width: 100%;

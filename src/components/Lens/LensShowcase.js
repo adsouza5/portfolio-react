@@ -4,6 +4,20 @@ import './LensShowcase.css';
 
 const API = process.env.REACT_APP_LENS_API_URL || '';
 
+// Seeded LCG — deterministic node positions so the graph is stable across renders
+function seeded(seed) {
+  let s = seed;
+  return () => { s = Math.imul(s, 1664525) + 1013904223 | 0; return (s >>> 0) / 0xffffffff; };
+}
+const _r = seeded(137);
+const GRAPH_NODES = Array.from({ length: 55 }, () => ({ x: _r() * 100, y: _r() * 100, r: 0.35 + _r() * 0.55 }));
+const GRAPH_EDGES = GRAPH_NODES.flatMap((a, i) =>
+  GRAPH_NODES.slice(i + 1).flatMap((b, j) => {
+    const dx = a.x - b.x, dy = a.y - b.y;
+    return dx * dx + dy * dy < 280 ? [[i, i + 1 + j]] : [];
+  })
+);
+
 const MODELS = [
   {
     id: 'local',
@@ -325,18 +339,21 @@ export default function LensShowcase() {
 
   return (
     <div className="lens-root">
-      {/* Hex grid — matches portfolio design language */}
-      <svg className="lens-hex-bg" aria-hidden="true">
-        <defs>
-          <pattern id="lhex"  x="0"  y="0"  width="38" height="66" patternUnits="userSpaceOnUse">
-            <path d="M19 11 L38 22 L38 44 L19 55 L0 44 L0 22 Z" fill="none" stroke="rgba(23,126,137,0.13)" strokeWidth="0.7"/>
-          </pattern>
-          <pattern id="lhex2" x="19" y="33" width="38" height="66" patternUnits="userSpaceOnUse">
-            <path d="M19 11 L38 22 L38 44 L19 55 L0 44 L0 22 Z" fill="none" stroke="rgba(23,126,137,0.13)" strokeWidth="0.7"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#lhex)"/>
-        <rect width="100%" height="100%" fill="url(#lhex2)"/>
+      {/* Embedding-space graph — scattered nodes + similarity edges, unique to Lens */}
+      <svg className="lens-graph-bg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g opacity="0.55">
+          {GRAPH_EDGES.map(([a, b], i) => (
+            <line
+              key={i}
+              x1={GRAPH_NODES[a].x} y1={GRAPH_NODES[a].y}
+              x2={GRAPH_NODES[b].x} y2={GRAPH_NODES[b].y}
+              stroke="rgba(23,126,137,0.18)" strokeWidth="0.18"
+            />
+          ))}
+          {GRAPH_NODES.map((n, i) => (
+            <circle key={i} cx={n.x} cy={n.y} r={n.r} fill="rgba(23,126,137,0.45)" />
+          ))}
+        </g>
       </svg>
 
       <button

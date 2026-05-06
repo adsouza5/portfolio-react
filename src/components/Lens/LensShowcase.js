@@ -145,10 +145,16 @@ function LangSelect({ value, onChange }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const MENU_HEIGHT = (LANGUAGES.length + 1) * 38;
+
   function toggle() {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setMenuPos({ top: r.bottom + 5, left: r.left, width: r.width });
+      const spaceBelow = window.innerHeight - r.bottom;
+      const top = spaceBelow >= MENU_HEIGHT + 8
+        ? r.bottom + 5
+        : r.top - MENU_HEIGHT - 5;
+      setMenuPos({ top, left: r.left, width: r.width });
     }
     setOpen(o => !o);
   }

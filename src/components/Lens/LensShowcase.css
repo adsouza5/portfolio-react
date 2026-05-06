@@ -535,33 +535,33 @@ a.lens-result-filepath:hover { color: #4dcfdf; text-decoration: underline; }
 
 /* ── Copy button ────────────────────────────────────────────── */
 .lens-copy-btn {
-  background: none;
-  border: 1px solid rgba(23,126,137,0.35);
-  border-radius: 3px;
-  color: rgba(232,232,232,0.50);
-  font-size: 12px;
+  background: rgba(23,126,137,0.08);
+  border: 1px solid rgba(23,126,137,0.40);
+  border-radius: 4px;
+  color: rgba(232,232,232,0.70);
+  font-size: 14px;
   cursor: pointer;
-  padding: 1px 7px;
+  padding: 3px 10px;
   margin-left: auto;
   flex-shrink: 0;
   transition: all 0.15s;
 }
-.lens-copy-btn:hover { border-color: #177E89; color: #177E89; }
+.lens-copy-btn:hover { background: rgba(23,126,137,0.18); border-color: #177E89; color: #E8E8E8; }
 
 /* ── Expand button ──────────────────────────────────────────── */
 .lens-expand-btn {
-  background: none;
-  border: 1px solid rgba(23,126,137,0.35);
-  border-radius: 3px;
-  color: rgba(232,232,232,0.50);
-  font-size: 13px;
+  background: rgba(23,126,137,0.08);
+  border: 1px solid rgba(23,126,137,0.40);
+  border-radius: 4px;
+  color: rgba(232,232,232,0.70);
+  font-size: 14px;
   cursor: pointer;
-  padding: 1px 6px;
+  padding: 3px 10px;
   flex-shrink: 0;
   transition: all 0.15s;
   line-height: 1;
 }
-.lens-expand-btn:hover { border-color: #177E89; color: #177E89; }
+.lens-expand-btn:hover { background: rgba(23,126,137,0.18); border-color: #177E89; color: #E8E8E8; }
 
 /* ── Result modal ───────────────────────────────────────────── */
 .lens-modal-backdrop {

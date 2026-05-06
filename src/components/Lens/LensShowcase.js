@@ -142,7 +142,9 @@ export default function LensShowcase() {
     try {
       const r = await fetch(`${API}/collections`);
       const d = await r.json();
-      setCollections(d.collections ?? []);
+      const cols = d.collections ?? [];
+      setCollections(cols);
+      setCollection(prev => prev || cols[0] || '');
     } catch { /* ignore */ }
   }, []);
 
@@ -360,52 +362,58 @@ export default function LensShowcase() {
         )}
 
         {/* ── Search ── */}
-        {(indexDone || collection) && (
-          <div className="lens-card">
-            <div className="lens-card-title">Search</div>
-            <div className="lens-search-row">
-              <input
-                className="lens-input"
-                placeholder="e.g. where is RSI calculated, find the auth middleware…"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && runSearch()}
-                autoFocus
-              />
-              <select
-                className="lens-lang-select"
-                value={langFilter}
-                onChange={e => setLangFilter(e.target.value)}
-              >
-                <option value="">All languages</option>
-                {['python','javascript','typescript','go','rust','java'].map(l => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
-              <button
-                className="lens-btn lens-btn-primary"
-                onClick={runSearch}
-                disabled={searching || !query.trim()}
-              >
-                {searching ? 'Searching…' : 'Search'}
-              </button>
+        <div className="lens-card">
+          <div className="lens-card-title">Search</div>
+          {!collection && !indexDone ? (
+            <div style={{ fontFamily: 'Courier New, monospace', fontSize: 12, color: 'rgba(200,230,230,0.35)' }}>
+              Index a repository above, or select one from Indexed Repositories to search.
             </div>
-
-            {searchErr && <div className="lens-error-banner" style={{ marginTop: 12 }}>✕ {searchErr}</div>}
-
-            {results.length > 0 && (
-              <div className="lens-results">
-                {results.map((r, i) => <ResultCard key={i} result={r} index={i} />)}
+          ) : (
+            <>
+              <div className="lens-search-row">
+                <input
+                  className="lens-input"
+                  placeholder="e.g. where is RSI calculated, find the auth middleware…"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && runSearch()}
+                  autoFocus
+                />
+                <select
+                  className="lens-lang-select"
+                  value={langFilter}
+                  onChange={e => setLangFilter(e.target.value)}
+                >
+                  <option value="">All languages</option>
+                  {['python','javascript','typescript','go','rust','java'].map(l => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+                <button
+                  className="lens-btn lens-btn-primary"
+                  onClick={runSearch}
+                  disabled={searching || !query.trim()}
+                >
+                  {searching ? 'Searching…' : 'Search'}
+                </button>
               </div>
-            )}
 
-            {!searching && results.length === 0 && query && !searchErr && (
-              <div style={{ fontFamily: 'Courier New, monospace', fontSize: 12, color: 'rgba(200,230,230,0.35)', marginTop: 20, textAlign: 'center' }}>
-                No results — try a different query or index the repository first.
-              </div>
-            )}
-          </div>
-        )}
+              {searchErr && <div className="lens-error-banner" style={{ marginTop: 12 }}>✕ {searchErr}</div>}
+
+              {results.length > 0 && (
+                <div className="lens-results">
+                  {results.map((r, i) => <ResultCard key={i} result={r} index={i} />)}
+                </div>
+              )}
+
+              {!searching && results.length === 0 && query && !searchErr && (
+                <div style={{ fontFamily: 'Courier New, monospace', fontSize: 12, color: 'rgba(200,230,230,0.35)', marginTop: 20, textAlign: 'center' }}>
+                  No results — try a different query or index the repository first.
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

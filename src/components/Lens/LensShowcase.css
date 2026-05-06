@@ -450,16 +450,12 @@
   color: rgba(23,126,137,0.70);
 }
 .lens-lang-menu {
-  position: absolute;
-  top: calc(100% + 5px);
-  right: 0;
-  min-width: 100%;
-  background: #0c1e1e;
-  border: 1px solid rgba(23,126,137,0.40);
+  background: #081414;
+  border: 1px solid rgba(23,126,137,0.50);
   border-radius: 6px;
   overflow: hidden;
-  z-index: 200;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 20px rgba(23,126,137,0.08);
+  z-index: 2000;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.80), 0 0 24px rgba(23,126,137,0.10);
 }
 .lens-lang-item {
   display: block;

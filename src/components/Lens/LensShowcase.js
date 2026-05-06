@@ -135,28 +135,42 @@ const LANGUAGES = ['python','javascript','typescript','go','rust','java'];
 
 function LangSelect({ value, onChange }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef(null);
+  const wrapRef = useRef(null);
 
   useEffect(() => {
-    const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const handler = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  function toggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setMenuPos({ top: r.bottom + 5, left: r.left, width: r.width });
+    }
+    setOpen(o => !o);
+  }
+
   const label = value || 'All languages';
 
   return (
-    <div className="lens-lang-wrap" ref={ref}>
+    <div className="lens-lang-wrap" ref={wrapRef}>
       <button
+        ref={btnRef}
         className={`lens-lang-btn${open ? ' open' : ''}`}
-        onClick={() => setOpen(o => !o)}
+        onClick={toggle}
         type="button"
       >
         <span>{label}</span>
         <span className="lens-lang-chevron">{open ? '▲' : '▼'}</span>
       </button>
       {open && (
-        <div className="lens-lang-menu">
+        <div
+          className="lens-lang-menu"
+          style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, minWidth: menuPos.width }}
+        >
           <button
             className={`lens-lang-item${!value ? ' active' : ''}`}
             onClick={() => { onChange(''); setOpen(false); }}

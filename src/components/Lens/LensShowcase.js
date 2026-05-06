@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LensShowcase.css';
 
@@ -172,6 +172,38 @@ export default function LensShowcase() {
   const [searching, setSearching]   = useState(false);
   const [results, setResults]       = useState([]);
   const [searchErr, setSearchErr]   = useState('');
+  const [placeholder, setPlaceholder] = useState('');
+
+  const PLACEHOLDERS = [
+    'where is authentication handled…',
+    'find the database connection logic…',
+    'how is rate limiting implemented…',
+    'where are API routes defined…',
+    'find error handling middleware…',
+    'where is caching configured…',
+  ];
+  const placeholderRef = useRef(0);
+  useEffect(() => {
+    let charIdx = 0;
+    let phIdx = 0;
+    let erasing = false;
+    let timer;
+    function tick() {
+      const target = PLACEHOLDERS[phIdx];
+      if (!erasing) {
+        charIdx++;
+        setPlaceholder(target.slice(0, charIdx));
+        if (charIdx === target.length) { erasing = true; timer = setTimeout(tick, 1800); return; }
+      } else {
+        charIdx--;
+        setPlaceholder(target.slice(0, charIdx));
+        if (charIdx === 0) { erasing = false; phIdx = (phIdx + 1) % PLACEHOLDERS.length; timer = setTimeout(tick, 300); return; }
+      }
+      timer = setTimeout(tick, erasing ? 28 : 52);
+    }
+    timer = setTimeout(tick, 1000);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadCollections = useCallback(async () => {
     if (!API) return;
@@ -393,7 +425,7 @@ export default function LensShowcase() {
         )}
 
         {/* ── Search ── */}
-        <div className="lens-card">
+        <div className="lens-card lens-card-search">
           <div className="lens-card-title">
             Search
             {collection && (
@@ -413,7 +445,7 @@ export default function LensShowcase() {
               <div className="lens-search-row">
                 <input
                   className="lens-input"
-                  placeholder="e.g. where is RSI calculated, find the auth middleware…"
+                  placeholder={query ? '' : placeholder || 'search the codebase…'}
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && runSearch()}

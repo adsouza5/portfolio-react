@@ -44,6 +44,7 @@ jobs:
         env:
           CI: false  # treat warnings as warnings, not errors
           REACT_APP_API_URL: https://ml-pipeline-api-cpktdw5swq-uc.a.run.app
+          REACT_APP_LENS_API_URL: ${{ secrets.LENS_API_URL }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

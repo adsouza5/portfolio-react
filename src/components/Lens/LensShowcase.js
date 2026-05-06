@@ -131,6 +131,49 @@ function ProgressView({ events }) {
   );
 }
 
+const LANGUAGES = ['python','javascript','typescript','go','rust','java'];
+
+function LangSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const label = value || 'All languages';
+
+  return (
+    <div className="lens-lang-wrap" ref={ref}>
+      <button
+        className={`lens-lang-btn${open ? ' open' : ''}`}
+        onClick={() => setOpen(o => !o)}
+        type="button"
+      >
+        <span>{label}</span>
+        <span className="lens-lang-chevron">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="lens-lang-menu">
+          <button
+            className={`lens-lang-item${!value ? ' active' : ''}`}
+            onClick={() => { onChange(''); setOpen(false); }}
+          >All languages</button>
+          {LANGUAGES.map(l => (
+            <button
+              key={l}
+              className={`lens-lang-item${value === l ? ' active' : ''}`}
+              onClick={() => { onChange(l); setOpen(false); }}
+            >{l}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -528,16 +571,7 @@ export default function LensShowcase() {
                   onKeyDown={e => e.key === 'Enter' && runSearch()}
                   autoFocus
                 />
-                <select
-                  className="lens-lang-select"
-                  value={langFilter}
-                  onChange={e => setLangFilter(e.target.value)}
-                >
-                  <option value="">All languages</option>
-                  {['python','javascript','typescript','go','rust','java'].map(l => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                </select>
+                <LangSelect value={langFilter} onChange={setLangFilter} />
                 <button
                   className="lens-btn lens-btn-primary"
                   onClick={runSearch}

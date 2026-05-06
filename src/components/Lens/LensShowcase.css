@@ -548,6 +548,12 @@ a.lens-result-filepath:hover { color: #4dcfdf; text-decoration: underline; }
 }
 .lens-copy-btn:hover { border-color: #177E89; color: #177E89; }
 
+/* ── Scrollbars ─────────────────────────────────────────────── */
+.lens-root ::-webkit-scrollbar        { width: 4px; height: 4px; }
+.lens-root ::-webkit-scrollbar-track  { background: rgba(0,0,0,0.3); border-radius: 2px; }
+.lens-root ::-webkit-scrollbar-thumb  { background: rgba(23,126,137,0.45); border-radius: 2px; }
+.lens-root ::-webkit-scrollbar-thumb:hover { background: rgba(26,172,190,0.70); }
+
 /* ── Divider ────────────────────────────────────────────────── */
 .lens-divider {
   height: 1px;

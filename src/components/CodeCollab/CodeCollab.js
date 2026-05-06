@@ -305,6 +305,50 @@ function UserPill({ user, isYou }) {
   );
 }
 
+// ── Language dropdown ─────────────────────────────────────────
+function CCLangSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
+  const btnRef = useRef(null);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    const handler = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  function toggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      const menuH = (LANGUAGES.length + 1) * 30;
+      const top = window.innerHeight - r.bottom >= menuH + 8 ? r.bottom + 3 : r.top - menuH - 3;
+      setMenuPos({ top, left: r.left, width: Math.max(r.width, 130) });
+    }
+    setOpen(o => !o);
+  }
+
+  return (
+    <div className="cc-lang-wrap" ref={wrapRef}>
+      <button ref={btnRef} className={`cc-lang-btn${open ? ' open' : ''}`} onClick={toggle} type="button">
+        <span>{value}</span>
+        <span className="cc-lang-chevron">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="cc-lang-menu" style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, minWidth: menuPos.width }}>
+          {LANGUAGES.map(l => (
+            <button
+              key={l}
+              className={`cc-lang-item${value === l ? ' active' : ''}`}
+              onClick={() => { onChange(l); setOpen(false); }}
+            >{l}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── New Segment Form ──────────────────────────────────────────
 function NewSegmentForm({ onConfirm, onCancel }) {
   const [name, setName]         = useState('');
@@ -315,9 +359,7 @@ function NewSegmentForm({ onConfirm, onCancel }) {
       <input className="cc-tab-new-input" placeholder="Segment name" value={name}
         onChange={e => setName(e.target.value)} autoFocus
         onKeyDown={e => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onCancel(); }} />
-      <select className="cc-tab-new-lang" value={language} onChange={e => setLanguage(e.target.value)}>
-        {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-      </select>
+      <CCLangSelect value={language} onChange={setLanguage} />
       <button className="cc-tab-new-confirm" onClick={submit}>Create</button>
       <button className="cc-tab-new-cancel" onClick={onCancel}>✕</button>
     </div>

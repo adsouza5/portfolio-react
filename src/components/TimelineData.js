@@ -4,6 +4,19 @@
 const timelineEntries = [
   {
     type: 'project',
+    title: 'Lens — Semantic Code Search Engine',
+    org: null,
+    date: '2026',
+    location: null,
+    description:
+      'Index any GitHub repository and query it in plain English. Code is chunked with tree-sitter (function/class level), embedded using your choice of model — jina-embeddings-v2-base-code (self-hosted), OpenAI text-embedding-3-small, or Ollama (fully local) — and stored in Qdrant for sub-second vector similarity search. Results include file path, line numbers, symbol name, and relevance score.',
+    tags: ['Python', 'FastAPI', 'Qdrant', 'tree-sitter', 'sentence-transformers', 'OpenAI', 'React', 'Cloud Run'],
+    link: 'https://github.com/adsouza5/lens-api',
+    status: null,
+    showcase: 'Lens',
+  },
+  {
+    type: 'project',
     title: 'Sentinel — Real-Time ML Inference Pipeline',
     org: null,
     date: '2026',

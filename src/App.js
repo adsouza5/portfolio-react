@@ -10,6 +10,7 @@ import './App.css';
 
 const MLPipelineShowcase = lazy(() => import('./components/MLPipelineShowcase'));
 const CodeCollab = lazy(() => import('./components/CodeCollab/CodeCollab'));
+const LensShowcase = lazy(() => import('./components/Lens/LensShowcase'));
 
 function Portfolio() {
   const [personalOpen, setPersonalOpen] = useState(false);
@@ -75,6 +76,10 @@ function App() {
       <Route
         path="/projects/codecollab"
         element={<ShowcasePage component={CodeCollab} />}
+      />
+      <Route
+        path="/projects/lens"
+        element={<ShowcasePage component={LensShowcase} />}
       />
     </Routes>
   );

@@ -1,0 +1,392 @@
+/* ── Layout ─────────────────────────────────────────────────── */
+.lens-root {
+  min-height: 100vh;
+  background: #060f0f;
+  color: #daeaea;
+  font-family: 'Roboto', sans-serif;
+  padding: 68px 28px 80px;
+}
+
+.lens-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.lens-back-btn {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(26,172,190,0.7);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 32px;
+  display: block;
+  transition: color 0.2s;
+}
+.lens-back-btn:hover { color: #1aacbe; }
+
+.lens-eyebrow {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(26,172,190,0.55);
+  margin-bottom: 12px;
+}
+
+.lens-title {
+  font-size: clamp(28px, 4.5vw, 44px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #daeaea;
+  margin: 0 0 12px;
+  line-height: 1.1;
+}
+
+.lens-subtitle {
+  font-size: 16px;
+  color: rgba(200,230,230,0.7);
+  line-height: 1.75;
+  max-width: 620px;
+  margin-bottom: 40px;
+}
+
+/* ── Glass card ─────────────────────────────────────────────── */
+.lens-card {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(23,126,137,0.22);
+  border-radius: 10px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.lens-card-title {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(26,172,190,0.7);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lens-card-title::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 14px;
+  background: #1aacbe;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(26,172,190,0.6);
+}
+
+/* ── Model selector ─────────────────────────────────────────── */
+.lens-model-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.lens-model-option {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(23,126,137,0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: left;
+}
+.lens-model-option:hover {
+  border-color: rgba(26,172,190,0.5);
+  background: rgba(26,172,190,0.06);
+}
+.lens-model-option.selected {
+  border-color: #1aacbe;
+  background: rgba(26,172,190,0.1);
+  box-shadow: 0 0 16px rgba(26,172,190,0.15);
+}
+
+.lens-model-name {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #daeaea;
+  margin-bottom: 4px;
+}
+.lens-model-detail {
+  font-size: 11px;
+  color: rgba(200,230,230,0.5);
+  line-height: 1.5;
+}
+.lens-model-badge {
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-top: 6px;
+}
+.lens-model-badge.free   { color: #34d399; background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); }
+.lens-model-badge.api    { color: #fbbf24; background: rgba(251,191,36,0.1);  border: 1px solid rgba(251,191,36,0.3); }
+.lens-model-badge.local  { color: #a78bfa; background: rgba(167,139,250,0.1); border: 1px solid rgba(167,139,250,0.3); }
+
+/* ── API key input ───────────────────────────────────────────── */
+.lens-api-key-row {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.lens-input {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(23,126,137,0.28);
+  border-radius: 5px;
+  color: #daeaea;
+  padding: 9px 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.lens-input:focus { border-color: rgba(26,172,190,0.7); }
+.lens-input::placeholder { color: rgba(200,230,230,0.3); }
+
+/* ── Repo URL row ───────────────────────────────────────────── */
+.lens-repo-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.lens-btn {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.lens-btn-primary {
+  background: #1aacbe;
+  color: #060f0f;
+}
+.lens-btn-primary:hover:not(:disabled) {
+  background: #1dc8de;
+  box-shadow: 0 0 18px rgba(26,172,190,0.45);
+}
+.lens-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Progress ───────────────────────────────────────────────── */
+.lens-progress-wrap {
+  margin-top: 16px;
+}
+.lens-progress-msg {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: rgba(26,172,190,0.85);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lens-spinner {
+  width: 10px; height: 10px;
+  border: 2px solid rgba(26,172,190,0.3);
+  border-top-color: #1aacbe;
+  border-radius: 50%;
+  animation: lens-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes lens-spin { to { transform: rotate(360deg); } }
+
+.lens-progress-bar-track {
+  height: 4px;
+  background: rgba(23,126,137,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.lens-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1aacbe, #34d399);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.lens-progress-stats {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: rgba(200,230,230,0.45);
+  margin-top: 6px;
+  display: flex;
+  gap: 20px;
+}
+
+.lens-done-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #34d399;
+  margin-top: 14px;
+}
+
+.lens-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(239,68,68,0.07);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #f87171;
+  margin-top: 14px;
+}
+
+/* ── Search ─────────────────────────────────────────────────── */
+.lens-search-row {
+  display: flex;
+  gap: 10px;
+}
+
+.lens-lang-select {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(23,126,137,0.28);
+  border-radius: 5px;
+  color: rgba(200,230,230,0.7);
+  padding: 9px 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ── Results ─────────────────────────────────────────────────── */
+.lens-results {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.lens-result-card {
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(23,126,137,0.2);
+  border-left: 3px solid #1aacbe;
+  border-radius: 7px;
+  overflow: hidden;
+  animation: lens-fadeup 0.25s ease both;
+}
+@keyframes lens-fadeup {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lens-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(26,172,190,0.05);
+  border-bottom: 1px solid rgba(23,126,137,0.15);
+  flex-wrap: wrap;
+}
+.lens-result-filepath {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #1aacbe;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lens-result-lines {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: rgba(200,230,230,0.4);
+  white-space: nowrap;
+}
+.lens-result-symbol {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: #a78bfa;
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 3px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.lens-result-score {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: rgba(52,211,153,0.7);
+  white-space: nowrap;
+}
+
+.lens-result-code {
+  margin: 0;
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(218,234,234,0.85);
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* ── Collections list ───────────────────────────────────────── */
+.lens-collections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.lens-collection-chip {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid rgba(23,126,137,0.3);
+  background: rgba(26,172,190,0.06);
+  color: rgba(200,230,230,0.6);
+  transition: all 0.15s;
+}
+.lens-collection-chip:hover,
+.lens-collection-chip.active {
+  border-color: #1aacbe;
+  color: #1aacbe;
+  background: rgba(26,172,190,0.12);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lens-root { padding: 56px 16px 60px; }
+  .lens-card { padding: 16px; }
+  .lens-model-grid { grid-template-columns: 1fr; }
+  .lens-repo-row,
+  .lens-search-row { flex-direction: column; }
+  .lens-btn { width: 100%; text-align: center; }
+}

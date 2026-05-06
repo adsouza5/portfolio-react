@@ -7,6 +7,7 @@ import './Projects.css';
 const SHOWCASE_ROUTES = {
   MLPipelineShowcase: '/projects/sentinel',
   CodeCollab: '/projects/codecollab',
+  Lens: '/projects/lens',
 };
 
 const TYPE_LABELS = {

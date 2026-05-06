@@ -13,10 +13,9 @@ function useIsMobile(breakpoint = 768) {
 
 // True on phones in both portrait (width ≤ 768) and landscape (height ≤ 500)
 function useIsPhoneViewport() {
-  const check = () => window.innerWidth <= 768 || window.innerHeight <= 500;
-  const [v, setV] = useState(check);
+  const [v, setV] = useState(() => window.innerWidth <= 768 || window.innerHeight <= 500);
   useEffect(() => {
-    const fn = () => setV(check());
+    const fn = () => setV(window.innerWidth <= 768 || window.innerHeight <= 500);
     window.addEventListener("resize", fn);
     return () => window.removeEventListener("resize", fn);
   }, []);
@@ -665,8 +664,7 @@ function SignalIntelligence({ results, stockData }) {
   );
 }
 
-function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, onRemoveCustom, disabled, stockData, onRealDataFetched }) {
-  const isMobile    = useIsMobile();
+function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, onRemoveCustom, disabled, stockData, onRealDataFetched, isMobile }) {
   const [showForm, setShowForm] = useState(false);
   const [ticker, setTicker]     = useState("");
   const [fetching, setFetching] = useState(false);
@@ -774,7 +772,6 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
         }}>+ Add Stock</button>
       ) : (
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          {/* Input row — stacks on mobile */}
           <div style={{ display:"flex", flexDirection:isMobile?"column":"row", alignItems:isMobile?"stretch":"center", gap:8 }}>
             <input
               placeholder="TICKER (e.g. GOOGL)"
@@ -782,7 +779,7 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
               value={ticker}
               onChange={e=>{ setTicker(e.target.value.toUpperCase().replace(/[^A-Z.]/g,"")); setQuote(null); setErr(""); }}
               onKeyDown={e=>{ if(e.key==="Enter") handleLookup(); }}
-              style={{ ...inputStyle, flex:isMobile?undefined:1, width:isMobile?"100%":180, letterSpacing:"1.5px", fontWeight:700, height:isMobile?42:undefined }}
+              style={{ ...inputStyle, flex:isMobile?undefined:1, width:isMobile?"100%":180, letterSpacing:"1.5px", fontWeight:700, height:isMobile?44:undefined }}
             />
             <div style={{ display:"flex", gap:8 }}>
               <button onClick={handleLookup} disabled={fetching||!ticker.trim()} style={{
@@ -792,14 +789,14 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
                 cursor: fetching||!ticker.trim() ? "not-allowed" : "pointer",
                 opacity: fetching||!ticker.trim() ? 0.5 : 1,
                 transition:"all 0.15s", flex:isMobile?1:undefined, minWidth:90,
-                height:isMobile?42:undefined,
+                height:isMobile?44:undefined,
               }}>
                 {fetching ? "Looking…" : "Lookup"}
               </button>
               <button onClick={handleCancel} style={{
                 fontFamily:F.mono, fontSize:12, padding:"7px 14px", borderRadius:4,
                 border:`1px solid ${C.border}`, background:"transparent", color:C.dim, cursor:"pointer",
-                height:isMobile?42:undefined,
+                height:isMobile?44:undefined,
               }}>Cancel</button>
             </div>
           </div>
@@ -814,7 +811,6 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
               border:`1px solid ${quote.simulated ? C.amber+"60" : C.borderBr}`,
               animation:"fadeUp 0.2s ease",
             }}>
-              {/* Ticker + status */}
               <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", flex:1 }}>
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:2 }}>
@@ -827,7 +823,6 @@ function StockSelector({ selectedTickers, onToggle, customStocks, onAddCustom, o
                   </div>
                   <div style={{ fontFamily:F.sans, fontSize:12, color:C.dim }}>{quote.simulated ? "Demo values — API unavailable" : "Real-time market data"}</div>
                 </div>
-                {/* Price + Volume inline */}
                 <div style={{ display:"flex", gap:16, marginLeft:isMobile?0:4 }}>
                   <div>
                     <div style={{ fontFamily:F.mono, fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:C.dim, marginBottom:2 }}>Price</div>
@@ -1283,6 +1278,7 @@ export default function MLPipelineShowcase() {
               disabled={running}
               stockData={stockData}
               onRealDataFetched={handleRealDataFetched}
+              isMobile={isMobile}
             />
 
             {/* Pipeline status */}

@@ -1114,12 +1114,12 @@ export default function MLPipelineShowcase() {
       <button
         onClick={() => navigate("/", { state:{ scrollTo:"projects" } })}
         style={{
-          position:"fixed", top:20, left:20, zIndex:100,
+          position:"fixed", top:isMobile?12:20, left:isMobile?12:20, zIndex:100,
           display:"inline-flex", alignItems:"center", gap:8,
-          fontFamily:F.mono, fontSize:12, letterSpacing:"2px", textTransform:"uppercase",
+          fontFamily:F.mono, fontSize:isMobile?10:12, letterSpacing:isMobile?"1.5px":"2px", textTransform:"uppercase",
           color:C.dim, background:"rgba(9,21,21,0.9)",
           border:`1px solid ${C.border}`, borderRadius:6,
-          padding:"9px 16px", cursor:"pointer", backdropFilter:"blur(16px)",
+          padding:isMobile?"6px 11px":"9px 16px", cursor:"pointer", backdropFilter:"blur(16px)",
           transition:"all 0.2s",
         }}
         onMouseEnter={e=>{e.currentTarget.style.color=C.text;e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.boxShadow=`0 0 20px ${C.glowSm}`;}}

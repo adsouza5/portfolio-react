@@ -714,4 +714,11 @@ a.lens-result-filepath:hover { color: #4dcfdf; text-decoration: underline; }
   .lens-search-row { flex-direction: column; }
   .lens-btn { width: 100%; }
   .lens-card-search::after { display: none; }
+  .lens-back-btn {
+    top: 12px;
+    left: 12px;
+    font-size: 10px;
+    padding: 6px 11px;
+    letter-spacing: 1.5px;
+  }
 }

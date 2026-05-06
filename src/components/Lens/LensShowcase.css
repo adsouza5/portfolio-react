@@ -21,14 +21,14 @@
   z-index: 0;
 }
 
-/* Ambient neon bleed matching portfolio */
+/* Ambient neon bleed */
 .lens-root::before {
   content: '';
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 80% 10%, rgba(23,126,137,0.08) 0%, transparent 55%),
-    radial-gradient(ellipse at 5% 80%,  rgba(219,58,52,0.05)  0%, transparent 50%);
+    radial-gradient(ellipse at 80% 10%, rgba(23,126,137,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse at 5% 80%,  rgba(219,58,52,0.06)  0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -56,7 +56,7 @@
   z-index: 1;
 }
 
-/* ── Back button — fixed pill, matches MLPipeline ───────────── */
+/* ── Back button — fixed pill ───────────────────────────────── */
 .lens-back-btn {
   position: fixed;
   top: 20px;
@@ -69,9 +69,9 @@
   font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(232,232,232,0.45);
-  background: rgba(9,21,21,0.9);
-  border: 1px solid rgba(23,126,137,0.22);
+  color: rgba(232,232,232,0.6);
+  background: rgba(9,21,21,0.92);
+  border: 1px solid rgba(23,126,137,0.35);
   border-radius: 6px;
   padding: 9px 16px;
   cursor: pointer;
@@ -85,12 +85,8 @@
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(23,126,137,0.65);
+  color: rgba(23,126,137,0.85);
   margin-bottom: 14px;
-}
-.lens-eyebrow span {
-  color: #177E89;
-  text-shadow: 0 0 8px rgba(23,126,137,0.7);
 }
 
 .lens-title {
@@ -101,13 +97,13 @@
   color: #E8E8E8;
   margin: 0 0 14px;
   line-height: 1.05;
-  text-shadow: 0 0 40px rgba(23,126,137,0.25);
+  text-shadow: 0 0 40px rgba(23,126,137,0.35);
 }
 
 .lens-subtitle {
   font-family: 'Segoe UI', system-ui, sans-serif;
   font-size: 16px;
-  color: rgba(232,232,232,0.65);
+  color: rgba(232,232,232,0.78);
   line-height: 1.85;
   max-width: 580px;
   margin-bottom: 48px;
@@ -115,8 +111,8 @@
 
 /* ── Cards ──────────────────────────────────────────────────── */
 .lens-card {
-  background: rgba(23,126,137,0.06);
-  border: 1px solid rgba(23,126,137,0.18);
+  background: rgba(23,126,137,0.10);
+  border: 1px solid rgba(23,126,137,0.30);
   border-radius: 8px;
   padding: 22px 26px;
   margin-bottom: 18px;
@@ -124,7 +120,7 @@
   transition: border-color 0.2s;
 }
 .lens-card:hover {
-  border-color: rgba(23,126,137,0.32);
+  border-color: rgba(23,126,137,0.50);
 }
 
 .lens-card-title {
@@ -132,7 +128,7 @@
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(23,126,137,0.7);
+  color: rgba(23,126,137,0.90);
   margin-bottom: 18px;
   display: flex;
   align-items: center;
@@ -151,14 +147,13 @@
 .lens-card-context {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
-  color: rgba(232,232,232,0.35);
+  color: rgba(232,232,232,0.55);
   letter-spacing: 0;
   text-transform: none;
   font-weight: 400;
 }
 
 /* ── Scan beam — unique Lens effect ────────────────────────── */
-/* Applied to the search card only */
 .lens-card-search {
   overflow: hidden;
 }
@@ -171,9 +166,9 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(23,126,137,0.07) 40%,
-    rgba(23,126,137,0.12) 50%,
-    rgba(23,126,137,0.07) 60%,
+    rgba(23,126,137,0.09) 40%,
+    rgba(23,126,137,0.15) 50%,
+    rgba(23,126,137,0.09) 60%,
     transparent 100%
   );
   transform: translateY(-100px);
@@ -187,7 +182,6 @@
   90%  { opacity: 1; }
   100% { transform: translateY(calc(100% + 200px)); opacity: 0; }
 }
-/* Make card content sit above the beam */
 .lens-card-search > * { position: relative; z-index: 1; }
 
 /* ── Model selector ─────────────────────────────────────────── */
@@ -197,8 +191,8 @@
   gap: 10px;
 }
 .lens-model-option {
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(23,126,137,0.15);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(23,126,137,0.28);
   border-radius: 6px;
   padding: 14px 14px 12px;
   cursor: pointer;
@@ -206,25 +200,25 @@
   transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
 }
 .lens-model-option:hover {
-  border-color: rgba(23,126,137,0.4);
-  background: rgba(23,126,137,0.06);
+  border-color: rgba(23,126,137,0.55);
+  background: rgba(23,126,137,0.10);
 }
 .lens-model-option.selected {
   border-color: #177E89;
-  background: rgba(23,126,137,0.1);
-  box-shadow: 0 0 16px rgba(23,126,137,0.18);
+  background: rgba(23,126,137,0.15);
+  box-shadow: 0 0 16px rgba(23,126,137,0.22);
 }
 .lens-model-name {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
   font-weight: 700;
-  color: #daeaea;
+  color: #e8f4f4;
   margin-bottom: 5px;
   letter-spacing: 0.5px;
 }
 .lens-model-detail {
   font-size: 11px;
-  color: rgba(232,232,232,0.45);
+  color: rgba(232,232,232,0.62);
   line-height: 1.5;
   margin-bottom: 8px;
 }
@@ -237,9 +231,9 @@
   padding: 2px 7px;
   border-radius: 3px;
 }
-.lens-model-badge.free  { color: #34d399; background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.28); }
-.lens-model-badge.api   { color: #fbbf24; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.28); }
-.lens-model-badge.local { color: #c084fc; background: rgba(192,132,252,0.08); border: 1px solid rgba(192,132,252,0.28); }
+.lens-model-badge.free  { color: #34d399; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.38); }
+.lens-model-badge.api   { color: #fbbf24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.38); }
+.lens-model-badge.local { color: #c084fc; background: rgba(192,132,252,0.12); border: 1px solid rgba(192,132,252,0.38); }
 
 /* ── Inputs ─────────────────────────────────────────────────── */
 .lens-api-key-row {
@@ -249,8 +243,8 @@
   width: 100%;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 13px;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(23,126,137,0.22);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(23,126,137,0.35);
   border-radius: 5px;
   color: #E8E8E8;
   padding: 10px 14px;
@@ -259,10 +253,10 @@
   box-sizing: border-box;
 }
 .lens-input:focus {
-  border-color: rgba(23,126,137,0.65);
-  box-shadow: 0 0 0 2px rgba(23,126,137,0.1);
+  border-color: rgba(23,126,137,0.75);
+  box-shadow: 0 0 0 2px rgba(23,126,137,0.14);
 }
-.lens-input::placeholder { color: rgba(232,232,232,0.28); }
+.lens-input::placeholder { color: rgba(232,232,232,0.40); }
 
 /* ── Repo row ───────────────────────────────────────────────── */
 .lens-repo-row {
@@ -295,24 +289,24 @@
   background: #1aacbe;
   box-shadow: 0 0 18px rgba(23,126,137,0.55);
 }
-.lens-btn-primary:disabled { opacity: 0.38; cursor: not-allowed; }
+.lens-btn-primary:disabled { opacity: 0.40; cursor: not-allowed; }
 
 /* ── Banners ────────────────────────────────────────────────── */
 .lens-info-banner {
   padding: 10px 14px;
-  background: rgba(251,191,36,0.05);
-  border: 1px solid rgba(251,191,36,0.2);
+  background: rgba(251,191,36,0.07);
+  border: 1px solid rgba(251,191,36,0.30);
   border-radius: 5px;
   font-size: 12px;
-  color: rgba(251,191,36,0.75);
+  color: rgba(251,191,36,0.90);
   line-height: 1.65;
   margin-top: 14px;
 }
 .lens-done-banner {
   margin-top: 14px;
   padding: 10px 14px;
-  background: rgba(52,211,153,0.05);
-  border: 1px solid rgba(52,211,153,0.25);
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.35);
   border-radius: 5px;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
@@ -324,8 +318,8 @@
 .lens-error-banner {
   margin-top: 14px;
   padding: 10px 14px;
-  background: rgba(219,58,52,0.06);
-  border: 1px solid rgba(219,58,52,0.25);
+  background: rgba(219,58,52,0.08);
+  border: 1px solid rgba(219,58,52,0.35);
   border-radius: 5px;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
@@ -337,7 +331,7 @@
 .lens-muted {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
-  color: rgba(232,232,232,0.28);
+  color: rgba(232,232,232,0.50);
   line-height: 1.6;
 }
 
@@ -346,7 +340,7 @@
 .lens-progress-msg {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
-  color: rgba(23,126,137,0.9);
+  color: rgba(23,126,137,1.0);
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -354,7 +348,7 @@
 }
 .lens-spinner {
   width: 10px; height: 10px;
-  border: 2px solid rgba(23,126,137,0.25);
+  border: 2px solid rgba(23,126,137,0.35);
   border-top-color: #177E89;
   border-radius: 50%;
   animation: lens-spin 0.8s linear infinite;
@@ -364,7 +358,7 @@
 
 .lens-progress-bar-track {
   height: 3px;
-  background: rgba(23,126,137,0.1);
+  background: rgba(23,126,137,0.18);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -378,7 +372,7 @@
 .lens-progress-stats {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
-  color: rgba(232,232,232,0.35);
+  color: rgba(232,232,232,0.55);
   margin-top: 6px;
   display: flex;
   gap: 18px;
@@ -395,23 +389,23 @@
   padding: 4px 12px;
   border-radius: 3px;
   cursor: pointer;
-  border: 1px solid rgba(23,126,137,0.22);
-  background: rgba(23,126,137,0.05);
-  color: rgba(232,232,232,0.5);
+  border: 1px solid rgba(23,126,137,0.32);
+  background: rgba(23,126,137,0.08);
+  color: rgba(232,232,232,0.68);
   transition: all 0.15s;
 }
-.lens-collection-chip:hover { border-color: rgba(23,126,137,0.5); color: rgba(232,232,232,0.85); }
+.lens-collection-chip:hover { border-color: rgba(23,126,137,0.60); color: rgba(232,232,232,0.92); }
 .lens-collection-chip.active {
   border-color: #177E89;
   color: #E8E8E8;
-  background: rgba(23,126,137,0.12);
-  box-shadow: 0 0 8px rgba(23,126,137,0.2);
+  background: rgba(23,126,137,0.18);
+  box-shadow: 0 0 8px rgba(23,126,137,0.28);
 }
 .lens-delete-btn {
   font-size: 9px;
   background: none;
   border: none;
-  color: rgba(232,232,232,0.2);
+  color: rgba(232,232,232,0.38);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 2px;
@@ -429,16 +423,16 @@
 .lens-lang-select {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(23,126,137,0.22);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(23,126,137,0.35);
   border-radius: 5px;
-  color: rgba(232,232,232,0.6);
+  color: rgba(232,232,232,0.78);
   padding: 10px 10px;
   outline: none;
   cursor: pointer;
   transition: border-color 0.15s;
 }
-.lens-lang-select:focus { border-color: rgba(23,126,137,0.55); }
+.lens-lang-select:focus { border-color: rgba(23,126,137,0.65); }
 
 /* ── Results ─────────────────────────────────────────────────── */
 .lens-results { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
@@ -447,21 +441,21 @@
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 1px;
-  color: rgba(232,232,232,0.35);
+  color: rgba(232,232,232,0.55);
   margin-bottom: 4px;
   text-transform: uppercase;
 }
 .lens-repo-link {
-  color: rgba(23,126,137,0.7);
+  color: rgba(23,126,137,0.90);
   text-decoration: none;
   text-transform: none;
   letter-spacing: 0;
 }
-.lens-repo-link:hover { color: #177E89; }
+.lens-repo-link:hover { color: #1aacbe; }
 
 .lens-result-card {
-  background: rgba(0,0,0,0.22);
-  border: 1px solid rgba(23,126,137,0.14);
+  background: rgba(0,0,0,0.32);
+  border: 1px solid rgba(23,126,137,0.25);
   border-left: 3px solid #177E89;
   border-radius: 6px;
   overflow: hidden;
@@ -469,9 +463,9 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .lens-result-card:hover {
-  border-color: rgba(23,126,137,0.45);
+  border-color: rgba(23,126,137,0.55);
   border-left-color: #1aacbe;
-  box-shadow: 0 0 18px rgba(23,126,137,0.1);
+  box-shadow: 0 0 18px rgba(23,126,137,0.14);
 }
 @keyframes lens-fadeup {
   from { opacity: 0; transform: translateY(6px); }
@@ -483,14 +477,14 @@
   align-items: center;
   gap: 10px;
   padding: 9px 14px;
-  background: rgba(23,126,137,0.04);
-  border-bottom: 1px solid rgba(23,126,137,0.1);
+  background: rgba(23,126,137,0.08);
+  border-bottom: 1px solid rgba(23,126,137,0.18);
   flex-wrap: wrap;
 }
 .lens-result-filepath, a.lens-result-filepath {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
-  color: #177E89;
+  color: #1aacbe;
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -499,14 +493,14 @@
   text-decoration: none;
   transition: color 0.15s;
 }
-a.lens-result-filepath:hover { color: #1aacbe; text-decoration: underline; }
+a.lens-result-filepath:hover { color: #4dcfdf; text-decoration: underline; }
 
 .lens-result-symbol {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   color: #c084fc;
-  background: rgba(192,132,252,0.08);
-  border: 1px solid rgba(192,132,252,0.22);
+  background: rgba(192,132,252,0.12);
+  border: 1px solid rgba(192,132,252,0.32);
   border-radius: 3px;
   padding: 1px 7px;
   white-space: nowrap;
@@ -514,23 +508,23 @@ a.lens-result-filepath:hover { color: #1aacbe; text-decoration: underline; }
 .lens-result-lines {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
-  color: rgba(232,232,232,0.35);
+  color: rgba(232,232,232,0.55);
   white-space: nowrap;
 }
 .lens-result-score {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
-  color: rgba(52,211,153,0.7);
+  color: rgba(52,211,153,0.90);
   white-space: nowrap;
 }
 
 .lens-result-code {
   margin: 0;
   padding: 14px 16px;
-  font-family: 'JetBrains Mono', 'Source Code Pro', 'JetBrains Mono', 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
   line-height: 1.75;
-  color: rgba(232,232,232,0.78);
+  color: rgba(232,232,232,0.88);
   overflow-x: auto;
   white-space: pre;
   max-height: 240px;
@@ -541,9 +535,9 @@ a.lens-result-filepath:hover { color: #1aacbe; text-decoration: underline; }
 /* ── Copy button ────────────────────────────────────────────── */
 .lens-copy-btn {
   background: none;
-  border: 1px solid rgba(23,126,137,0.2);
+  border: 1px solid rgba(23,126,137,0.35);
   border-radius: 3px;
-  color: rgba(232,232,232,0.3);
+  color: rgba(232,232,232,0.50);
   font-size: 12px;
   cursor: pointer;
   padding: 1px 7px;
@@ -556,7 +550,7 @@ a.lens-result-filepath:hover { color: #1aacbe; text-decoration: underline; }
 /* ── Divider ────────────────────────────────────────────────── */
 .lens-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(23,126,137,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(23,126,137,0.4), transparent);
   margin: 4px 0 18px;
 }
 

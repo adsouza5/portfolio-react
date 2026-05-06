@@ -1,16 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap');
+
 /* ── Root / atmosphere ──────────────────────────────────────── */
 .lens-root {
   min-height: 100vh;
   background-color: #091515;
-  background-image:
-    linear-gradient(rgba(23,126,137,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23,126,137,0.04) 1px, transparent 1px);
-  background-size: 50px 50px;
   color: #E8E8E8;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Segoe UI', system-ui, sans-serif;
   padding: 72px 28px 100px;
   position: relative;
   overflow: hidden;
+}
+
+/* Hex grid SVG — fixed, full viewport */
+.lens-hex-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Ambient neon bleed matching portfolio */
@@ -48,29 +56,32 @@
   z-index: 1;
 }
 
-/* ── Back button ────────────────────────────────────────────── */
+/* ── Back button — fixed pill, matches MLPipeline ───────────── */
 .lens-back-btn {
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(23,126,137,0.65);
-  background: none;
-  border: none;
+  color: rgba(232,232,232,0.45);
+  background: rgba(9,21,21,0.9);
+  border: 1px solid rgba(23,126,137,0.22);
+  border-radius: 6px;
+  padding: 9px 16px;
   cursor: pointer;
-  padding: 0;
-  margin-bottom: 36px;
-  display: block;
-  transition: color 0.2s, text-shadow 0.2s;
-}
-.lens-back-btn:hover {
-  color: #177E89;
-  text-shadow: 0 0 8px rgba(23,126,137,0.7);
+  backdrop-filter: blur(16px);
+  transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
 /* ── Header ─────────────────────────────────────────────────── */
 .lens-eyebrow {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -83,6 +94,7 @@
 }
 
 .lens-title {
+  font-family: 'Rajdhani', 'Franklin Gothic Medium', Arial, sans-serif;
   font-size: clamp(32px, 5vw, 52px);
   font-weight: 700;
   letter-spacing: 2px;
@@ -93,9 +105,10 @@
 }
 
 .lens-subtitle {
-  font-size: 15px;
-  color: rgba(232,232,232,0.6);
-  line-height: 1.8;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 16px;
+  color: rgba(232,232,232,0.65);
+  line-height: 1.85;
   max-width: 580px;
   margin-bottom: 48px;
 }
@@ -115,7 +128,7 @@
 }
 
 .lens-card-title {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -136,7 +149,7 @@
 }
 
 .lens-card-context {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   color: rgba(232,232,232,0.35);
   letter-spacing: 0;
@@ -202,7 +215,7 @@
   box-shadow: 0 0 16px rgba(23,126,137,0.18);
 }
 .lens-model-name {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
   font-weight: 700;
   color: #daeaea;
@@ -217,7 +230,7 @@
 }
 .lens-model-badge {
   display: inline-block;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 9px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -234,7 +247,7 @@
 }
 .lens-input {
   width: 100%;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 13px;
   background: rgba(0,0,0,0.3);
   border: 1px solid rgba(23,126,137,0.22);
@@ -261,7 +274,7 @@
 
 /* ── Buttons ────────────────────────────────────────────────── */
 .lens-btn {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
@@ -301,7 +314,7 @@
   background: rgba(52,211,153,0.05);
   border: 1px solid rgba(52,211,153,0.25);
   border-radius: 5px;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
   color: #34d399;
   display: flex;
@@ -314,7 +327,7 @@
   background: rgba(219,58,52,0.06);
   border: 1px solid rgba(219,58,52,0.25);
   border-radius: 5px;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
   color: #f87171;
   display: flex;
@@ -322,7 +335,7 @@
   gap: 8px;
 }
 .lens-muted {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
   color: rgba(232,232,232,0.28);
   line-height: 1.6;
@@ -331,7 +344,7 @@
 /* ── Progress ───────────────────────────────────────────────── */
 .lens-progress-wrap { margin-top: 14px; }
 .lens-progress-msg {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
   color: rgba(23,126,137,0.9);
   margin-bottom: 10px;
@@ -363,7 +376,7 @@
   box-shadow: 0 0 8px rgba(23,126,137,0.6);
 }
 .lens-progress-stats {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   color: rgba(232,232,232,0.35);
   margin-top: 6px;
@@ -376,7 +389,7 @@
 .lens-chip-row    { display: flex; align-items: center; gap: 3px; }
 
 .lens-collection-chip {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 0.5px;
   padding: 4px 12px;
@@ -411,10 +424,10 @@
   display: flex;
   gap: 10px;
 }
-.lens-search-row .lens-input { flex: 1; width: auto; }
+.lens-search-row .lens-input { flex: 1; width: auto; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
 
 .lens-lang-select {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
   background: rgba(0,0,0,0.3);
   border: 1px solid rgba(23,126,137,0.22);
@@ -431,7 +444,7 @@
 .lens-results { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
 
 .lens-results-header {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 1px;
   color: rgba(232,232,232,0.35);
@@ -475,7 +488,7 @@
   flex-wrap: wrap;
 }
 .lens-result-filepath, a.lens-result-filepath {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 11px;
   color: #177E89;
   flex: 1;
@@ -489,7 +502,7 @@
 a.lens-result-filepath:hover { color: #1aacbe; text-decoration: underline; }
 
 .lens-result-symbol {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   color: #c084fc;
   background: rgba(192,132,252,0.08);
@@ -499,13 +512,13 @@ a.lens-result-filepath:hover { color: #1aacbe; text-decoration: underline; }
   white-space: nowrap;
 }
 .lens-result-lines {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   color: rgba(232,232,232,0.35);
   white-space: nowrap;
 }
 .lens-result-score {
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
   font-size: 10px;
   color: rgba(52,211,153,0.7);
   white-space: nowrap;
@@ -514,7 +527,7 @@ a.lens-result-filepath:hover { color: #1aacbe; text-decoration: underline; }
 .lens-result-code {
   margin: 0;
   padding: 14px 16px;
-  font-family: 'JetBrains Mono', 'Source Code Pro', 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Source Code Pro', 'JetBrains Mono', 'Courier New', monospace;
   font-size: 12px;
   line-height: 1.75;
   color: rgba(232,232,232,0.78);

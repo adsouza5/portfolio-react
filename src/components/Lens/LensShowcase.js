@@ -325,11 +325,30 @@ export default function LensShowcase() {
 
   return (
     <div className="lens-root">
-      <div className="lens-inner">
-        <button className="lens-back-btn" onClick={() => navigate('/', { state: { scrollTo: 'projects' } })}>
-          ← Timeline
-        </button>
+      {/* Hex grid — matches portfolio design language */}
+      <svg className="lens-hex-bg" aria-hidden="true">
+        <defs>
+          <pattern id="lhex"  x="0"  y="0"  width="38" height="66" patternUnits="userSpaceOnUse">
+            <path d="M19 11 L38 22 L38 44 L19 55 L0 44 L0 22 Z" fill="none" stroke="rgba(23,126,137,0.13)" strokeWidth="0.7"/>
+          </pattern>
+          <pattern id="lhex2" x="19" y="33" width="38" height="66" patternUnits="userSpaceOnUse">
+            <path d="M19 11 L38 22 L38 44 L19 55 L0 44 L0 22 Z" fill="none" stroke="rgba(23,126,137,0.13)" strokeWidth="0.7"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#lhex)"/>
+        <rect width="100%" height="100%" fill="url(#lhex2)"/>
+      </svg>
 
+      <button
+        className="lens-back-btn"
+        onClick={() => navigate('/', { state: { scrollTo: 'projects' } })}
+        onMouseEnter={e => { e.currentTarget.style.color='#E8E8E8'; e.currentTarget.style.borderColor='#177E89'; e.currentTarget.style.boxShadow='0 0 20px rgba(23,126,137,0.35)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color=''; e.currentTarget.style.borderColor=''; e.currentTarget.style.boxShadow=''; }}
+      >
+        ← Timeline
+      </button>
+
+      <div className="lens-inner">
         <div className="lens-eyebrow">◈ Project · 2026</div>
         <h1 className="lens-title">Lens</h1>
         <p className="lens-subtitle">

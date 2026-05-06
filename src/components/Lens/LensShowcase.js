@@ -7,7 +7,7 @@ const API = process.env.REACT_APP_LENS_API_URL || '';
 const MODELS = [
   {
     id: 'local',
-    name: 'jina-code-v2',
+    name: 'all-MiniLM-L6-v2',
     detail: 'Runs in the backend container — no setup needed',
     badge: 'free',
     badgeLabel: 'Free',

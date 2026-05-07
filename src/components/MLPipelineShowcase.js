@@ -61,12 +61,12 @@ const STAGES = [
 
 /* fallback prices shown before real data loads */
 const DEFAULT_STOCKS = [
-  { ticker:"AAPL", price:198.5,  volume:12400000 },
-  { ticker:"TSLA", price:245.2,  volume:38200000 },
-  { ticker:"MSFT", price:412.8,  volume:8900000  },
-  { ticker:"NVDA", price:875.3,  volume:54100000 },
-  { ticker:"AMZN", price:186.4,  volume:15700000 },
-  { ticker:"META", price:502.1,  volume:22300000 },
+  { ticker:"AAPL", price:211.0,  volume:14200000 },
+  { ticker:"TSLA", price:278.0,  volume:41000000 },
+  { ticker:"MSFT", price:432.0,  volume:9800000  },
+  { ticker:"NVDA", price:112.0,  volume:48000000 },
+  { ticker:"AMZN", price:205.0,  volume:17500000 },
+  { ticker:"META", price:585.0,  volume:19800000 },
 ];
 
 const ARCH = [
@@ -887,15 +887,15 @@ export default function MLPipelineShowcase() {
       .catch(() => {});
   }, []);
 
-  /* Fetch all default tickers when simulation tab first opens */
+  /* Fetch real-time prices on mount so ticker chips are never stale */
   useEffect(() => {
-    if (view !== "simulation" || fetchedRef.current || !API_URL) return;
+    if (fetchedRef.current || !API_URL) return;
     fetchedRef.current = true;
     setDataStatus("loading");
     fetchAllTwelveData(DEFAULT_STOCKS.map(s => s.ticker))
       .then(data => { setStockData(prev => ({ ...prev, ...data })); setDataStatus("ready"); })
       .catch(() => setDataStatus("error"));
-  }, [view]);
+  }, []);
 
   const handleRealDataFetched = useCallback((data) => {
     setStockData(prev => ({ ...prev, [data.ticker]: data }));

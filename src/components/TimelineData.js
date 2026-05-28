@@ -48,7 +48,7 @@ const timelineEntries = [
     date: "Mar '24 – Present",
     location: 'New York, NY',
     description:
-      'Engineered a production-grade OCR pipeline (Python, OpenCV, Tesseract) increasing digitization throughput by 40%. Owned end-to-end frontend delivery for a large-scale enterprise client — scoping and delivering 350+ feature requests directly with stakeholders. Spearheaded Java → Kotlin modernization cutting build time by 25% and maintainability overhead by 20%.',
+      'Engineered a production-grade OCR pipeline (Python, OpenCV, Tesseract) increasing digitization throughput by 40%. Delivered a high-priority client demo under a one-week deadline — owning the React frontend layer while coordinating cross-functional execution to ship on time. Owned end-to-end frontend delivery for a large-scale enterprise client — scoping and delivering 350+ feature requests directly with stakeholders. Spearheaded Java → Kotlin modernization cutting build time by 25% and maintainability overhead by 20%.',
     tags: ['Python', 'OpenCV', 'Tesseract', 'React', 'Node.js', 'Kotlin', 'Java'],
     link: null,
     status: null,

@@ -2,10 +2,11 @@ import React from 'react';
 import './Skills.css';
 
 const SKILLS = [
-  'Kotlin', 'Java', 'Python', 'JavaScript', 'C/C++', 'SQL', 'Bash',
-  'React', 'React Native', 'Node.js', 'Jetpack Compose', 'D3.js',
-  'Firebase', 'AWS', 'WebRTC', 'REST APIs', 'Git', 'OpenCV',
-  'Agile', 'CI/CD',
+  'Go', 'Python', 'TypeScript', 'JavaScript', 'Kotlin', 'Java', 'SQL', 'Bash',
+  'React', 'React Native', 'Node.js', 'FastAPI',
+  'GCP', 'AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD',
+  'PostgreSQL', 'Redis', 'Firebase',
+  'scikit-learn', 'Qdrant', 'OpenAI API', 'REST APIs', 'Git',
 ];
 
 const Skills = () => (

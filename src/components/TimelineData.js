@@ -4,6 +4,19 @@
 const timelineEntries = [
   {
     type: 'project',
+    title: 'Prism — API Gateway with Auth & Rate Limiting',
+    org: null,
+    date: '2026',
+    location: null,
+    description:
+      'Production-grade API gateway with JWT authentication, per-client sliding-window rate limiting, and intelligent request routing. Built in Go with a reverse proxy core, a WebSocket-powered live admin dashboard, and a React UI showing real-time traffic, client quota usage, and JWT token inspection. Deployed on Cloud Run.',
+    tags: ['Go', 'JWT', 'Rate Limiting', 'Reverse Proxy', 'WebSockets', 'React', 'Cloud Run', 'Docker'],
+    link: 'https://github.com/adsouza5/prism-api',
+    status: null,
+    showcase: 'Prism',
+  },
+  {
+    type: 'project',
     title: 'Lens — Semantic Code Search Engine',
     org: null,
     date: '2026',
@@ -35,8 +48,8 @@ const timelineEntries = [
     date: "Mar '24 – Present",
     location: 'New York, NY',
     description:
-      'Optimised mobile app efficiency by 25% and maintainability by 20% migrating Java to Kotlin. Built advanced Jetpack Compose UI features including dark mode and a redesigned settings page, lifting user engagement 15%. Developed a secure Kotlin widget for card data display and leveraged Python with Tesseract and OpenCV for structured image-to-JSON text extraction.',
-    tags: ['Kotlin', 'Jetpack Compose', 'Java', 'Python', 'OpenCV', 'Android'],
+      'Engineered a production-grade OCR pipeline (Python, OpenCV, Tesseract) increasing digitization throughput by 40%. Owned end-to-end frontend delivery for a large-scale enterprise client — scoping and delivering 350+ feature requests directly with stakeholders. Spearheaded Java → Kotlin modernization cutting build time by 25% and maintainability overhead by 20%.',
+    tags: ['Python', 'OpenCV', 'Tesseract', 'React', 'Node.js', 'Kotlin', 'Java'],
     link: null,
     status: null,
   },

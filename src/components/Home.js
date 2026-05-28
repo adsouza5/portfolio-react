@@ -87,14 +87,14 @@ const Home = () => (
         Adam Dsouza
       </a>
 
-      <p className="hero-role">Software Engineer</p>
+      <p className="hero-role">Cloud &amp; AI Engineer</p>
 
       <p className="hero-bio">
-        Software engineer based in the NYC area, currently at Synechron.
-        I'm drawn to large-scale, industrial-grade systems — the kind built
-        to handle real load, real failure, and real complexity. Deeply
-        interested in AI/ML and cloud architecture, and how they come
-        together to power the next generation of software.
+        Full-stack engineer specializing in cloud-native AI/ML systems and
+        distributed backends — currently building production infrastructure
+        at Synechron. I build systems that connect technical architecture
+        to business outcomes: ML pipelines, API gateways, semantic search
+        — designed for real load and real complexity.
       </p>
 
       <div className="hero-ctas">
@@ -110,13 +110,6 @@ const Home = () => (
           Resume ↗
         </a>
       </div>
-
-      <p className="hero-quote">
-        <i>
-          Code is the canvas, curiosity the brush —<br />
-          innovation is what you create when you dare to wonder.
-        </i>
-      </p>
     </div>
   </section>
 );

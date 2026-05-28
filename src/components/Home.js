@@ -87,7 +87,7 @@ const Home = () => (
         Adam Dsouza
       </a>
 
-      <p className="hero-role">Cloud &amp; AI Engineer</p>
+      <p className="hero-role">Full-Stack Engineer · Cloud &amp; AI</p>
 
       <p className="hero-bio">
         Full-stack engineer specializing in cloud-native AI/ML systems and

@@ -35,7 +35,7 @@ const Footer = () => (
     </div>
 
     <div className="footer-bottom">
-      <span className="footer-copy">© 2025 Adam Dsouza</span>
+      <span className="footer-copy">© 2026 Adam Dsouza</span>
       <span className="footer-built">Built with React</span>
     </div>
   </footer>

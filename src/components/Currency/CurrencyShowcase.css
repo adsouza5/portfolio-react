@@ -306,6 +306,11 @@
   color: #ef4444;
 }
 
+.fx-mic--busy {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Pulsing ring while listening */
 .fx-mic--listening::after {
   content: '';
@@ -354,6 +359,10 @@
   padding: 4px 16px 0;
   min-height: 18px;
   font-style: italic;
+}
+
+.fx-transcript--recording {
+  color: #ef4444;
 }
 
 /* ── Responsive ─────────────────────────────────────────────────── */

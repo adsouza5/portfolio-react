@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useWhisper } from './useWhisper';
 import './CurrencyShowcase.css';
 
 // ── Currency name → ISO code map ─────────────────────────────────
@@ -66,25 +67,16 @@ function formatAmount(n, code) {
 
 function parseQuery(text) {
   const s = text.toLowerCase().replace(/[,]/g, '');
-
-  // Build alternation of all known names + 3-letter codes
   const names = Object.keys(CURRENCY_MAP)
-    .sort((a, b) => b.length - a.length) // longest first so "canadian dollar" beats "dollar"
+    .sort((a, b) => b.length - a.length)
     .map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
-  const codePattern = '[a-z]{3}';
-  const currencyPattern = `(?:${names}|${codePattern})`;
-
+  const currencyPattern = `(?:${names}|[a-z]{3})`;
   const re = new RegExp(
-    `(\\d+(?:\\.\\d+)?)\\s+(${currencyPattern})\\s+(?:to|in|into)\\s+(${currencyPattern})`
-  );
-  const re2 = new RegExp(
     `(?:convert|change|exchange)?\\s*(\\d+(?:\\.\\d+)?)\\s+(${currencyPattern})\\s+(?:to|in|into)\\s+(${currencyPattern})`
   );
-
-  const m = s.match(re2) || s.match(re);
+  const m = s.match(re);
   if (!m) return null;
-
   const amount = parseFloat(m[1]);
   const from = resolveCurrency(m[2]);
   const to = resolveCurrency(m[3]);
@@ -93,12 +85,11 @@ function parseQuery(text) {
 }
 
 async function fetchConversion(amount, from, to) {
-  const url = `https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Rate fetch failed: ${res.status}`);
+  const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`);
+  if (!res.ok) throw new Error(`${res.status}`);
   const data = await res.json();
   const result = data.rates[to];
-  if (result === undefined) throw new Error(`Unsupported pair: ${from}/${to}`);
+  if (result === undefined) throw new Error(`Unsupported pair`);
   return { result, rate: result / amount, date: data.date };
 }
 
@@ -112,61 +103,24 @@ const WELCOME = {
   text: 'Ask me to convert any currency — type or speak naturally.',
 };
 
+const MIC_LABEL = {
+  idle: 'Speak',
+  loading: 'Loading model…',
+  recording: 'Stop recording',
+  transcribing: 'Transcribing…',
+};
+
 export default function CurrencyShowcase() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([WELCOME]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [speechSupported, setSpeechSupported] = useState(true);
   const chatEndRef = useRef(null);
-  const recognitionRef = useRef(null);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { setSpeechSupported(false); return; }
-
-    const rec = new SR();
-    rec.continuous = false;
-    rec.interimResults = true;
-    rec.lang = 'en-US';
-
-    let finalText = '';
-
-    rec.onstart = () => { setListening(true); finalText = ''; };
-
-    rec.onresult = (e) => {
-      let interim = '';
-      finalText = '';
-      for (const result of e.results) {
-        if (result.isFinal) finalText += result[0].transcript;
-        else interim += result[0].transcript;
-      }
-      setTranscript(finalText || interim);
-      if (finalText) setInput(finalText.trim());
-    };
-
-    rec.onend = () => {
-      setListening(false);
-      setTranscript('');
-      if (finalText.trim()) {
-        handleSend(finalText.trim());
-        finalText = '';
-      }
-    };
-
-    rec.onerror = () => { setListening(false); setTranscript(''); };
-
-    recognitionRef.current = rec;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
-
-  const addMessage = (msg) => setMessages(prev => [...prev, { id: mkId(), ...msg }]);
+  const addMessage = useCallback((msg) => {
+    setMessages(prev => [...prev, { id: mkId(), ...msg }]);
+  }, []);
 
   const handleSend = useCallback(async (text) => {
     const q = (text ?? input).trim();
@@ -178,11 +132,7 @@ export default function CurrencyShowcase() {
 
     const parsed = parseQuery(q);
     if (!parsed) {
-      addMessage({
-        role: 'bot',
-        type: 'error',
-        text: 'Try something like "100 USD to EUR" or "50 pounds to yen".',
-      });
+      addMessage({ role: 'bot', type: 'error', text: 'Try something like "100 USD to EUR" or "50 pounds to yen".' });
       return;
     }
 
@@ -195,32 +145,31 @@ export default function CurrencyShowcase() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [input, loading, addMessage]);
 
-  const toggleMic = () => {
-    const rec = recognitionRef.current;
-    if (!rec) return;
-    if (listening) {
-      rec.stop();
-    } else {
-      setInput('');
-      rec.start();
-    }
-  };
+  const { state: whisperState, loadPct, toggle: toggleMic } = useWhisper({
+    onResult: useCallback((text) => {
+      setInput(text);
+      handleSend(text);
+    }, [handleSend]),
+    onError: useCallback((msg) => {
+      addMessage({ role: 'bot', type: 'error', text: msg });
+    }, [addMessage]),
+  });
 
-  const handleFlip = async (msg) => {
-    if (loading) return;
-    const q = `${msg.result.toFixed(2)} ${msg.to} to ${msg.from}`;
-    handleSend(q);
-  };
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
+  const micBusy = whisperState !== 'idle';
+  const micActive = whisperState === 'recording';
+
   return (
     <div className="fx-root">
-      {/* Nav */}
       <nav className="fx-nav">
         <button className="fx-back" onClick={() => navigate('/')}>← Back</button>
         <span className="fx-nav-title">Currency Converter</span>
@@ -228,13 +177,11 @@ export default function CurrencyShowcase() {
       </nav>
 
       <div className="fx-layout">
-        {/* Header */}
         <header className="fx-header">
           <h1>Currency Converter</h1>
           <p>Type or speak — live exchange rates, any pair</p>
         </header>
 
-        {/* Chat */}
         <div className="fx-chat">
           {messages.map(msg => (
             <div key={msg.id} className={`fx-msg fx-msg--${msg.role}`}>
@@ -248,21 +195,13 @@ export default function CurrencyShowcase() {
                   </div>
                 </div>
               )}
-
-              {msg.type === 'text' && (
-                <div className="fx-bubble">{msg.text}</div>
-              )}
-
-              {msg.type === 'error' && (
-                <div className="fx-bubble fx-error">{msg.text}</div>
-              )}
-
+              {msg.type === 'text' && <div className="fx-bubble">{msg.text}</div>}
+              {msg.type === 'error' && <div className="fx-bubble fx-error">{msg.text}</div>}
               {msg.type === 'result' && (
                 <div className="fx-bubble">
                   <div className="fx-result">
                     <div className="fx-result-amount">
-                      {formatAmount(msg.result, msg.to)}{' '}
-                      <span>{msg.to}</span>
+                      {formatAmount(msg.result, msg.to)} <span>{msg.to}</span>
                     </div>
                     <div className="fx-result-rate">
                       {formatAmount(msg.amount, msg.from)} {msg.from} = {formatAmount(msg.result, msg.to)} {msg.to}
@@ -272,7 +211,7 @@ export default function CurrencyShowcase() {
                     </div>
                     <div className="fx-result-meta">
                       <span className="fx-result-date">Rate as of {msg.date}</span>
-                      <button className="fx-flip-btn" onClick={() => handleFlip(msg)}>⇄ Reverse</button>
+                      <button className="fx-flip-btn" onClick={() => handleSend(`${msg.result.toFixed(2)} ${msg.to} to ${msg.from}`)}>⇄ Reverse</button>
                     </div>
                   </div>
                 </div>
@@ -284,9 +223,7 @@ export default function CurrencyShowcase() {
             <div className="fx-msg fx-msg--bot">
               <div className="fx-bubble">
                 <div className="fx-typing">
-                  <div className="fx-dot" />
-                  <div className="fx-dot" />
-                  <div className="fx-dot" />
+                  <div className="fx-dot" /><div className="fx-dot" /><div className="fx-dot" />
                 </div>
               </div>
             </div>
@@ -295,11 +232,17 @@ export default function CurrencyShowcase() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input */}
         <div className="fx-input-area">
-          {listening && transcript && (
-            <div className="fx-transcript">"{transcript}"</div>
+          {whisperState === 'loading' && (
+            <div className="fx-transcript">Loading voice model… {loadPct > 0 ? `${loadPct}%` : ''}</div>
           )}
+          {whisperState === 'recording' && (
+            <div className="fx-transcript fx-transcript--recording">Recording — click mic to stop</div>
+          )}
+          {whisperState === 'transcribing' && (
+            <div className="fx-transcript">Transcribing…</div>
+          )}
+
           <div className="fx-input-row">
             <input
               ref={inputRef}
@@ -307,31 +250,30 @@ export default function CurrencyShowcase() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={listening ? 'Listening...' : 'Convert 100 USD to EUR…'}
-              disabled={listening}
+              placeholder={micBusy ? MIC_LABEL[whisperState] : 'Convert 100 USD to EUR…'}
+              disabled={micBusy}
             />
-            {speechSupported && (
-              <button
-                className={`fx-mic${listening ? ' fx-mic--listening' : ''}`}
-                onClick={toggleMic}
-                title={listening ? 'Stop listening' : 'Speak'}
-              >
-                {listening ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <rect x="6" y="6" width="12" height="12" rx="2" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
-                  </svg>
-                )}
-              </button>
-            )}
+            <button
+              className={`fx-mic${micActive ? ' fx-mic--listening' : ''}${whisperState === 'loading' || whisperState === 'transcribing' ? ' fx-mic--busy' : ''}`}
+              onClick={toggleMic}
+              disabled={whisperState === 'loading' || whisperState === 'transcribing'}
+              title={MIC_LABEL[whisperState]}
+            >
+              {micActive ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V23h2v-2.06A9 9 0 0 0 21 12v-2h-2z"/>
+                </svg>
+              )}
+            </button>
             <button
               className="fx-send"
               onClick={() => handleSend()}
-              disabled={!input.trim() || loading || listening}
+              disabled={!input.trim() || loading || micBusy}
               title="Send"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -339,9 +281,9 @@ export default function CurrencyShowcase() {
               </svg>
             </button>
           </div>
-          {!speechSupported && (
-            <div className="fx-unsupported">Voice input not supported in this browser. Try Chrome or Edge.</div>
-          )}
+          <div className="fx-unsupported">
+            Voice powered by Whisper — runs locally in your browser, no data sent to any server
+          </div>
         </div>
       </div>
     </div>

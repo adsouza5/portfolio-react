@@ -335,8 +335,9 @@ export default function PrismShowcase() {
         }
         return next;
       });
-    } catch (_) {
-      setTestResp({ cls: 'auth', msg: 'Network error — check connection' });
+    } catch (err) {
+      console.error('Prism fireRequest error:', err);
+      setTestResp({ cls: 'auth', msg: `Error: ${err.message || err}` });
     } finally {
       setFiring(false);
     }

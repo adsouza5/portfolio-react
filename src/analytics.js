@@ -11,7 +11,7 @@ export function initAnalytics() {
 
 export function trackPage(path, title) {
   gtag('event', 'page_view', {
-    page_path:  path,
+    page_path:  path + (window.location?.search || ''),
     page_title: title,
     send_to:    GA_ID,
   });

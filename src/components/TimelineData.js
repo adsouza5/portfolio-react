@@ -55,19 +55,6 @@ const timelineEntries = [
   },
   {
     type: 'project',
-    title: 'CodeCollab — Real-Time Collaborative Editor',
-    org: null,
-    date: '2023',
-    location: null,
-    description:
-      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique colour, editable only by them and read-only for others. Eliminates merge conflicts by design. Shared state is synced via Y.js (CRDT) over a y-websocket relay deployed on Render. Monaco Editor powers the coding experience with per-owner colour decorations and read-only enforcement. Wandbox handles sandboxed multi-language execution (JS, TS, Python, Go, Rust, Java). Sessions are passcode-protected using client-side SHA-256 hashing.',
-    tags: ['React', 'Y.js', 'CRDT', 'Monaco Editor', 'Wandbox', 'WebSockets', 'Node.js'],
-    link: 'https://github.com/adsouza5/RealTimeCoding',
-    status: null,
-    showcase: 'CodeCollab',
-  },
-  {
-    type: 'project',
     title: 'Currency — Voice-Enabled Conversion Chatbot',
     org: null,
     date: '2024',
@@ -78,6 +65,19 @@ const timelineEntries = [
     link: 'https://github.com/adsouza5/currency-convert-chatbot',
     status: null,
     showcase: 'Currency',
+  },
+  {
+    type: 'project',
+    title: 'CodeCollab — Real-Time Collaborative Editor',
+    org: null,
+    date: '2023',
+    location: null,
+    description:
+      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique colour, editable only by them and read-only for others. Eliminates merge conflicts by design. Shared state is synced via Y.js (CRDT) over a y-websocket relay deployed on Render. Monaco Editor powers the coding experience with per-owner colour decorations and read-only enforcement. Wandbox handles sandboxed multi-language execution (JS, TS, Python, Go, Rust, Java). Sessions are passcode-protected using client-side SHA-256 hashing.',
+    tags: ['React', 'Y.js', 'CRDT', 'Monaco Editor', 'Wandbox', 'WebSockets', 'Node.js'],
+    link: 'https://github.com/adsouza5/RealTimeCoding',
+    status: null,
+    showcase: 'CodeCollab',
   },
   {
     type: 'education',

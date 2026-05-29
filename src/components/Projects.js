@@ -9,6 +9,7 @@ const SHOWCASE_ROUTES = {
   CodeCollab: '/projects/codecollab',
   Lens: '/projects/lens',
   Prism: '/projects/prism',
+  Currency: '/projects/currency',
 };
 
 const TYPE_LABELS = {

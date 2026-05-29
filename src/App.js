@@ -12,6 +12,7 @@ const MLPipelineShowcase = lazy(() => import('./components/MLPipelineShowcase'))
 const CodeCollab = lazy(() => import('./components/CodeCollab/CodeCollab'));
 const LensShowcase = lazy(() => import('./components/Lens/LensShowcase'));
 const PrismShowcase = lazy(() => import('./components/Prism/PrismShowcase'));
+const CurrencyShowcase = lazy(() => import('./components/Currency/CurrencyShowcase'));
 
 function Portfolio() {
   const [personalOpen, setPersonalOpen] = useState(false);
@@ -85,6 +86,10 @@ function App() {
       <Route
         path="/projects/prism"
         element={<ShowcasePage component={PrismShowcase} />}
+      />
+      <Route
+        path="/projects/currency"
+        element={<ShowcasePage component={CurrencyShowcase} />}
       />
     </Routes>
   );

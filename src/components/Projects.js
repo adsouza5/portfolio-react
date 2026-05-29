@@ -8,6 +8,7 @@ const SHOWCASE_ROUTES = {
   MLPipelineShowcase: '/projects/sentinel',
   CodeCollab: '/projects/codecollab',
   Lens: '/projects/lens',
+  Prism: '/projects/prism',
 };
 
 const TYPE_LABELS = {

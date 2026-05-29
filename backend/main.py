@@ -50,6 +50,7 @@ app.add_middleware(
     allow_origins=[
         "https://iadamdsouza.com",
         "https://www.iadamdsouza.com",
+        "https://adsouza5.github.io",
         "http://localhost:3000",
     ],
     allow_methods=["GET", "POST"],

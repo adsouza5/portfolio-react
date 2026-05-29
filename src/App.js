@@ -6,13 +6,33 @@ import Projects from './components/Projects';
 import Footer from './components/Footer';
 import Cursor from './components/Cursor';
 import Personal, { PersonalTrigger } from './components/Personal';
+import { trackPage } from './analytics';
 import './App.css';
 
 const MLPipelineShowcase = lazy(() => import('./components/MLPipelineShowcase'));
-const CodeCollab = lazy(() => import('./components/CodeCollab/CodeCollab'));
-const LensShowcase = lazy(() => import('./components/Lens/LensShowcase'));
-const PrismShowcase = lazy(() => import('./components/Prism/PrismShowcase'));
-const CurrencyShowcase = lazy(() => import('./components/Currency/CurrencyShowcase'));
+const CodeCollab          = lazy(() => import('./components/CodeCollab/CodeCollab'));
+const LensShowcase        = lazy(() => import('./components/Lens/LensShowcase'));
+const PrismShowcase       = lazy(() => import('./components/Prism/PrismShowcase'));
+const CurrencyShowcase    = lazy(() => import('./components/Currency/CurrencyShowcase'));
+const AnalyticsDashboard  = lazy(() => import('./components/Analytics/AnalyticsDashboard'));
+
+const PAGE_TITLES = {
+  '/':                   'Portfolio — Adam Dsouza',
+  '/projects/sentinel':  'Sentinel Showcase',
+  '/projects/codecollab':'CodeCollab Showcase',
+  '/projects/lens':      'Lens Showcase',
+  '/projects/prism':     'Prism Showcase',
+  '/projects/currency':  'Currency Showcase',
+};
+
+function PageTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    const title = PAGE_TITLES[location.pathname] || document.title;
+    trackPage(location.pathname, title);
+  }, [location.pathname]);
+  return null;
+}
 
 function Portfolio() {
   const [personalOpen, setPersonalOpen] = useState(false);
@@ -33,11 +53,8 @@ function Portfolio() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          } else {
-            entry.target.classList.remove('visible');
-          }
+          if (entry.isIntersecting) entry.target.classList.add('visible');
+          else entry.target.classList.remove('visible');
         });
       },
       { root: null, threshold: 0.12 }
@@ -69,29 +86,18 @@ function ShowcasePage({ component: Component }) {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Portfolio />} />
-      <Route
-        path="/projects/sentinel"
-        element={<ShowcasePage component={MLPipelineShowcase} />}
-      />
-      <Route
-        path="/projects/codecollab"
-        element={<ShowcasePage component={CodeCollab} />}
-      />
-      <Route
-        path="/projects/lens"
-        element={<ShowcasePage component={LensShowcase} />}
-      />
-      <Route
-        path="/projects/prism"
-        element={<ShowcasePage component={PrismShowcase} />}
-      />
-      <Route
-        path="/projects/currency"
-        element={<ShowcasePage component={CurrencyShowcase} />}
-      />
-    </Routes>
+    <>
+      <PageTracker />
+      <Routes>
+        <Route path="/"                    element={<Portfolio />} />
+        <Route path="/projects/sentinel"   element={<ShowcasePage component={MLPipelineShowcase} />} />
+        <Route path="/projects/codecollab" element={<ShowcasePage component={CodeCollab} />} />
+        <Route path="/projects/lens"       element={<ShowcasePage component={LensShowcase} />} />
+        <Route path="/projects/prism"      element={<ShowcasePage component={PrismShowcase} />} />
+        <Route path="/projects/currency"   element={<ShowcasePage component={CurrencyShowcase} />} />
+        <Route path="/analytics"           element={<ShowcasePage component={AnalyticsDashboard} />} />
+      </Routes>
+    </>
   );
 }
 

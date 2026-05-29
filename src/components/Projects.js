@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import entries from './TimelineData';
+import { track } from '../analytics';
 import Skills from './Skills';
 import './Projects.css';
 
@@ -33,8 +34,10 @@ const Projects = () => {
 
   const handleCardClick = useCallback((entry) => {
     if (entry.showcase) {
+      track.projectClick(entry.showcase);
       navigate(SHOWCASE_ROUTES[entry.showcase]);
     } else if (entry.link) {
+      track.projectClick(entry.title);
       window.open(entry.link, '_blank', 'noopener,noreferrer');
     }
   }, [navigate]);

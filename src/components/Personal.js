@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import ReactDOM from 'react-dom';
 import './Personal.css';
 import { INTRO, HOBBIES, POEMS, PHOTOS } from './PersonalData';
+import { track } from '../analytics';
 
 /* ── Hex math: axial coordinates, pointy-top orientation ── */
 const HEX_W      = 155;
@@ -382,10 +383,10 @@ export const PersonalTrigger = ({ onOpen }) => (
   <div className="personal-trigger-section">
     <div
       className="personal-trigger-card"
-      onClick={onOpen}
+      onClick={() => { track.beyondCodeOpen(); onOpen(); }}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
+      onKeyDown={(e) => e.key === 'Enter' && (track.beyondCodeOpen(), onOpen())}
     >
       <span className="trigger-eyebrow">{'// outside the terminal'}</span>
       <h2 className="trigger-title">Beyond the code.</h2>

@@ -184,11 +184,10 @@ export default function CurrencyShowcase() {
   return (
     <div className="fx-root">
       <CurrencyVisualizer state={whisperState} analyserRef={analyserRef} />
-      <nav className="fx-nav">
-        <button className="fx-back" onClick={() => navigate('/')}>← Back</button>
-        <span className="fx-nav-title">Currency Converter</span>
-        <span className="fx-nav-badge">Live · Frankfurter</span>
-      </nav>
+      <button
+        className="fx-back-btn"
+        onClick={() => navigate('/', { state: { scrollTo: 'projects' } })}
+      >← Timeline</button>
 
       <div className="fx-layout">
         <header className="fx-header">

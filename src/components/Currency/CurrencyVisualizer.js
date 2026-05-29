@@ -1,14 +1,13 @@
 import { useEffect, useRef } from 'react';
 
 const RINGS = [
-  { radius: 60,  bins: [0,  4],  opacity: 0.55, spikeMax: 38, color: '16,185,129' },
-  { radius: 105, bins: [4,  16], opacity: 0.40, spikeMax: 50, color: '16,185,129' },
-  { radius: 155, bins: [16, 48], opacity: 0.28, spikeMax: 60, color: '52,211,153' },
-  { radius: 210, bins: [48, 96], opacity: 0.18, spikeMax: 70, color: '52,211,153' },
+  { radius: 60,  binStart: 0,  binEnd: 4,  numSpikes: 32, halfWidth: 0.045, spikeMax: 38, opacity: 0.60, color: '16,185,129' },
+  { radius: 105, binStart: 4,  binEnd: 16, numSpikes: 48, halfWidth: 0.038, spikeMax: 52, opacity: 0.42, color: '16,185,129' },
+  { radius: 155, binStart: 16, binEnd: 48, numSpikes: 56, halfWidth: 0.032, spikeMax: 62, opacity: 0.28, color: '52,211,153' },
+  { radius: 210, binStart: 48, binEnd: 96, numSpikes: 64, halfWidth: 0.028, spikeMax: 72, opacity: 0.18, color: '52,211,153' },
 ];
 
 const IDLE_RINGS = [60, 105, 155, 210, 270];
-const POINTS = 180;
 const TWO_PI = Math.PI * 2;
 
 function drawIdle(ctx, cx, cy, t) {
@@ -28,35 +27,46 @@ function drawActive(ctx, cx, cy, dataArray) {
 
   // Centre glow
   const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 55);
-  grd.addColorStop(0, 'rgba(16,185,129,0.08)');
+  grd.addColorStop(0, 'rgba(16,185,129,0.10)');
   grd.addColorStop(1, 'rgba(16,185,129,0)');
   ctx.fillStyle = grd;
   ctx.beginPath();
   ctx.arc(cx, cy, 55, 0, TWO_PI);
   ctx.fill();
 
-  RINGS.forEach(({ radius, bins, opacity, spikeMax, color }) => {
-    const [binStart, binEnd] = bins;
+  RINGS.forEach(({ radius, binStart, binEnd, numSpikes, halfWidth, spikeMax, opacity, color }) => {
     const binCount = binEnd - binStart;
 
+    // Base circle
     ctx.beginPath();
-    for (let i = 0; i <= POINTS; i++) {
-      const angle = (i / POINTS) * TWO_PI - Math.PI / 2;
-      const binIdx = binStart + Math.floor((i / POINTS) * binCount);
-      const amplitude = (dataArray[Math.min(binIdx, dataArray.length - 1)] || 0) / 255;
-      const r = radius + amplitude * spikeMax;
-      const x = cx + Math.cos(angle) * r;
-      const y = cy + Math.sin(angle) * r;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = `rgba(${color},${opacity})`;
-    ctx.lineWidth = 1.5;
+    ctx.arc(cx, cy, radius, 0, TWO_PI);
+    ctx.strokeStyle = `rgba(${color},${opacity * 0.35})`;
+    ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Faint fill
-    ctx.fillStyle = `rgba(${color},${opacity * 0.08})`;
-    ctx.fill();
+    // Triangular spikes
+    for (let i = 0; i < numSpikes; i++) {
+      const centerAngle = (i / numSpikes) * TWO_PI - Math.PI / 2;
+      const binIdx = binStart + Math.floor((i / numSpikes) * binCount);
+      const amplitude = (dataArray[Math.min(binIdx, dataArray.length - 1)] || 0) / 255;
+      if (amplitude < 0.04) continue;
+
+      const tipR = radius + amplitude * spikeMax;
+      const lAngle = centerAngle - halfWidth;
+      const rAngle = centerAngle + halfWidth;
+
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(lAngle) * radius, cy + Math.sin(lAngle) * radius);
+      ctx.lineTo(cx + Math.cos(centerAngle) * tipR, cy + Math.sin(centerAngle) * tipR);
+      ctx.lineTo(cx + Math.cos(rAngle) * radius, cy + Math.sin(rAngle) * radius);
+      ctx.closePath();
+
+      ctx.fillStyle = `rgba(${color},${opacity * 0.35})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(${color},${opacity})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
   });
 }
 

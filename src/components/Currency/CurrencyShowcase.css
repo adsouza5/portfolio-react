@@ -24,46 +24,32 @@
   z-index: 0;
 }
 
-/* ── Nav bar ────────────────────────────────────────────────────── */
-.fx-nav {
-  display: flex;
+/* ── Back button — matches Prism / other showcases ──────────────── */
+.fx-back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px 32px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  position: relative;
-  z-index: 10;
-  flex-shrink: 0;
-}
-
-.fx-back {
-  background: none;
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #94a3b8;
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.18s;
-}
-.fx-back:hover { border-color: #10b981; color: #10b981; }
-
-.fx-nav-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #e2e8f0;
-  letter-spacing: 0.02em;
-}
-
-.fx-nav-badge {
-  margin-left: auto;
-  font-size: 11px;
-  color: #10b981;
-  background: rgba(16,185,129,0.1);
-  border: 1px solid rgba(16,185,129,0.25);
-  padding: 3px 10px;
-  border-radius: 20px;
+  gap: 8px;
   font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(232,232,232,0.60);
+  background: rgba(7,16,26,0.92);
+  border: 1px solid rgba(16,185,129,0.30);
+  border-radius: 6px;
+  padding: 9px 16px;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.fx-back-btn:hover {
+  color: #e2e8f0;
+  border-color: #10b981;
+  box-shadow: 0 0 20px rgba(16,185,129,0.30);
 }
 
 /* ── Main layout ────────────────────────────────────────────────── */

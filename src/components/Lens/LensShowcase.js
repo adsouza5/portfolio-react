@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LensShowcase.css';
 
-const API = process.env.REACT_APP_LENS_API_URL || '';
+const API = process.env.REACT_APP_LENS_API_URL || 'https://lens-api-cpktdw5swq-uc.a.run.app';
 
 // Seeded LCG — deterministic node positions so the graph is stable across renders
 function seeded(seed) {
@@ -43,16 +43,25 @@ const MODELS = [
 ];
 
 const DEMO_REPOS = [
-  { label: 'This portfolio', url: 'https://github.com/adsouza5/portfolio-react' },
-  { label: 'ML Pipeline API', url: 'https://github.com/adsouza5/sentinel-ml-pipeline' },
-  { label: 'Lens API', url: 'https://github.com/adsouza5/lens-api' },
+  { label: 'Lens API (indexed)', url: 'https://github.com/adsouza5/lens-api' },
+  { label: 'Prism API', url: 'https://github.com/adsouza5/prism-api' },
+  { label: 'Sentinel ML Pipeline', url: 'https://github.com/adsouza5/sentinel-ml-pipeline' },
+  { label: 'FastAPI', url: 'https://github.com/fastapi/fastapi' },
+  { label: 'Qdrant', url: 'https://github.com/qdrant/qdrant' },
 ];
 
 const REPO_STORAGE_KEY = 'lens_collection_repos';
 
+const SEEDED_REPO_MAP = {
+  'lens-https-github-com-adsouza5-sentinel-ml-pipeline': 'https://github.com/adsouza5/sentinel-ml-pipeline',
+};
+
 function loadRepoMap() {
-  try { return JSON.parse(localStorage.getItem(REPO_STORAGE_KEY) || '{}'); }
-  catch { return {}; }
+  try {
+    const stored = JSON.parse(localStorage.getItem(REPO_STORAGE_KEY) || '{}');
+    return { ...SEEDED_REPO_MAP, ...stored };
+  }
+  catch { return { ...SEEDED_REPO_MAP }; }
 }
 function saveRepoMap(map) {
   try { localStorage.setItem(REPO_STORAGE_KEY, JSON.stringify(map)); } catch {}

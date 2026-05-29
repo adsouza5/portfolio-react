@@ -19,8 +19,6 @@ const CURRENCY_MAP = {
   'canadian dollar': 'CAD', cad: 'CAD', 'canadian dollars': 'CAD',
   'australian dollar': 'AUD', aud: 'AUD', 'australian dollars': 'AUD',
   'new zealand dollar': 'NZD', nzd: 'NZD',
-  dirham: 'AED', aed: 'AED', 'uae dirham': 'AED',
-  ruble: 'RUB', rubles: 'RUB', rub: 'RUB', 'russian ruble': 'RUB',
   lira: 'TRY', try: 'TRY', 'turkish lira': 'TRY',
   rand: 'ZAR', zar: 'ZAR', 'south african rand': 'ZAR',
   krona: 'SEK', sek: 'SEK', 'swedish krona': 'SEK',
@@ -35,7 +33,6 @@ const CURRENCY_MAP = {
   baht: 'THB', thb: 'THB', 'thai baht': 'THB',
   ringgit: 'MYR', myr: 'MYR', 'malaysian ringgit': 'MYR',
   rupiah: 'IDR', idr: 'IDR', 'indonesian rupiah': 'IDR',
-  riyal: 'SAR', sar: 'SAR', 'saudi riyal': 'SAR',
 };
 
 const CURRENCY_SYMBOLS = {
@@ -85,12 +82,24 @@ function parseQuery(text) {
   return { amount, from, to };
 }
 
+// Frankfurter supported codes (api.frankfurter.dev/v1/currencies)
+const SUPPORTED = new Set([
+  'AUD','BRL','CAD','CHF','CNY','CZK','DKK','EUR','GBP',
+  'HKD','HUF','IDR','ILS','INR','ISK','JPY','KRW','MXN',
+  'MYR','NOK','NZD','PHP','PLN','RON','SEK','SGD','THB',
+  'TRY','USD','ZAR',
+]);
+
 async function fetchConversion(amount, from, to) {
-  const res = await fetch(`https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`);
-  if (!res.ok) throw new Error(`${res.status}`);
+  if (!SUPPORTED.has(from)) throw new Error(`${from} not supported`);
+  if (!SUPPORTED.has(to))   throw new Error(`${to} not supported`);
+  const res = await fetch(
+    `https://api.frankfurter.dev/v1/latest?amount=${amount}&from=${from}&to=${to}`
+  );
+  if (!res.ok) throw new Error(`API error ${res.status}`);
   const data = await res.json();
   const result = data.rates[to];
-  if (result === undefined) throw new Error(`Unsupported pair`);
+  if (result === undefined) throw new Error(`No rate for ${to}`);
   return { result, rate: result / amount, date: data.date };
 }
 
@@ -141,8 +150,11 @@ export default function CurrencyShowcase() {
     try {
       const { result, rate, date } = await fetchConversion(parsed.amount, parsed.from, parsed.to);
       addMessage({ role: 'bot', type: 'result', amount: parsed.amount, from: parsed.from, to: parsed.to, result, rate, date });
-    } catch {
-      addMessage({ role: 'bot', type: 'error', text: 'Could not fetch live rate. The currency pair may not be supported.' });
+    } catch (err) {
+      const msg = err.message?.includes('not supported')
+        ? `${err.message}. Supported currencies include USD, EUR, GBP, JPY, CAD, AUD, INR, CNY, and 22 others.`
+        : 'Could not fetch live rate — please try again.';
+      addMessage({ role: 'bot', type: 'error', text: msg });
     } finally {
       setLoading(false);
     }

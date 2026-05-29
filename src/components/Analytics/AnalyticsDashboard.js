@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { markAsInternal } from '../../analytics';
 import './AnalyticsDashboard.css';
 
 const SESSION_KEY = 'an_auth';
@@ -89,6 +90,7 @@ function Gate({ onAuth }) {
     e.preventDefault();
     if (btoa(pw) === CORRECT) {
       sessionStorage.setItem(SESSION_KEY, '1');
+      markAsInternal();
       onAuth();
     } else {
       setError('Incorrect passcode.');
@@ -278,7 +280,11 @@ function Dashboard() {
 
 // ── Root ─────────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === '1');
+  const [authed, setAuthed] = useState(() => {
+    const already = sessionStorage.getItem(SESSION_KEY) === '1';
+    if (already) markAsInternal();
+    return already;
+  });
   if (!authed) return <Gate onAuth={() => setAuthed(true)} />;
   return <Dashboard />;
 }

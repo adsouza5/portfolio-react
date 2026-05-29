@@ -4,19 +4,6 @@
 const timelineEntries = [
   {
     type: 'project',
-    title: 'Currency — Voice-Enabled Conversion Chatbot',
-    org: null,
-    date: '2026',
-    location: null,
-    description:
-      'Conversational currency converter with live exchange rates and voice recognition. Understands natural language ("convert 100 dollars to yen"), parses 50+ currency names and ISO codes, and fetches real-time rates from Frankfurter. Speak your query via the Web Speech API — results stream back as a chat response with the rate, date, and a one-click reverse conversion.',
-    tags: ['React', 'Web Speech API', 'Frankfurter', 'NLP', 'Voice UI'],
-    link: 'https://github.com/adsouza5/currency-convert-chatbot',
-    status: null,
-    showcase: 'Currency',
-  },
-  {
-    type: 'project',
     title: 'Prism — API Gateway with Auth & Rate Limiting',
     org: null,
     date: '2026',
@@ -68,7 +55,7 @@ const timelineEntries = [
   },
   {
     type: 'project',
-    title: 'Collaborative Coding Platform',
+    title: 'CodeCollab — Real-Time Collaborative Editor',
     org: null,
     date: '2023',
     location: null,
@@ -78,6 +65,19 @@ const timelineEntries = [
     link: 'https://github.com/adsouza5/RealTimeCoding',
     status: null,
     showcase: 'CodeCollab',
+  },
+  {
+    type: 'project',
+    title: 'Currency — Voice-Enabled Conversion Chatbot',
+    org: null,
+    date: '2024',
+    location: null,
+    description:
+      'Conversational currency converter with live exchange rates and voice recognition. Understands natural language ("convert 100 dollars to yen"), parses 50+ currency names and ISO codes, and fetches real-time rates from Frankfurter. Speak your query via in-browser Whisper — audio never leaves the device. Results appear as chat responses with the live rate, date, and a one-click reverse conversion.',
+    tags: ['React', 'Whisper', 'Web Audio API', 'Frankfurter', 'NLP', 'Voice UI'],
+    link: 'https://github.com/adsouza5/currency-convert-chatbot',
+    status: null,
+    showcase: 'Currency',
   },
   {
     type: 'education',

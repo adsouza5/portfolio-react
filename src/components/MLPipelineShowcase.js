@@ -77,7 +77,7 @@ const ARCH = [
 ];
 
 /* ── Backend API (Cloud Run) ─────────────────────────────────── */
-const API_URL = process.env.REACT_APP_API_URL || "";
+const API_URL = process.env.REACT_APP_API_URL || 'https://ml-pipeline-api-cpktdw5swq-uc.a.run.app';
 
 async function fetchAllTwelveData(tickers) {
   if (!API_URL) throw new Error("no_api_url");

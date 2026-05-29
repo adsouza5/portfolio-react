@@ -53,6 +53,8 @@ const DEMO_REPOS = [
 const REPO_STORAGE_KEY = 'lens_collection_repos';
 
 const SEEDED_REPO_MAP = {
+  'lens-https-github-com-adsouza5-lens-api': 'https://github.com/adsouza5/lens-api',
+  'lens-https-github-com-adsouza5-prism-api': 'https://github.com/adsouza5/prism-api',
   'lens-https-github-com-adsouza5-sentinel-ml-pipeline': 'https://github.com/adsouza5/sentinel-ml-pipeline',
 };
 

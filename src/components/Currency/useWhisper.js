@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
 
-// Module-level singleton so model persists across re-renders
 let _transcriber = null;
 let _loadPromise = null;
 
@@ -28,9 +27,12 @@ async function getTranscriber(onProgress) {
 export function useWhisper({ onResult, onError }) {
   const [state, setState] = useState('idle');
   const [loadPct, setLoadPct] = useState(0);
-  const recorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const streamRef = useRef(null);
+  const recorderRef  = useRef(null);
+  const chunksRef    = useRef([]);
+  const streamRef    = useRef(null);
+  const audioCtxRef  = useRef(null);
+  // Exposed so callers can read frequency data during recording
+  const analyserRef  = useRef(null);
 
   const start = useCallback(async () => {
     setState('loading');
@@ -42,7 +44,7 @@ export function useWhisper({ onResult, onError }) {
           setLoadPct(Math.round(p.progress));
         }
       });
-    } catch (err) {
+    } catch {
       setState('idle');
       onError('Failed to load voice model.');
       return;
@@ -60,6 +62,15 @@ export function useWhisper({ onResult, onError }) {
     streamRef.current = stream;
     chunksRef.current = [];
 
+    // Wire up analyser for the visualizer
+    const audioCtx = new AudioContext();
+    audioCtxRef.current = audioCtx;
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.8;
+    audioCtx.createMediaStreamSource(stream).connect(analyser);
+    analyserRef.current = analyser;
+
     const recorder = new MediaRecorder(stream);
     recorderRef.current = recorder;
 
@@ -69,13 +80,15 @@ export function useWhisper({ onResult, onError }) {
 
     recorder.onstop = async () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
+      analyserRef.current = null;
+      audioCtxRef.current?.close();
       setState('transcribing');
 
       try {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         const arrayBuffer = await blob.arrayBuffer();
-        const audioCtx = new AudioContext({ sampleRate: 16000 });
-        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const decodeCtx = new AudioContext({ sampleRate: 16000 });
+        const audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
         const float32 = audioBuffer.getChannelData(0);
 
         const output = await transcriber(float32, {
@@ -106,5 +119,5 @@ export function useWhisper({ onResult, onError }) {
     else if (state === 'idle') start();
   }, [state, start, stop]);
 
-  return { state, loadPct, toggle };
+  return { state, loadPct, toggle, analyserRef };
 }

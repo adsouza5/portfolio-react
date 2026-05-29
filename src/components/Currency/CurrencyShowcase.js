@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWhisper } from './useWhisper';
+import CurrencyVisualizer from './CurrencyVisualizer';
 import './CurrencyShowcase.css';
 
 // ── Currency name → ISO code map ─────────────────────────────────
@@ -147,7 +148,7 @@ export default function CurrencyShowcase() {
     }
   }, [input, loading, addMessage]);
 
-  const { state: whisperState, loadPct, toggle: toggleMic } = useWhisper({
+  const { state: whisperState, loadPct, toggle: toggleMic, analyserRef } = useWhisper({
     onResult: useCallback((text) => {
       setInput(text);
       handleSend(text);
@@ -170,6 +171,7 @@ export default function CurrencyShowcase() {
 
   return (
     <div className="fx-root">
+      <CurrencyVisualizer state={whisperState} analyserRef={analyserRef} />
       <nav className="fx-nav">
         <button className="fx-back" onClick={() => navigate('/')}>← Back</button>
         <span className="fx-nav-title">Currency Converter</span>

@@ -1,1 +1,0 @@
-(self.webpackChunkportfolio_react=self.webpackChunkportfolio_react||[]).push([[821],{52:()=>{},143:()=>{},603:()=>{},806:()=>{},9:()=>{},837:()=>{},499:()=>{}}]);

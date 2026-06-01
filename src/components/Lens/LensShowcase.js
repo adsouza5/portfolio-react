@@ -481,7 +481,23 @@ export default function LensShowcase() {
       </button>
 
       <div className="lens-inner">
-        <h1 className="lens-title">Lens</h1>
+        <header className="lens-header">
+          <div className="lens-logo-row">
+            <svg className="lens-logomark" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="9" stroke="currentColor" strokeWidth="1.6"/>
+              <circle cx="11" cy="11" r="4.5" stroke="currentColor" strokeWidth="1.3"/>
+              <circle cx="11" cy="11" r="1.5" fill="currentColor"/>
+              <line x1="18.5" y1="18.5" x2="21" y2="21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            <span className="lens-wordmark">LENS</span>
+          </div>
+          <p className="lens-tagline">Semantic Code Search</p>
+          <div className="lens-header-pills">
+            {['Embeddings', 'Qdrant', 'GitHub API', 'React', 'FastAPI'].map(t => (
+              <span key={t} className="lens-header-pill">{t}</span>
+            ))}
+          </div>
+        </header>
         <p className="lens-subtitle">
           Semantic code search — index any GitHub repository and query it in plain English.
           Powered by code-aware embeddings and vector similarity search over Qdrant.

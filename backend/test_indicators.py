@@ -1,5 +1,7 @@
 import math
 import pytest
+from unittest.mock import MagicMock, patch
+import numpy as np
 from main import (
     calc_rsi,
     calc_macd_bull,
@@ -8,6 +10,8 @@ from main import (
     calc_atr,
     calc_volatility,
     score_predict,
+    score_predict_ml,
+    outcome_is_correct,
 )
 
 
@@ -209,3 +213,91 @@ def test_score_predict_returns_valid_labels():
     for rsi in [20, 50, 80]:
         pred, _ = score_predict(rsi, True, True, True, 0.0)
         assert pred in valid
+
+
+# ── score_predict_ml ──────────────────────────────────────────────────────────
+
+def _mock_artifact(prob_up: float) -> dict:
+    model = MagicMock()
+    model.predict_proba.return_value = np.array([[1 - prob_up, prob_up]])
+    return {"model": model, "features": [], "cv_accuracy": 0.52}
+
+
+def test_score_predict_ml_no_model_falls_back_to_rule_based():
+    with patch("main.get_model", return_value=None):
+        pred, conf = score_predict_ml(25.0, True, True, True, 20.0, 0.02, 3.0, 10.0)
+    assert pred == "BULLISH"
+    assert 0.0 <= conf <= 0.95
+
+
+def test_score_predict_ml_bullish_when_prob_high():
+    with patch("main.get_model", return_value=_mock_artifact(0.72)):
+        pred, conf = score_predict_ml(40.0, True, True, True, 60.0, 0.015, 2.0, 5.0)
+    assert pred == "BULLISH"
+    assert conf == pytest.approx(0.72, abs=0.01)
+
+
+def test_score_predict_ml_bearish_when_prob_low():
+    with patch("main.get_model", return_value=_mock_artifact(0.28)):
+        pred, conf = score_predict_ml(70.0, False, False, False, 20.0, 0.02, -3.0, -5.0)
+    assert pred == "BEARISH"
+    assert conf == pytest.approx(0.72, abs=0.01)  # 1 - prob_up
+
+
+def test_score_predict_ml_neutral_when_prob_near_half():
+    with patch("main.get_model", return_value=_mock_artifact(0.50)):
+        pred, conf = score_predict_ml(50.0, False, True, False, 50.0, 0.015, 0.0, 0.0)
+    assert pred == "NEUTRAL"
+    assert 0.0 <= conf <= 0.95
+
+
+def test_score_predict_ml_confidence_capped_at_95():
+    with patch("main.get_model", return_value=_mock_artifact(0.99)):
+        _, conf = score_predict_ml(20.0, True, True, True, 80.0, 0.01, 5.0, 20.0)
+    assert conf <= 0.95
+
+
+def test_score_predict_ml_exception_falls_back():
+    bad_artifact = {"model": MagicMock(side_effect=Exception("boom")), "features": []}
+    bad_artifact["model"].predict_proba = MagicMock(side_effect=Exception("boom"))
+    with patch("main.get_model", return_value=bad_artifact):
+        pred, conf = score_predict_ml(25.0, True, True, True, 20.0, 0.02, 3.0, 10.0)
+    assert pred in {"BULLISH", "BEARISH", "NEUTRAL"}
+    assert 0.0 <= conf <= 0.95
+
+
+# ── outcome_is_correct ────────────────────────────────────────────────────────
+
+def test_bullish_correct_above_threshold():
+    assert outcome_is_correct("BULLISH", 1.2) is True
+
+
+def test_bullish_incorrect_below_threshold():
+    assert outcome_is_correct("BULLISH", 0.3) is False
+
+
+def test_bullish_exactly_at_threshold_is_false():
+    assert outcome_is_correct("BULLISH", 0.5) is False
+
+
+def test_bearish_correct_below_threshold():
+    assert outcome_is_correct("BEARISH", -1.0) is True
+
+
+def test_bearish_incorrect_above_threshold():
+    assert outcome_is_correct("BEARISH", -0.3) is False
+
+
+def test_bearish_exactly_at_threshold_is_false():
+    assert outcome_is_correct("BEARISH", -0.5) is False
+
+
+def test_neutral_correct_when_flat():
+    assert outcome_is_correct("NEUTRAL", 0.0) is True
+    assert outcome_is_correct("NEUTRAL", 1.2) is True
+    assert outcome_is_correct("NEUTRAL", -1.2) is True
+
+
+def test_neutral_incorrect_when_large_move():
+    assert outcome_is_correct("NEUTRAL", 2.0) is False
+    assert outcome_is_correct("NEUTRAL", -2.0) is False

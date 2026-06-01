@@ -549,14 +549,166 @@
   box-shadow: 0 0 20px var(--cc-glowSm);
 }
 
-/* ── Lobby ───────────────────────────────────────────────────── */
+/* ── Animated scene background ──────────────────────────────── */
+.cc-scene-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.cc-pulse {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(26,172,190,0.10);
+  animation: ccPulse 5s ease-out infinite;
+}
+.cc-pulse--a { width: 360px; height: 360px; right: 14%; top: 22%; animation-delay: 0s; }
+.cc-pulse--b { width: 620px; height: 620px; right: 3%;  top: 8%;  animation-delay: 1.7s; }
+.cc-pulse--c { width: 880px; height: 880px; right: -8%; top: -4%; animation-delay: 3.4s; }
+
+@keyframes ccPulse {
+  0%   { transform: scale(0.65); opacity: 0; }
+  18%  { opacity: 0.8; }
+  100% { transform: scale(1.1);  opacity: 0; }
+}
+
+.cc-float-sym {
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  color: rgba(26,172,190,0.065);
+  letter-spacing: 0.1em;
+  animation: ccFloat 11s ease-in-out infinite;
+  user-select: none;
+}
+.cc-float-sym--1 { font-size: 20px; top: 14%; left: 6%;   animation-delay: 0s; }
+.cc-float-sym--2 { font-size: 16px; top: 70%; left: 4%;   animation-delay: 2.5s; }
+.cc-float-sym--3 { font-size: 18px; top: 44%; left: 15%;  animation-delay: 5s; }
+.cc-float-sym--4 { font-size: 24px; top: 20%; right: 20%; animation-delay: 1s; }
+.cc-float-sym--5 { font-size: 15px; top: 80%; right: 26%; animation-delay: 3.5s; }
+.cc-float-sym--6 { font-size: 19px; top: 56%; left: 24%;  animation-delay: 7s; }
+.cc-float-sym--7 { font-size: 14px; top: 33%; right: 32%; animation-delay: 4s; }
+.cc-float-sym--8 { font-size: 22px; top: 64%; right: 16%; animation-delay: 2s; }
+
+@keyframes ccFloat {
+  0%, 100% { transform: translateY(0)   rotate(0deg); }
+  33%       { transform: translateY(-12px) rotate(2deg); }
+  66%       { transform: translateY(6px)  rotate(-1deg); }
+}
+
+/* ── Lobby two-column layout ─────────────────────────────────── */
+.cc-lobby-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 64px;
+  max-width: 1020px;
+  width: 100%;
+  padding: 0 40px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Hero (left column) ──────────────────────────────────────── */
+.cc-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: ccHeroIn 0.55s ease 0.15s both;
+}
+
+.cc-hero-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cc-hero-mark {
+  width: 30px;
+  height: 26px;
+  color: #1aacbe;
+  filter: drop-shadow(0 0 10px rgba(26,172,190,0.60));
+  flex-shrink: 0;
+}
+
+.cc-hero-wordmark {
+  font-family: var(--cc-mono);
+  font-size: clamp(22px, 3.2vw, 34px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--cc-text);
+  text-shadow: 0 0 50px rgba(26,172,190,0.22);
+}
+
+.cc-hero-tagline {
+  font-family: var(--cc-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cc-accent);
+  opacity: 0.80;
+  margin: 0;
+}
+
+.cc-hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cc-hero-pill {
+  font-family: var(--cc-mono);
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(26,172,190,0.22);
+  background: rgba(26,172,190,0.05);
+  color: rgba(218,234,234,0.55);
+}
+
+.cc-origin-card {
+  padding: 16px 20px;
+  background: rgba(26,172,190,0.04);
+  border: 1px solid rgba(23,126,137,0.18);
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+  margin-top: 4px;
+}
+
+.cc-origin-eyebrow {
+  display: block;
+  font-family: var(--cc-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cc-accent);
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.cc-origin-text {
+  font-size: 13px;
+  color: var(--cc-dim);
+  line-height: 1.8;
+  margin: 0;
+}
+
+@keyframes ccHeroIn {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Lobby card (right column) ───────────────────────────────── */
 
 .cc-lobby-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  width: 340px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 28px 24px;
   background: var(--cc-surface);
   border: 1px solid var(--cc-border);
@@ -565,6 +717,39 @@
   box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07);
   position: relative;
   z-index: 1;
+  animation: ccCardIn 0.55s ease 0.35s both;
+}
+
+@keyframes ccCardIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.cc-lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.cc-lobby-title {
+  font-family: var(--cc-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cc-accent);
+  opacity: 0.80;
+}
+
+.cc-lobby-count {
+  font-family: var(--cc-mono);
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 10px;
+  background: rgba(26,172,190,0.08);
+  border: 1px solid rgba(26,172,190,0.20);
+  color: var(--cc-dim);
+  letter-spacing: 0.08em;
 }
 
 .cc-lobby-card::before {
@@ -642,6 +827,10 @@
 }
 
 .cc-session-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
   font-family: var(--cc-mono);
   color: var(--cc-dim);
@@ -649,6 +838,17 @@
   padding: 28px 0;
   letter-spacing: 0.5px;
   line-height: 1.8;
+}
+
+.cc-session-empty-icon {
+  font-size: 22px;
+  opacity: 0.35;
+  margin-bottom: 4px;
+}
+
+.cc-session-empty-sub {
+  font-size: 11px;
+  opacity: 0.55;
 }
 
 /* ── Lobby actions ───────────────────────────────────────────── */
@@ -1023,6 +1223,24 @@
 
 /* ── 768 px — tablet ──────────────────────────────────────── */
 @media (max-width: 768px) {
+  .cc-join-screen {
+    align-items: flex-start;
+    padding-top: 0;
+  }
+
+  .cc-lobby-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 80px 20px 40px;
+  }
+
+  .cc-hero {
+    align-items: center;
+    text-align: center;
+  }
+
+  .cc-hero-pills { justify-content: center; }
+
   /* Join / lobby cards */
   .cc-join-card,
   .cc-lobby-card {
@@ -1508,6 +1726,8 @@
 
 /* ── 375 px — small phone ─────────────────────────────────── */
 @media (max-width: 375px) {
+  .cc-lobby-layout { padding: 70px 14px 32px; }
+
   .cc-join-card,
   .cc-lobby-card {
     width: 100%;

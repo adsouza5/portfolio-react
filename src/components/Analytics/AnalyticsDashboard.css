@@ -370,9 +370,21 @@
   .an-nav  { padding: 14px 16px; }
   .an-grid-4, .an-grid-3, .an-grid-2 { grid-template-columns: 1fr 1fr; }
   .an-card-value { font-size: 22px; }
+  /* Table — horizontal scroll instead of overflow-hidden clipping */
+  .an-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 @media (max-width: 480px) {
   .an-gate-box { padding: 32px 24px; width: 100%; margin: 16px; }
   .an-grid-4, .an-grid-3, .an-grid-2 { grid-template-columns: 1fr; }
+  .an-nav { padding: 12px 14px; gap: 10px; }
+  .an-nav-title { font-size: 13px; }
+  .an-card { padding: 16px 16px; }
+  .an-card-value { font-size: 20px; }
+  /* Info rows — stack key above value */
+  .an-info-row { flex-direction: column; gap: 3px; padding: 11px 16px; }
+  .an-info-key { min-width: unset; padding-top: 0; color: #334155; }
+  /* GA link grid */
+  .an-ga-grid { grid-template-columns: 1fr; }
+  .an-ga-link { padding: 14px 14px; }
 }

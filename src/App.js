@@ -14,6 +14,7 @@ const CodeCollab          = lazy(() => import('./components/CodeCollab/CodeColla
 const LensShowcase        = lazy(() => import('./components/Lens/LensShowcase'));
 const PrismShowcase       = lazy(() => import('./components/Prism/PrismShowcase'));
 const CurrencyShowcase    = lazy(() => import('./components/Currency/CurrencyShowcase'));
+const FluxShowcase        = lazy(() => import('./components/Flux/FluxShowcase'));
 const AnalyticsDashboard  = lazy(() => import('./components/Analytics/AnalyticsDashboard'));
 
 const PAGE_TITLES = {
@@ -23,6 +24,7 @@ const PAGE_TITLES = {
   '/projects/lens':      'Lens Showcase',
   '/projects/prism':     'Prism Showcase',
   '/projects/currency':  'Currency Showcase',
+  '/projects/flux':      'Flux — Universal Converter',
 };
 
 function PageTracker() {
@@ -49,7 +51,7 @@ function Portfolio() {
   }, [location.state]);
 
   useEffect(() => {
-    const sections = document.querySelectorAll('.section, .projects-section');
+    const sections = document.querySelectorAll('.section, .projects-section, .footer, .personal-trigger-section');
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -76,9 +78,16 @@ function Portfolio() {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function ShowcasePage({ component: Component }) {
   return (
     <Suspense fallback={<div className="showcase-loading">Loading...</div>}>
+      <ScrollToTop />
       <Component />
     </Suspense>
   );
@@ -95,6 +104,7 @@ function App() {
         <Route path="/projects/lens"       element={<ShowcasePage component={LensShowcase} />} />
         <Route path="/projects/prism"      element={<ShowcasePage component={PrismShowcase} />} />
         <Route path="/projects/currency"   element={<ShowcasePage component={CurrencyShowcase} />} />
+        <Route path="/projects/flux"       element={<ShowcasePage component={FluxShowcase} />} />
         <Route path="/analytics"           element={<ShowcasePage component={AnalyticsDashboard} />} />
       </Routes>
     </>

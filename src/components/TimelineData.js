@@ -55,16 +55,16 @@ const timelineEntries = [
   },
   {
     type: 'project',
-    title: 'Currency — Voice-Enabled Conversion Chatbot',
+    title: 'Flux — Universal Unit Converter',
     org: null,
     date: '2024',
     location: null,
     description:
-      'Conversational currency converter with live exchange rates and voice recognition. Understands natural language ("convert 100 dollars to yen"), parses 50+ currency names and ISO codes, and fetches real-time rates from Frankfurter. Speak your query via in-browser Whisper — audio never leaves the device. Results appear as chat responses with the live rate, date, and a one-click reverse conversion.',
+      'Universal converter spanning 17 measurement types — length, mass, temperature, volume, speed, area, time, digital storage, pressure, energy, power, frequency, angle, force, torque, fuel economy, and live currency exchange. Understands natural language queries typed or spoken via in-browser Whisper (audio never leaves the device). Hundreds of units, real-time Frankfurter currency rates, and a dynamic audio-reactive visualizer that shifts color per conversion type.',
     tags: ['React', 'Whisper', 'Web Audio API', 'Frankfurter', 'NLP', 'Voice UI'],
     link: 'https://github.com/adsouza5/currency-convert-chatbot',
     status: null,
-    showcase: 'Currency',
+    showcase: 'Flux',
   },
   {
     type: 'project',
@@ -73,8 +73,8 @@ const timelineEntries = [
     date: '2023',
     location: null,
     description:
-      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique colour, editable only by them and read-only for others. Eliminates merge conflicts by design. Shared state is synced via Y.js (CRDT) over a y-websocket relay deployed on Render. Monaco Editor powers the coding experience with per-owner colour decorations and read-only enforcement. Wandbox handles sandboxed multi-language execution (JS, TS, Python, Go, Rust, Java). Sessions are passcode-protected using client-side SHA-256 hashing.',
-    tags: ['React', 'Y.js', 'CRDT', 'Monaco Editor', 'Wandbox', 'WebSockets', 'Node.js'],
+      'Segment-based real-time collaborative editor — each user owns a named code segment with a unique colour, editable only by them and read-only for others. Eliminates merge conflicts by design. Shared state is synced via Y.js (CRDT) over a y-websocket relay deployed on Render. Monaco Editor powers the coding experience with per-owner colour decorations and read-only enforcement. Judge0 CE handles sandboxed multi-language execution (JS, TS, Python, Go, Rust, Java) with TLE and compile-error surfacing. Sessions are passcode-protected using client-side SHA-256 hashing.',
+    tags: ['React', 'Y.js', 'CRDT', 'Monaco Editor', 'Judge0', 'WebSockets', 'Node.js'],
     link: 'https://github.com/adsouza5/RealTimeCoding',
     status: null,
     showcase: 'CodeCollab',

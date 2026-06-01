@@ -15,17 +15,20 @@ const USER_COLORS = [
 ];
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-// Wandbox compiler map — free, no auth, CORS-enabled
-const WANDBOX_CONFIG = {
-  javascript: { compiler: 'nodejs-20.17.0'   },
-  typescript: { compiler: 'typescript-5.6.2' },
-  python:     { compiler: 'cpython-3.12.7'   },
-  go:         { compiler: 'go-1.23.2'        },
-  rust:       { compiler: 'rust-1.82.0'      },
-  java:       { compiler: 'openjdk-jdk-22+36'},
-  c:          { compiler: 'gcc-13.2.0-c'     },
-  cpp:        { compiler: 'gcc-13.2.0'       },
+// Judge0 CE language IDs
+const JUDGE0_LANG = {
+  javascript: 63,
+  typescript: 74,
+  python:     71,
+  go:         60,
+  rust:       73,
+  java:       62,
+  c:          50,
+  cpp:        54,
 };
+
+const JUDGE0_HOST = process.env.REACT_APP_JUDGE0_HOST || 'https://ce.judge0.com';
+const JUDGE0_KEY  = process.env.REACT_APP_JUDGE0_KEY  || '';
 
 // Language-specific starter templates
 const TEMPLATES = {
@@ -63,21 +66,37 @@ async function hashPasscode(raw) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-async function runOnWandbox(monacoLang, content) {
-  const config = WANDBOX_CONFIG[monacoLang];
-  if (!config) return { stdout: '', stderr: `"${monacoLang}" is not executable (markup/config language).` };
+async function runOnJudge0(monacoLang, content) {
+  const languageId = JUDGE0_LANG[monacoLang];
+  if (!languageId) return { stdout: '', stderr: `"${monacoLang}" is not executable (markup/config language).` };
 
-  const res = await fetch('https://wandbox.org/api/compile.json', {
+  const headers = { 'Content-Type': 'application/json' };
+  if (JUDGE0_KEY) {
+    headers['X-RapidAPI-Key']  = JUDGE0_KEY;
+    headers['X-RapidAPI-Host'] = 'judge0-ce.p.rapidapi.com';
+  }
+
+  // Submit and wait for result in one call
+  const submitRes = await fetch(`${JUDGE0_HOST}/submissions?base64_encoded=false&wait=true`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ compiler: config.compiler, code: content }),
+    headers,
+    body: JSON.stringify({ language_id: languageId, source_code: content }),
   });
 
-  if (!res.ok) return { stdout: '', stderr: `Compiler API error ${res.status} — please try again.` };
+  if (!submitRes.ok) return { stdout: '', stderr: `Compiler API error ${submitRes.status} — please try again.` };
 
-  const data = await res.json();
-  const stdout = data.program_output ?? '';
-  const stderr = [data.compiler_error, data.program_error].filter(Boolean).join('\n');
+  const data = await submitRes.json();
+
+  // status.id: 1=queued, 2=processing, 3=accepted, 4=wrong answer, 5=TLE, 6=CE, 7-12=runtime errors
+  const stdout = data.stdout ?? '';
+  const stderr = [data.compile_output, data.stderr, data.message]
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+
+  if (data.status?.id === 5) return { stdout, stderr: 'Time limit exceeded.' };
+  if (data.status?.id === 6) return { stdout: '', stderr: stderr || 'Compilation error.' };
+
   return { stdout, stderr };
 }
 
@@ -147,31 +166,84 @@ const IconCameraOff = () => (
 );
 
 // ── Lobby ─────────────────────────────────────────────────────
+function CCBg() {
+  const syms = ['{', '}', '//', '=>', '</', '>;', '&&', '==='];
+  return (
+    <div className="cc-scene-bg" aria-hidden="true">
+      <div className="cc-pulse cc-pulse--a" />
+      <div className="cc-pulse cc-pulse--b" />
+      <div className="cc-pulse cc-pulse--c" />
+      {syms.map((s, i) => (
+        <span key={i} className={`cc-float-sym cc-float-sym--${i + 1}`}>{s}</span>
+      ))}
+    </div>
+  );
+}
+
 function SessionLobby({ sessions, onJoin, onCreate, onJoinByCode, onBack }) {
   return (
     <div className="cc-join-screen">
       <button className="cc-back-btn" onClick={onBack}>← Timeline</button>
-      <div className="cc-lobby-card">
-        <div className="cc-logo">◈ CodeCollab</div>
-        <p className="cc-join-sub">Join a live session or start a new one</p>
-        <div className="cc-session-list">
-          {sessions.length === 0 ? (
-            <p className="cc-session-empty">No sessions visible on this network.</p>
-          ) : (
-            sessions.map(s => (
-              <button key={s.id} className="cc-session-item" onClick={() => onJoin(s)}>
-                <span className="cc-session-dot" />
-                <span className="cc-session-name">{s.displayName}</span>
-                <span className="cc-session-meta">by {s.creatorName}</span>
-                <span className="cc-session-arrow">→</span>
-              </button>
-            ))
-          )}
+      <CCBg />
+      <div className="cc-lobby-layout">
+
+        {/* ── Left: hero ── */}
+        <div className="cc-hero">
+          <div className="cc-hero-logo-row">
+            <svg className="cc-hero-mark" viewBox="0 0 26 22" fill="none" aria-hidden="true">
+              <path d="M8 4L2 11l6 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M18 4l6 7-6 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="15" y1="2" x2="11" y2="20" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+            </svg>
+            <span className="cc-hero-wordmark">CODECOLLAB</span>
+          </div>
+          <p className="cc-hero-tagline">Real-Time Collaborative Coding</p>
+          <div className="cc-hero-pills">
+            {['Live Cursors', '10 Languages', 'WebSocket Sync', 'Run & Execute'].map(t => (
+              <span key={t} className="cc-hero-pill">{t}</span>
+            ))}
+          </div>
+          <div className="cc-origin-card">
+            <span className="cc-origin-eyebrow">// origin story</span>
+            <p className="cc-origin-text">
+              CodeCollab started as a way to make LeetCode more fun — two coders, one problem,
+              racing to the solution. Drop into the same editor simultaneously, watch each other's
+              keystrokes in real time, and turn a solo grind into a friendly competition.
+              Who ships the working solution first?
+            </p>
+          </div>
         </div>
-        <div className="cc-lobby-actions">
-          <button className="cc-create-btn" onClick={onCreate}>+ New Session</button>
-          <button className="cc-code-join-btn" onClick={onJoinByCode}>Enter code →</button>
+
+        {/* ── Right: lobby card ── */}
+        <div className="cc-lobby-card">
+          <div className="cc-lobby-header">
+            <span className="cc-lobby-title">Sessions</span>
+            <span className="cc-lobby-count">{sessions.length} live</span>
+          </div>
+          <div className="cc-session-list">
+            {sessions.length === 0 ? (
+              <div className="cc-session-empty">
+                <span className="cc-session-empty-icon">⬡</span>
+                <span>No active sessions</span>
+                <span className="cc-session-empty-sub">Create one to get started</span>
+              </div>
+            ) : (
+              sessions.map(s => (
+                <button key={s.id} className="cc-session-item" onClick={() => onJoin(s)}>
+                  <span className="cc-session-dot" />
+                  <span className="cc-session-name">{s.displayName}</span>
+                  <span className="cc-session-meta">by {s.creatorName}</span>
+                  <span className="cc-session-arrow">→</span>
+                </button>
+              ))
+            )}
+          </div>
+          <div className="cc-lobby-actions">
+            <button className="cc-create-btn" onClick={onCreate}>+ New Session</button>
+            <button className="cc-code-join-btn" onClick={onJoinByCode}>Enter code →</button>
+          </div>
         </div>
+
       </div>
     </div>
   );
@@ -643,7 +715,7 @@ export default function CodeCollab() {
     const entry = { runBy: user.name, runByColor: user.color, timestamp: Date.now(), stdout: '', stderr: '' };
 
     try {
-      const result = await runOnWandbox(seg.language, seg.content);
+      const result = await runOnJudge0(seg.language, seg.content);
       entry.stdout = result.stdout;
       entry.stderr = result.stderr;
     } catch (err) {

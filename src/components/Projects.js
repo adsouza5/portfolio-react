@@ -11,6 +11,7 @@ const SHOWCASE_ROUTES = {
   Lens: '/projects/lens',
   Prism: '/projects/prism',
   Currency: '/projects/currency',
+  Flux: '/projects/flux',
 };
 
 const TYPE_LABELS = {

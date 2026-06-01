@@ -4,6 +4,13 @@
   background-color: #0c1818;
   border-top: 1px solid rgba(23, 126, 137, 0.15);
   padding: 90px 80px 50px 80px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1s ease, visibility 1s;
+}
+.footer.visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .footer-inner {

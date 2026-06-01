@@ -19,6 +19,12 @@
   height: 100%;
   pointer-events: none;
   z-index: 0;
+  animation: prismBgFadeIn 0.8s ease 0.2s both;
+}
+
+@keyframes prismBgFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Ambient bleed — teal + spectrum hints */
@@ -111,41 +117,60 @@
 }
 
 /* ── Hero ───────────────────────────────────────────────────── */
-.prism-title {
-  font-family: 'Rajdhani', Arial, sans-serif;
-  font-size: clamp(34px, 5.5vw, 58px);
+.prism-header { margin-bottom: 20px; }
+
+.prism-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.prism-logomark {
+  width: 26px;
+  height: 24px;
+  color: #177E89;
+  filter: drop-shadow(0 0 8px rgba(23,126,137,0.55));
+}
+.prism-wordmark {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(24px, 4vw, 34px);
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 0.18em;
   color: #E8E8E8;
-  margin: 0 0 14px;
-  line-height: 1.0;
   text-shadow: 0 0 50px rgba(23,126,137,0.30);
+}
+.prism-tagline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #177E89;
+  margin: 0 0 14px 2px;
+  opacity: 0.85;
+}
+.prism-header-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.prism-header-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(23,126,137,0.28);
+  background: rgba(23,126,137,0.06);
+  color: rgba(232,232,232,0.55);
 }
 
 .prism-subtitle {
-  font-size: 16px;
-  color: rgba(232,232,232,0.75);
+  font-size: 15px;
+  color: rgba(232,232,232,0.65);
   line-height: 1.85;
   max-width: 600px;
-  margin-bottom: 14px;
-}
-
-.prism-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 48px;
-}
-.prism-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 3px;
-  border: 1px solid rgba(23,126,137,0.35);
-  background: rgba(23,126,137,0.08);
-  color: rgba(232,232,232,0.60);
+  margin-bottom: 32px;
 }
 
 /* ── Cards ──────────────────────────────────────────────────── */
@@ -519,4 +544,39 @@
   .prism-arch-arrow { transform: rotate(90deg); }
   .prism-back-btn { top: 12px; left: 12px; font-size: 10px; padding: 6px 11px; letter-spacing: 1.5px; }
   .prism-jwt-decoded { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .prism-root { padding: 52px 12px 60px; }
+  .prism-card { padding: 14px 12px; }
+  .prism-stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .prism-stat-value { font-size: 18px; }
+
+  /* Feed — hide low-value columns so path gets full width */
+  .prism-feed-client,
+  .prism-feed-lat { display: none; }
+  .prism-feed-row { padding: 6px 8px; gap: 7px; }
+  .prism-feed-method { width: 32px; }
+
+  /* Client table — stack name + bar vertically */
+  .prism-client-row {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 10px 10px;
+  }
+  .prism-client-name { flex: 1 1 100%; }
+  .prism-client-key  { flex: 1 1 auto; }
+  .prism-rate-bar-wrap { order: 3; flex: 1 1 100%; }
+  .prism-client-pct  { order: 4; }
+
+  /* Rate tester — stack client selector + button */
+  .prism-tester-row { flex-direction: column; align-items: stretch; }
+  .prism-select-btn { width: 100%; justify-content: space-between; }
+  .prism-btn { width: 100%; justify-content: center; text-align: center; }
+
+  /* Quota bar */
+  .prism-quota { flex-wrap: wrap; gap: 8px; }
+  .prism-quota-label { flex: 1 1 100%; }
+
+  .prism-back-btn { top: 10px; left: 10px; font-size: 10px; padding: 5px 10px; letter-spacing: 1.2px; }
 }

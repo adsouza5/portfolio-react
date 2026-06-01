@@ -353,8 +353,21 @@
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .fx-nav { padding: 16px 20px; }
   .fx-layout { padding: 0 12px; }
+  /* Ensure content clears the fixed back button */
+  .fx-header { padding: 72px 0 16px; }
   .fx-header h1 { font-size: 22px; }
   .fx-result-amount { font-size: 18px; }
+  /* Larger touch targets */
+  .fx-mic, .fx-send { width: 44px; height: 44px; }
+}
+
+@media (max-width: 420px) {
+  .fx-header { padding: 68px 0 12px; }
+  .fx-header h1 { font-size: 20px; }
+  .fx-bubble { padding: 10px 13px; font-size: 13px; }
+  .fx-result-amount { font-size: 17px; }
+  .fx-suggestions { gap: 6px; }
+  .fx-suggestion { font-size: 11px; padding: 4px 10px; }
+  .fx-input-area { padding: 12px 0 24px; }
 }

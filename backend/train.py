@@ -22,7 +22,7 @@ import httpx
 import joblib
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -167,7 +167,7 @@ def train(api_key: str) -> None:
         ("clf",    LogisticRegression(C=0.5, max_iter=1000, random_state=42)),
     ])
 
-    cv     = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    cv     = TimeSeriesSplit(n_splits=5)
     scores = cross_val_score(model, X, y, cv=cv, scoring="accuracy")
     print(f"5-fold CV accuracy: {scores.mean():.3f} ± {scores.std():.3f}")
     print(f"Baseline (always-up): {y.mean():.3f}")
@@ -180,16 +180,27 @@ def train(api_key: str) -> None:
         bar = "#" * int(abs(coef) * 20)
         print(f"  {name:15s} {coef:+.3f}  {bar}")
 
+    feature_importance = sorted(
+        [{"name": n, "coefficient": round(float(c), 4)} for n, c in zip(FEATURE_NAMES, coefs)],
+        key=lambda x: abs(x["coefficient"]), reverse=True
+    )
+
     out = os.path.join(os.path.dirname(__file__), "model.joblib")
     joblib.dump({
-        "model":       model,
-        "features":    FEATURE_NAMES,
-        "cv_accuracy": float(scores.mean()),
-        "cv_std":      float(scores.std()),
-        "tickers":     TICKERS,
+        "model":              model,
+        "features":           FEATURE_NAMES,
+        "cv_accuracy":        float(scores.mean()),
+        "cv_std":             float(scores.std()),
+        "baseline_accuracy":  float(y.mean()),
+        "n_samples":          len(X),
+        "tickers":            TICKERS,
+        "feature_importance": feature_importance,
+        "validation_method":  "TimeSeriesSplit(n_splits=5)",
     }, out)
     print(f"\nSaved -> {out}")
-    print(f"Model accuracy: {scores.mean():.1%} (5-fold CV on {len(X)} samples)")
+    print(f"Baseline (always-up):  {y.mean():.1%}")
+    print(f"CV accuracy (TimeSeriesSplit): {scores.mean():.1%} ± {scores.std():.1%}")
+    print(f"Improvement over baseline: {(scores.mean() - y.mean())*100:+.1f}pp")
 
 
 if __name__ == "__main__":

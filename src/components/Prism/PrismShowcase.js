@@ -380,16 +380,26 @@ export default function PrismShowcase() {
       <div className="prism-inner">
 
         {/* ── Hero ── */}
-        <h1 className="prism-title">Prism</h1>
+        <header className="prism-header">
+          <div className="prism-logo-row">
+            <svg className="prism-logomark" viewBox="0 0 22 20" fill="none" aria-hidden="true">
+              <polygon points="11,2 21,18 1,18" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+              <line x1="11" y1="7" x2="7.5" y2="18" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+              <line x1="11" y1="7" x2="14.5" y2="18" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+            </svg>
+            <span className="prism-wordmark">PRISM</span>
+          </div>
+          <p className="prism-tagline">API Gateway</p>
+          <div className="prism-header-pills">
+            {['Go', 'JWT Auth', 'Rate Limiting', 'Reverse Proxy', 'WebSocket', 'Cloud Run'].map(t => (
+              <span key={t} className="prism-header-pill">{t}</span>
+            ))}
+          </div>
+        </header>
         <p className="prism-subtitle">
           Production API gateway written in Go — JWT authentication, per-client sliding-window
           rate limiting, and intelligent request routing, all observable through a live traffic dashboard.
         </p>
-        <div className="prism-tags">
-          {['Go', 'JWT', 'Rate Limiting', 'Reverse Proxy', 'WebSocket', 'React', 'Cloud Run'].map(t => (
-            <span key={t} className="prism-tag">{t}</span>
-          ))}
-        </div>
 
         {/* ── Live Stats ── */}
         <div className="prism-card">

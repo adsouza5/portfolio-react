@@ -728,6 +728,13 @@
   display: flex;
   justify-content: center;
   background-color: #0c1818;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1s ease, visibility 1s;
+}
+.personal-trigger-section.visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .personal-trigger-card {

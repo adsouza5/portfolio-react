@@ -5,6 +5,7 @@ import math
 import os
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Any
 
@@ -57,13 +58,20 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-PROJECT_ID = os.environ.get("GCP_PROJECT", "portfolio-ml-pipeline")
-TOPIC_ID   = "market-data-ingest"
+PROJECT_ID     = os.environ.get("GCP_PROJECT", "portfolio-ml-pipeline")
+TOPIC_ID       = "market-data-ingest"
+OUTCOMES_TABLE = f"{PROJECT_ID}.ml_pipeline.prediction_outcomes"
+
+TICKERS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "META", "GOOGL", "JPM"]
+FEATURE_NAMES = ["rsi", "macd_bull", "above_ma50", "above_ma200",
+                 "bb_pos", "volatility", "ret5", "vol_delta"]
 
 _td_key_cache: str | None = None
 _publisher:    pubsub_v1.PublisherClient | None = None
 _fs_client:    firestore.Client | None = None
 _model:        Any | None = None
+_bq_client:    Any | None = None
+_outcomes_table_ensured: bool = False
 
 
 def get_td_key() -> str:
@@ -96,6 +104,13 @@ def get_model() -> dict | None:
     _model = joblib.load(path)
     logger.info("ML model loaded cv_accuracy=%.3f", _model.get("cv_accuracy", 0))
     return _model
+
+
+def get_bq_client() -> bigquery.Client:
+    global _bq_client
+    if _bq_client is None:
+        _bq_client = bigquery.Client(project=PROJECT_ID)
+    return _bq_client
 
 
 def get_firestore() -> firestore.Client:
@@ -318,9 +333,126 @@ async def fetch_and_score(tickers: list[str]) -> dict[str, dict]:
     return results
 
 
+def ensure_outcomes_table() -> None:
+    global _outcomes_table_ensured
+    if _outcomes_table_ensured:
+        return
+    bq = get_bq_client()
+    schema = [
+        bigquery.SchemaField("ticker",              "STRING",    mode="REQUIRED"),
+        bigquery.SchemaField("prediction_ts",       "TIMESTAMP", mode="REQUIRED"),
+        bigquery.SchemaField("prediction",          "STRING",    mode="REQUIRED"),
+        bigquery.SchemaField("confidence",          "FLOAT64",   mode="NULLABLE"),
+        bigquery.SchemaField("price_at_prediction", "FLOAT64",   mode="NULLABLE"),
+        bigquery.SchemaField("price_5d_later",      "FLOAT64",   mode="NULLABLE"),
+        bigquery.SchemaField("realised_return_pct", "FLOAT64",   mode="NULLABLE"),
+        bigquery.SchemaField("is_correct",          "BOOL",      mode="NULLABLE"),
+        bigquery.SchemaField("resolved_at",         "TIMESTAMP", mode="NULLABLE"),
+    ]
+    table = bigquery.Table(OUTCOMES_TABLE, schema=schema)
+    get_bq_client().create_table(table, exists_ok=True)
+    _outcomes_table_ensured = True
+
+
+def outcome_is_correct(prediction: str, ret_pct: float) -> bool:
+    """Return True if the 5-day realised return matches the directional prediction."""
+    if prediction == "BULLISH":
+        return ret_pct > 0.5
+    if prediction == "BEARISH":
+        return ret_pct < -0.5
+    return abs(ret_pct) < 1.5  # NEUTRAL: price stayed flat
+
+
+async def resolve_pending_outcomes() -> dict:
+    bq = get_bq_client()
+    ensure_outcomes_table()
+
+    # Predictions older than 7 days with no outcome yet
+    query = f"""
+        SELECT p.ticker, p.timestamp, p.prediction, p.confidence, p.price
+        FROM `{PROJECT_ID}.ml_pipeline.predictions` p
+        LEFT JOIN `{OUTCOMES_TABLE}` o
+            ON p.ticker = o.ticker AND p.timestamp = o.prediction_ts
+        WHERE p.timestamp < TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+          AND o.ticker IS NULL
+        LIMIT 200
+    """
+    try:
+        rows = list(bq.query(query).result())
+    except Exception as e:
+        logger.warning("resolve_outcomes query failed: %s", e)
+        return {"resolved": 0, "error": str(e)}
+
+    if not rows:
+        return {"resolved": 0}
+
+    tickers = list(set(r["ticker"] for r in rows))
+    td_key  = get_td_key()
+    sym     = ",".join(tickers)
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(
+            "https://api.twelvedata.com/time_series",
+            params={"symbol": sym, "interval": "1day", "outputsize": 30, "apikey": td_key},
+        )
+    if resp.status_code != 200:
+        return {"resolved": 0, "error": "price_fetch_failed"}
+
+    ts        = resp.json()
+    is_single = len(tickers) == 1
+
+    # Build price index: {ticker: {"YYYY-MM-DD": close_price}}
+    price_index: dict[str, dict[str, float]] = {}
+    for ticker in tickers:
+        d = ts if is_single else ts.get(ticker, {})
+        if not d.get("values") or d.get("status") == "error" or d.get("code"):
+            continue
+        price_index[ticker] = {v["datetime"][:10]: float(v["close"]) for v in d["values"]}
+
+    outcomes: list[dict] = []
+    for row in rows:
+        ticker     = row["ticker"]
+        if ticker not in price_index:
+            continue
+        prices     = price_index[ticker]
+        pred_ts    = row["timestamp"]
+        pred_date  = str(pred_ts)[:10]
+
+        # Sorted trading days after pred_date
+        future_days = sorted(d for d in prices if d > pred_date)
+        if len(future_days) < 5:
+            continue  # not enough future data yet
+
+        price_at  = float(row["price"])
+        price_5d  = prices[future_days[4]]  # 5th trading day after prediction
+        ret_pct   = round((price_5d - price_at) / price_at * 100, 3)
+        pred      = row["prediction"]
+        is_correct = outcome_is_correct(pred, ret_pct)
+
+        outcomes.append({
+            "ticker":              ticker,
+            "prediction_ts":       pred_ts.isoformat() if hasattr(pred_ts, "isoformat") else str(pred_ts),
+            "prediction":          pred,
+            "confidence":          float(row["confidence"]),
+            "price_at_prediction": price_at,
+            "price_5d_later":      price_5d,
+            "realised_return_pct": ret_pct,
+            "is_correct":          is_correct,
+            "resolved_at":         datetime.now(timezone.utc).isoformat(),
+        })
+
+    if outcomes:
+        errors = bq.insert_rows_json(OUTCOMES_TABLE, outcomes)
+        if errors:
+            logger.warning("bq_outcomes_insert_errors: %s", errors)
+
+    logger.info("resolve_outcomes resolved=%d", len(outcomes))
+    return {"resolved": len(outcomes)}
+
+
 def write_to_bq(row: dict) -> None:
     try:
-        bq = bigquery.Client(project=PROJECT_ID)
+        bq = get_bq_client()
         bq.insert_rows_json(f"{PROJECT_ID}.ml_pipeline.predictions", [{
             "ticker":      row["ticker"],
             "timestamp":   datetime.now(timezone.utc).isoformat(),
@@ -349,6 +481,40 @@ class PredictRequest(BaseModel):
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@app.get("/model-info")
+def model_info():
+    """Expose real model metadata — accuracy, features, coefficients."""
+    artifact = get_model()
+    if artifact is None:
+        return {"available": False, "fallback": "rule_based"}
+    clf = artifact["model"].named_steps["clf"]
+    # If feature_importance wasn't saved (old artifact), compute it now
+    fi = artifact.get("feature_importance")
+    if fi is None:
+        coefs = clf.coef_[0]
+        feats = artifact.get("features", FEATURE_NAMES)
+        fi = sorted(
+            [{"name": n, "coefficient": round(float(c), 4)} for n, c in zip(feats, coefs)],
+            key=lambda x: abs(x["coefficient"]), reverse=True
+        )
+    return {
+        "available":          True,
+        "model_type":         type(clf).__name__,
+        "pipeline_steps":     ["StandardScaler", type(clf).__name__],
+        "cv_accuracy":        round(float(artifact.get("cv_accuracy", 0)), 4),
+        "cv_std":             round(float(artifact.get("cv_std", 0)), 4),
+        "baseline_accuracy":  round(float(artifact.get("baseline_accuracy", 0)), 4) if artifact.get("baseline_accuracy") else None,
+        "n_samples":          artifact.get("n_samples"),
+        "n_features":         len(artifact.get("features", FEATURE_NAMES)),
+        "features":           artifact.get("features", FEATURE_NAMES),
+        "feature_importance": fi,
+        "training_tickers":   artifact.get("tickers", TICKERS),
+        "validation_method":  artifact.get("validation_method", "StratifiedKFold(shuffle=True) [legacy]"),
+        "label":              "next-day close > current close",
+        "signal_thresholds":  {"bullish": 0.55, "bearish": 0.45},
+    }
+
 
 @app.get("/health")
 def health():
@@ -456,8 +622,8 @@ def get_results(session_id: str):
 def analytics():
     """Query BigQuery for prediction statistics over the last 7 days."""
     try:
-        bq = bigquery.Client(project=PROJECT_ID)
-        query = f"""
+        bq = get_bq_client()
+        breakdown_query = f"""
             SELECT
                 prediction,
                 COUNT(*)                    AS count,
@@ -469,9 +635,52 @@ def analytics():
             GROUP BY prediction
             ORDER BY count DESC
         """
-        rows = list(bq.query(query).result())
+        acc_query = f"""
+            SELECT
+                prediction,
+                COUNT(*)                        AS total,
+                COUNTIF(is_correct)             AS correct,
+                ROUND(SAFE_DIVIDE(COUNTIF(is_correct), COUNT(*)), 4) AS accuracy,
+                ROUND(AVG(confidence), 3)       AS avg_confidence,
+                ROUND(AVG(realised_return_pct), 2) AS avg_return_pct
+            FROM `{OUTCOMES_TABLE}`
+            GROUP BY prediction
+            ORDER BY total DESC
+        """
+
+        def run_query(q):
+            return list(bq.query(q).result())
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            f_breakdown = pool.submit(run_query, breakdown_query)
+            f_acc       = pool.submit(run_query, acc_query)
+            rows     = f_breakdown.result()
+            try:
+                acc_rows = f_acc.result()
+            except Exception as acc_err:
+                logger.info("accuracy_query_skipped: %s", acc_err)
+                acc_rows = []
+
         total = sum(int(r["count"]) for r in rows)
         logger.info("analytics query total_predictions=%d", total)
+
+        accuracy_stats = [
+            {
+                "prediction":     r["prediction"],
+                "total":          int(r["total"]),
+                "correct":        int(r["correct"]),
+                "accuracy":       float(r["accuracy"] or 0),
+                "avg_confidence": float(r["avg_confidence"] or 0),
+                "avg_return_pct": float(r["avg_return_pct"] or 0),
+            }
+            for r in acc_rows
+        ]
+        total_resolved = sum(r["total"] for r in accuracy_stats)
+        overall_accuracy = None
+        if total_resolved > 0:
+            total_correct = sum(r["correct"] for r in accuracy_stats)
+            overall_accuracy = round(total_correct / total_resolved, 4)
+
         return {
             "total_predictions": total,
             "window_days":       7,
@@ -485,7 +694,18 @@ def analytics():
                 }
                 for r in rows
             ],
+            "accuracy_stats":    accuracy_stats,
+            "overall_accuracy":  overall_accuracy,
+            "total_resolved":    total_resolved,
         }
     except Exception as e:
         logger.error("analytics_query_failed error=%s", e)
         return {"total_predictions": 0, "window_days": 7, "breakdown": []}
+
+
+@app.post("/resolve-outcomes")
+@limiter.limit("5/minute")
+async def resolve_outcomes_endpoint(request: Request):
+    """Resolve pending predictions against actual 5-day forward returns."""
+    result = await resolve_pending_outcomes()
+    return result

@@ -8,6 +8,12 @@ const Navbar = () => {
     const sections = ['home', 'projects', 'contact'];
 
     const handleScroll = () => {
+      const nearBottom =
+        window.innerHeight + window.pageYOffset >= document.body.offsetHeight - 80;
+      if (nearBottom) {
+        setActiveSection('contact');
+        return;
+      }
       let current = 'home';
       sections.forEach((id) => {
         const el = document.getElementById(id);

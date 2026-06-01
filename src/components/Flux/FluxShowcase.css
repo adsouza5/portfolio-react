@@ -654,36 +654,78 @@
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .flux-layout { padding: 0 12px; }
-  /* Push header content below the fixed back button */
-  .flux-header { padding: 76px 0 12px; }
-  .flux-wordmark { font-size: 26px; }
-  .flux-converter { gap: 6px; }
-  .fxd-wrap { min-width: 120px; }
-  .flux-amount { width: 85px; }
-  .flux-result-value { font-size: 20px; }
-  .flux-convert-btn { padding: 10px 14px; }
-  /* Type grid — slightly smaller cells on narrow screens */
-  .flux-type-grid { grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 4px; }
-  .flux-type-cell { padding: 8px 2px 6px; }
-  .flux-type-cell-icon { font-size: 16px; }
+  .flux-header { padding: 50px 0 6px; }
+  .flux-wordmark { font-size: 24px; }
+  .flux-tagline { margin-bottom: 2px; }
+
+  /* Remove decorative pills — reclaim vertical space on mobile */
+  .flux-header-pills { display: none; }
+
+  /* Type selector → single horizontally-scrollable row instead of multi-row grid.
+     Transforms a 3-4 row grid (~150px) into a single 48px strip. */
+  .flux-type-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 5px;
+    padding: 4px 0 6px;
+  }
+  .flux-type-grid::-webkit-scrollbar { display: none; }
+  .flux-type-cell { flex: 0 0 52px; padding: 8px 4px 6px; }
+  .flux-type-cell-icon { font-size: 15px; }
   .flux-type-cell-label { font-size: 8px; }
-  /* Back button — smaller on mobile */
+
+  /* Converter — compact but keep single row */
+  .flux-converter { gap: 6px; padding: 10px 12px; }
+  .fxd-wrap { min-width: 0; flex: 1; }
+  .fxd-trigger { padding: 8px 10px; font-size: 12px; }
+  .flux-amount { width: 76px; }
+  .flux-convert-btn { padding: 9px 12px; font-size: 12px; }
+  .flux-result-value { font-size: 20px; }
+
+  /* Hide decorative hint line — not readable at bottom anyway */
+  .flux-hint { display: none; }
+
   .flux-back { font-size: 10px; padding: 6px 11px; letter-spacing: 1.5px; top: 12px; left: 12px; }
 }
 
 @media (max-width: 420px) {
-  .flux-header { padding: 68px 0 8px; }
-  .flux-wordmark { font-size: 22px; }
-  .flux-tagline { font-size: 9px; letter-spacing: 0.12em; }
-  .flux-converter { flex-direction: column; align-items: stretch; gap: 8px; }
-  .flux-amount-wrap, .fxd-wrap { width: 100%; }
-  .flux-amount { width: 100%; text-align: left; }
-  .flux-swap { display: none; }
-  .flux-convert-btn { width: 100%; text-align: center; padding: 12px; }
-  .flux-mic, .flux-wake-btn, .flux-send { width: 44px; height: 44px; }
-  .flux-input-area { padding: 8px 0; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+  .flux-header { padding: 44px 0 4px; }
+  .flux-wordmark { font-size: 20px; }
+  .flux-tagline { font-size: 9px; letter-spacing: 0.10em; }
+
+  /* Slightly narrower type cells on smallest screens */
+  .flux-type-cell { flex: 0 0 46px; }
+
+  /* Converter → 3-row grid:
+     Row 1: from-dropdown | → | to-dropdown  (side by side)
+     Row 2: amount input  (full width)
+     Row 3: convert button (full width)
+     Replaces 4-item vertical stack (~220px) with a compact grid (~150px) */
+  .flux-converter {
+    display: grid;
+    grid-template-columns: 1fr 22px 1fr;
+    gap: 6px;
+    padding: 10px 12px;
+    align-items: center;
+  }
+  .flux-converter > .fxd-wrap:nth-child(1) { grid-column: 1; grid-row: 1; min-width: 0; width: auto; }
+  .flux-converter > .flux-arrow            { grid-column: 2; grid-row: 1; text-align: center; font-size: 13px; }
+  .flux-converter > .fxd-wrap:nth-child(4) { grid-column: 3; grid-row: 1; min-width: 0; width: auto; }
+  .flux-converter > .flux-amount-wrap      { grid-column: 1 / -1; grid-row: 2; width: auto; }
+  .flux-amount                             { width: 100%; text-align: left; box-sizing: border-box; }
+  .flux-converter > .flux-swap            { display: none; }
+  .flux-converter > .flux-convert-btn     { grid-column: 1 / -1; grid-row: 3; width: auto; padding: 9px; text-align: center; }
+  .fxd-trigger { font-size: 11px; padding: 7px 8px; }
+
+  /* Tighten the input bar to ensure it stays inside the viewport */
+  .flux-mic, .flux-wake-btn, .flux-send { width: 38px; height: 38px; border-radius: 9px; }
+  .flux-text-input { font-size: 13px; }
+  .flux-input-area { padding: 6px 0; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
   .flux-back { font-size: 9px; padding: 5px 9px; letter-spacing: 1.2px; top: 10px; left: 10px; }
-  .flux-type-grid { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
-  .flux-bubble { padding: 10px 13px; font-size: 13px; }
-  .flux-result-value { font-size: 18px; }
+  .flux-bubble { padding: 10px 12px; font-size: 13px; }
+  .flux-result-value { font-size: 17px; }
 }

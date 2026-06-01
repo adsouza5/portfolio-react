@@ -74,10 +74,6 @@ const Home = () => (
     <MatrixRain />
 
     <div className="hero-content">
-      <p className="hero-eyebrow">
-        Open to full-time opportunities <span>▋</span>
-      </p>
-
       <a
         href="https://www.linkedin.com/in/adam-dsouza/"
         target="_blank"

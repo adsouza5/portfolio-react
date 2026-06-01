@@ -354,20 +354,22 @@
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .fx-layout { padding: 0 12px; }
-  /* Ensure content clears the fixed back button */
   .fx-header { padding: 72px 0 16px; }
   .fx-header h1 { font-size: 22px; }
   .fx-result-amount { font-size: 18px; }
-  /* Larger touch targets */
   .fx-mic, .fx-send { width: 44px; height: 44px; }
+  .fx-back-btn { font-size: 10px; padding: 6px 11px; letter-spacing: 1.5px; top: 12px; left: 12px; }
 }
 
 @media (max-width: 420px) {
   .fx-header { padding: 68px 0 12px; }
   .fx-header h1 { font-size: 20px; }
+  .fx-header p { font-size: 12px; }
   .fx-bubble { padding: 10px 13px; font-size: 13px; }
   .fx-result-amount { font-size: 17px; }
   .fx-suggestions { gap: 6px; }
   .fx-suggestion { font-size: 11px; padding: 4px 10px; }
   .fx-input-area { padding: 12px 0 24px; }
+  .fx-back-btn { font-size: 9px; padding: 5px 9px; letter-spacing: 1.2px; top: 10px; left: 10px; }
+  .fx-result-rate { font-size: 11px; }
 }

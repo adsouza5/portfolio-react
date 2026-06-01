@@ -661,18 +661,27 @@
   .flux-result-value { font-size: 20px; }
   .flux-convert-btn { padding: 10px 14px; }
   /* Type grid — slightly smaller cells on narrow screens */
-  .flux-type-grid { grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 4px; }
+  .flux-type-grid { grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 4px; }
   .flux-type-cell { padding: 8px 2px 6px; }
   .flux-type-cell-icon { font-size: 16px; }
   .flux-type-cell-label { font-size: 8px; }
+  /* Back button — smaller on mobile */
+  .flux-back { font-size: 10px; padding: 6px 11px; letter-spacing: 1.5px; top: 12px; left: 12px; }
 }
 
 @media (max-width: 420px) {
-  .flux-header { padding: 72px 0 10px; }
-  .flux-converter { flex-direction: column; align-items: stretch; }
+  .flux-header { padding: 68px 0 8px; }
+  .flux-wordmark { font-size: 22px; }
+  .flux-tagline { font-size: 9px; letter-spacing: 0.12em; }
+  .flux-converter { flex-direction: column; align-items: stretch; gap: 8px; }
   .flux-amount-wrap, .fxd-wrap { width: 100%; }
   .flux-amount { width: 100%; text-align: left; }
-  .flux-convert-btn { width: 100%; text-align: center; }
+  .flux-swap { display: none; }
+  .flux-convert-btn { width: 100%; text-align: center; padding: 12px; }
   .flux-mic, .flux-wake-btn, .flux-send { width: 44px; height: 44px; }
   .flux-input-area { padding: 8px 0 20px; }
+  .flux-back { font-size: 9px; padding: 5px 9px; letter-spacing: 1.2px; top: 10px; left: 10px; }
+  .flux-type-grid { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
+  .flux-bubble { padding: 10px 13px; font-size: 13px; }
+  .flux-result-value { font-size: 18px; }
 }

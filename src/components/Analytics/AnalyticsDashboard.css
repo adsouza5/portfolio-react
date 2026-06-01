@@ -377,14 +377,29 @@
 @media (max-width: 480px) {
   .an-gate-box { padding: 32px 24px; width: 100%; margin: 16px; }
   .an-grid-4, .an-grid-3, .an-grid-2 { grid-template-columns: 1fr; }
-  .an-nav { padding: 12px 14px; gap: 10px; }
+  /* Nav — allow right-side badges to wrap under title */
+  .an-nav { padding: 12px 14px; gap: 8px; flex-wrap: wrap; }
   .an-nav-title { font-size: 13px; }
+  .an-nav-right { flex-wrap: wrap; gap: 6px; }
+  .an-badge { font-size: 10px; padding: 2px 8px; }
+  .an-back { font-size: 10px; padding: 6px 10px; letter-spacing: 1.5px; }
   .an-card { padding: 16px 16px; }
   .an-card-value { font-size: 20px; }
+  .an-card-sub { font-size: 11px; }
   /* Info rows — stack key above value */
   .an-info-row { flex-direction: column; gap: 3px; padding: 11px 16px; }
   .an-info-key { min-width: unset; padding-top: 0; color: #334155; }
+  .an-info-val { font-size: 12px; }
   /* GA link grid */
   .an-ga-grid { grid-template-columns: 1fr; }
   .an-ga-link { padding: 14px 14px; }
+}
+
+@media (max-width: 375px) {
+  .an-body { padding: 20px 12px 60px; }
+  .an-grid-4, .an-grid-3, .an-grid-2 { grid-template-columns: 1fr; }
+  .an-card-value { font-size: 18px; }
+  .an-section-label { font-size: 11px; }
+  .an-nav-title { font-size: 12px; }
+  .an-back { display: none; }
 }

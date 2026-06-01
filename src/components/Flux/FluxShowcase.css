@@ -536,11 +536,11 @@
 .flux-input-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   background: rgba(255,255,255,0.035);
   border: 1px solid rgba(255,255,255,0.09);
   border-radius: 14px;
-  padding: 8px 8px 8px 16px;
+  padding: 7px 7px 7px 14px;
   transition: border-color 0.2s;
 }
 .flux-input-row:focus-within { border-color: rgba(var(--ar),var(--ag),var(--ab),0.35); }
@@ -685,6 +685,9 @@
   .flux-convert-btn { padding: 9px 12px; font-size: 12px; }
   .flux-result-value { font-size: 20px; }
 
+  /* Tighten input row padding so all 3 buttons stay inside the container */
+  .flux-input-row { padding: 7px 6px 7px 12px; gap: 6px; }
+
   /* Hide decorative hint line — not readable at bottom anyway */
   .flux-hint { display: none; }
 
@@ -720,8 +723,9 @@
   .flux-converter > .flux-convert-btn     { grid-column: 1 / -1; grid-row: 3; width: auto; padding: 9px; text-align: center; }
   .fxd-trigger { font-size: 11px; padding: 7px 8px; }
 
-  /* Tighten the input bar to ensure it stays inside the viewport */
-  .flux-mic, .flux-wake-btn, .flux-send { width: 38px; height: 38px; border-radius: 9px; }
+  /* Tighten input bar — smaller buttons + reduced padding prevent overflow */
+  .flux-input-row { padding: 6px 5px 6px 10px; gap: 5px; border-radius: 12px; }
+  .flux-mic, .flux-wake-btn, .flux-send { width: 34px; height: 34px; border-radius: 8px; }
   .flux-text-input { font-size: 13px; }
   .flux-input-area { padding: 6px 0; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 

@@ -577,10 +577,10 @@
   .prism-rate-bar-wrap { order: 3; flex: 1 1 100%; }
   .prism-client-pct  { order: 4; }
 
-  /* Rate tester — stack client selector + button */
+  /* Rate tester — stack client selector + button, enforce touch-friendly heights */
   .prism-tester-row { flex-direction: column; align-items: stretch; }
-  .prism-select-btn { width: 100%; justify-content: space-between; }
-  .prism-btn { width: 100%; justify-content: center; text-align: center; }
+  .prism-select-btn { width: 100%; justify-content: space-between; min-height: 44px; padding: 11px 14px; }
+  .prism-btn { width: 100%; justify-content: center; text-align: center; min-height: 44px; padding: 12px 20px; }
 
   /* Quota bar */
   .prism-quota { flex-wrap: wrap; gap: 8px; }

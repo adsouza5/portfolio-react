@@ -490,7 +490,9 @@
   background: #081414;
   border: 1px solid rgba(23,126,137,0.50);
   border-radius: 6px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: calc(100vw - 24px);
   z-index: 2000;
   box-shadow: 0 8px 40px rgba(0,0,0,0.80), 0 0 24px rgba(23,126,137,0.10);
 }
@@ -775,6 +777,7 @@ a.lens-result-filepath:hover { color: #4dcfdf; text-decoration: underline; }
   /* Result cards — compact meta row */
   .lens-result-meta { padding: 7px 10px; gap: 6px; flex-wrap: wrap; }
   .lens-result-filepath { font-size: 10px; }
+  .lens-result-symbol,
   .lens-result-lines,
   .lens-result-score { display: none; }
 

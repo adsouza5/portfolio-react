@@ -388,7 +388,7 @@
   .an-card-sub { font-size: 11px; }
   /* Info rows — stack key above value */
   .an-info-row { flex-direction: column; gap: 3px; padding: 11px 16px; }
-  .an-info-key { min-width: unset; padding-top: 0; color: #334155; }
+  .an-info-key { min-width: unset; padding-top: 0; color: #475569; }
   .an-info-val { font-size: 12px; }
   /* GA link grid */
   .an-ga-grid { grid-template-columns: 1fr; }

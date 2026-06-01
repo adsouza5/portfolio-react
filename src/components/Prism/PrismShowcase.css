@@ -537,6 +537,9 @@
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
+  /* Disable heavy SVG animations on mobile — GPU relief */
+  .prism-bg { display: none; }
+  .prism-root::after { display: none; }
   .prism-root { padding: 56px 14px 70px; }
   .prism-card { padding: 16px 14px; }
   .prism-stats { grid-template-columns: repeat(2, 1fr); }

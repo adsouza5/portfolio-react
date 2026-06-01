@@ -1670,8 +1670,8 @@ export default function MLPipelineShowcase() {
           <div style={{ animation:"fadeUp 0.35s ease both" }}>
             <GlassCard style={{ padding:isMobile?"16px 14px":"28px 32px", marginBottom:20 }} topColor={C.accent}>
               <SectionHeader>Pipeline Architecture</SectionHeader>
-              <div style={{ overflowX:isMobile?"auto":"visible", WebkitOverflowScrolling:"touch", marginLeft:-4, paddingLeft:4, paddingBottom:isMobile?8:0 }}>
-                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"center", flexWrap:"nowrap", gap:0, minWidth:isMobile?380:undefined }}>
+              <div style={{ overflowX:isMobile?"auto":"visible", WebkitOverflowScrolling:"touch", paddingBottom:isMobile?8:0 }}>
+                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:isMobile?"flex-start":"center", flexWrap:"nowrap", gap:0, minWidth:isMobile?380:undefined }}>
                   {STAGES.map((stage,i) => (
                     <div key={stage.id} style={{ display:"flex", alignItems:"flex-start" }}>
                       <PipelineNode stage={stage} active={false} complete={false} progress={0} />
@@ -1813,8 +1813,8 @@ export default function MLPipelineShowcase() {
                   }}
                 >{running ? "■ Stop" : "▶ Run Pipeline"}</button>
               </div>
-              <div style={{ overflowX:isMobile?"auto":"visible", WebkitOverflowScrolling:"touch", marginLeft:-4, paddingLeft:4, paddingBottom:isMobile?8:0 }}>
-                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"center", flexWrap:"nowrap", gap:0, minWidth:isMobile?380:undefined }}>
+              <div style={{ overflowX:isMobile?"auto":"visible", WebkitOverflowScrolling:"touch", paddingBottom:isMobile?8:0 }}>
+                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:isMobile?"flex-start":"center", flexWrap:"nowrap", gap:0, minWidth:isMobile?380:undefined }}>
                   {STAGES.map((stage,i) => (
                     <div key={stage.id} style={{ display:"flex", alignItems:"flex-start" }}>
                       <PipelineNode stage={stage} active={activeStage===i} complete={activeStage>i} progress={activeStage===i?progress:0} />

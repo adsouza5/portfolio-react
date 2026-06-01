@@ -4,6 +4,7 @@
 .flux-root {
   --ar: 16; --ag: 185; --ab: 129;
   height: 100vh;
+  height: 100dvh;
   background: #07101a;
   color: #e2e8f0;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -519,6 +520,7 @@
 /* ── Voice input bar ─────────────────────────────────────────────── */
 .flux-input-area {
   padding: 10px 0 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 
@@ -679,7 +681,7 @@
   .flux-swap { display: none; }
   .flux-convert-btn { width: 100%; text-align: center; padding: 12px; }
   .flux-mic, .flux-wake-btn, .flux-send { width: 44px; height: 44px; }
-  .flux-input-area { padding: 8px 0 20px; }
+  .flux-input-area { padding: 8px 0; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
   .flux-back { font-size: 9px; padding: 5px 9px; letter-spacing: 1.2px; top: 10px; left: 10px; }
   .flux-type-grid { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
   .flux-bubble { padding: 10px 13px; font-size: 13px; }

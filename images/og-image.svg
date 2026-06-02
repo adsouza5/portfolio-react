@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="627" viewBox="0 0 1200 627">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#070d14"/>
+      <stop offset="100%" style="stop-color:#0d1a24"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#177e89"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="627" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="1" x2="1200" y2="1" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="0" y1="626" x2="1200" y2="626" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="1" y1="0" x2="1" y2="627" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="1199" y1="0" x2="1199" y2="627" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+
+  <!-- Teal accent bar top -->
+  <rect x="80" y="72" width="60" height="3" fill="url(#accent)" rx="2"/>
+
+  <!-- Name -->
+  <text x="80" y="160" font-family="'Segoe UI', system-ui, sans-serif" font-size="72" font-weight="700" fill="#f1f5f9" letter-spacing="-2">Adam Dsouza</text>
+
+  <!-- Headline -->
+  <text x="80" y="218" font-family="'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="400" fill="#64748b" letter-spacing="0">Full-Stack Engineer · Go · Python · GCP · React</text>
+
+  <!-- Divider -->
+  <line x1="80" y1="258" x2="480" y2="258" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+
+  <!-- Project pills -->
+  <!-- Sentinel -->
+  <rect x="80" y="290" width="148" height="36" rx="8" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="1"/>
+  <text x="154" y="314" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" fill="#10b981" text-anchor="middle" font-weight="500">Sentinel</text>
+
+  <!-- Prism -->
+  <rect x="240" y="290" width="120" height="36" rx="8" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="1"/>
+  <text x="300" y="314" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" fill="#10b981" text-anchor="middle" font-weight="500">Prism</text>
+
+  <!-- Lens -->
+  <rect x="372" y="290" width="110" height="36" rx="8" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="1"/>
+  <text x="427" y="314" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" fill="#10b981" text-anchor="middle" font-weight="500">Lens</text>
+
+  <!-- CodeCollab -->
+  <rect x="494" y="290" width="148" height="36" rx="8" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.25)" stroke-width="1"/>
+  <text x="568" y="314" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" fill="#10b981" text-anchor="middle" font-weight="500">CodeCollab</text>
+
+  <!-- Tech stack row -->
+  <text x="80" y="380" font-family="'Courier New', monospace" font-size="15" fill="rgba(100,116,139,0.9)" letter-spacing="1">
+    GCP · Cloud Run · Pub/Sub · BigQuery · Terraform · Docker · Qdrant · WebSockets · Y.js
+  </text>
+
+  <!-- URL bottom left -->
+  <text x="80" y="540" font-family="'Courier New', monospace" font-size="18" fill="#10b981" filter="url(#glow)" letter-spacing="0.5">www.iadamdsouza.com</text>
+
+  <!-- Decorative right-side glow -->
+  <circle cx="980" cy="314" r="220" fill="rgba(16,185,129,0.04)"/>
+  <circle cx="980" cy="314" r="140" fill="rgba(16,185,129,0.05)"/>
+
+  <!-- Right side monogram -->
+  <text x="980" y="360" font-family="'Segoe UI', system-ui, sans-serif" font-size="120" font-weight="700" fill="rgba(16,185,129,0.12)" text-anchor="middle" letter-spacing="-4">AD</text>
+  <text x="980" y="360" font-family="'Segoe UI', system-ui, sans-serif" font-size="120" font-weight="700" fill="none" stroke="rgba(16,185,129,0.2)" stroke-width="1" text-anchor="middle" letter-spacing="-4">AD</text>
+</svg>

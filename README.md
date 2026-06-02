@@ -2,17 +2,18 @@
 
 Personal portfolio built with React, deployed on GitHub Pages.
 
-**[Live Site](https://www.iadamdsouza.com)**
+**[www.iadamdsouza.com](https://www.iadamdsouza.com)**
 
 ## Projects
 
-| Project | Stack | Demo |
+| Project | Description | Stack |
 |---|---|---|
-| [Sentinel](https://github.com/adsouza5/sentinel-ml-pipeline) | Python, FastAPI, GCP, scikit-learn | [Live](https://www.iadamdsouza.com/projects/sentinel) |
-| [Lens](https://github.com/adsouza5/lens-api) | Python, FastAPI, Qdrant, tree-sitter | [Live](https://www.iadamdsouza.com/projects/lens) |
-| [Prism](https://github.com/adsouza5/prism-api) | Go, JWT, WebSocket, Cloud Run | [Live](https://www.iadamdsouza.com/projects/prism) |
-| [CodeCollab](https://github.com/adsouza5/codecollab) | Node.js, Socket.io, React | [Live](https://www.iadamdsouza.com/projects/codecollab) |
+| [Sentinel](https://github.com/adsouza5/sentinel-ml-pipeline) | Serverless ML inference pipeline on GCP | Python · FastAPI · Pub/Sub · BigQuery · scikit-learn · Terraform |
+| [Prism](https://github.com/adsouza5/prism-api) | Production API gateway in Go | Go · JWT · WebSocket · Cloud Run |
+| [Lens](https://github.com/adsouza5/lens-api) | Semantic code search engine | Python · FastAPI · Qdrant · tree-sitter · OpenAI |
+| [CodeCollab](https://github.com/adsouza5/codecollab) | Real-time collaborative code editor | React · Y.js · Monaco · Judge0 · WebSocket |
+| [Flux](https://github.com/adsouza5/flux) | Universal unit & currency converter with voice | React · Whisper · Web Audio API · Frankfurter |
 
 ## Stack
 
-React · CSS · GitHub Actions · GitHub Pages
+React · CSS · GitHub Pages
